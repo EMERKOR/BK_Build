@@ -68,6 +68,11 @@ print("\n[2/4] Engineering features for current week...")
 matchups = games[['away_team', 'home_team', 'spread_line',
                   'home_rest', 'away_rest', 'div_game']].copy()
 
+# CRITICAL FIX: nflverse spread_line is from AWAY team perspective
+# But v1.2 was trained on nfelo home_line_close (HOME perspective)
+# Convert: home_line = -1 * away_line
+matchups['spread_line'] = -1 * matchups['spread_line']
+
 matchups = matchups.merge(
     nfelo_ratings[['team', 'nfelo']],
     left_on='home_team',
