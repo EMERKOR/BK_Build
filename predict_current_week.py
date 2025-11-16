@@ -19,7 +19,7 @@ project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
 from src.nflverse_data import nflverse
-from src import data_loader, config
+from src import data_loader, config, betting_utils
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.width', 150)
@@ -140,6 +140,54 @@ matchups['abs_edge'] = matchups['edge'].abs()
 print("✓ Predictions generated")
 
 # ============================================================================
+# BETTING ANALYTICS
+# ============================================================================
+
+print("\n[3.5/4] Calculating betting metrics (probabilities, EV, Kelly)...")
+
+# Use model test residual std for probability calibration (from model params)
+residual_std = 1.88  # From v1.2 test set
+
+# Convert spread predictions to win probabilities
+matchups['home_win_prob'] = matchups['bk_v1_2_spread'].apply(
+    lambda x: betting_utils.spread_to_win_probability(x, residual_std=residual_std)
+)
+matchups['away_win_prob'] = 1 - matchups['home_win_prob']
+
+# Determine bet side (which side has the edge)
+matchups['bet_side'] = matchups['edge'].apply(lambda x: 'HOME' if x < 0 else 'AWAY')
+matchups['bet_prob'] = matchups.apply(
+    lambda row: row['home_win_prob'] if row['bet_side'] == 'HOME' else row['away_win_prob'],
+    axis=1
+)
+
+# Assume standard -110 odds for spread betting
+standard_odds = -110
+
+# Calculate Kelly sizing (quarter Kelly recommended)
+matchups['kelly_full'] = matchups.apply(
+    lambda row: betting_utils.kelly_criterion(
+        model_prob=row['bet_prob'],
+        odds=standard_odds
+    ),
+    axis=1
+)
+matchups['kelly_quarter'] = matchups['kelly_full'] * 0.25
+
+# Calculate EV (simplified - assumes -110 on all bets)
+matchups['ev_per_100'] = matchups.apply(
+    lambda row: betting_utils.calculate_ev(
+        model_prob=row['bet_prob'],
+        market_prob=0.5,  # Simplified assumption for spread bets
+        odds=standard_odds,
+        stake=100
+    ),
+    axis=1
+)
+
+print(f"✓ Added win probabilities and Kelly sizing")
+
+# ============================================================================
 # IDENTIFY VALUE BETS
 # ============================================================================
 
@@ -150,13 +198,23 @@ print("ALL WEEK 11 PREDICTIONS")
 print("="*80)
 
 display_cols = ['away_team', 'home_team', 'spread_line', 'bk_v1_2_spread',
-                'edge', 'home_rest', 'away_rest', 'div_game']
+                'edge', 'home_win_prob', 'kelly_quarter', 'ev_per_100']
 
 all_preds = matchups[display_cols].copy()
 all_preds = all_preds.sort_values('edge', ascending=False)
-all_preds = all_preds.round(2)
 
-print("\n" + all_preds.to_string(index=False))
+# Format for display
+all_preds_display = all_preds.copy()
+all_preds_display['home_win_prob'] = (all_preds_display['home_win_prob'] * 100).round(1)
+all_preds_display['kelly_quarter'] = (all_preds_display['kelly_quarter'] * 100).round(2)
+all_preds_display[['spread_line', 'bk_v1_2_spread', 'edge', 'ev_per_100']] = \
+    all_preds_display[['spread_line', 'bk_v1_2_spread', 'edge', 'ev_per_100']].round(2)
+
+# Rename for clarity
+all_preds_display.columns = ['Away', 'Home', 'Vegas', 'BK_v1.2', 'Edge',
+                              'Home_Win_%', '1/4_Kelly_%', 'EV_per_$100']
+
+print("\n" + all_preds_display.to_string(index=False))
 
 # Value bet thresholds
 print("\n" + "="*80)
@@ -179,10 +237,6 @@ print(f"VALUE BETS ({value_threshold}+ POINT EDGE)")
 print("="*80)
 
 if len(value_bets) > 0:
-    value_bets['bet_side'] = value_bets['edge'].apply(
-        lambda x: 'HOME' if x < 0 else 'AWAY'
-    )
-
     value_bets['bet_team'] = value_bets.apply(
         lambda row: row['home_team'] if row['bet_side'] == 'HOME' else row['away_team'],
         axis=1
@@ -193,30 +247,34 @@ if len(value_bets) > 0:
         axis=1
     )
 
+    # Format for display
     bet_display = value_bets[[
         'away_team', 'home_team', 'spread_line', 'bk_v1_2_spread',
-        'edge', 'bet_side', 'recommendation'
+        'edge', 'bet_side', 'kelly_quarter', 'ev_per_100', 'recommendation'
     ]].copy()
 
     bet_display = bet_display.sort_values('edge', key=abs, ascending=False)
-    bet_display = bet_display.round(2)
+
+    # Format percentages
+    bet_display_formatted = bet_display.copy()
+    bet_display_formatted['kelly_pct'] = (bet_display_formatted['kelly_quarter'] * 100).round(2)
+    bet_display_formatted = bet_display_formatted.drop(columns=['kelly_quarter'])
+    bet_display_formatted = bet_display_formatted.round(2)
 
     print(f"\n{len(value_bets)} recommended bets:\n")
-    print(bet_display.to_string(index=False))
+    print(bet_display_formatted.to_string(index=False))
 
     # Risk analysis
     print("\n" + "="*80)
-    print("BETTING RECOMMENDATIONS - RISK ANALYSIS")
+    print("BETTING RECOMMENDATIONS - PROFESSIONAL ANALYSIS")
     print("="*80)
 
-    print(f"""
-Total recommended bets: {len(value_bets)}
-
-Confidence tiers (based on edge size):
-""")
+    print(f"\nTotal recommended bets: {len(value_bets)}\n")
 
     for bet_idx, bet in bet_display.iterrows():
         edge_mag = abs(bet['edge'])
+        kelly_pct = bet['kelly_quarter'] * 100
+
         if edge_mag >= 3.0:
             confidence = "HIGH"
         elif edge_mag >= 2.5:
@@ -226,8 +284,10 @@ Confidence tiers (based on edge size):
         else:
             confidence = "LOW"
 
-        print(f"  {bet['away_team']} @ {bet['home_team']}: "
-              f"{bet['recommendation']} - {confidence} CONFIDENCE")
+        print(f"  {bet['away_team']} @ {bet['home_team']}")
+        print(f"    {bet['recommendation']}")
+        print(f"    Confidence: {confidence} | 1/4 Kelly: {kelly_pct:.2f}% | EV: ${bet['ev_per_100']:.2f}/bet")
+        print()
 
 else:
     print(f"\nNo games meet the {value_threshold}+ point threshold this week.")
@@ -285,7 +345,11 @@ Recommended Betting Strategy:
    - Not financial advice
    - Track results honestly
 
-Good luck! 🏈
+6. PROBABILITY AND KELLY:
+   - Win probabilities derived from spread predictions
+   - 1/4 Kelly sizing is conservative and recommended
+   - Never bet more than Kelly suggests
+   - Adjust for model uncertainty and bankroll risk tolerance
 """)
 
 print("="*80 + "\n")
