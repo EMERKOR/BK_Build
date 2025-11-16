@@ -41,9 +41,9 @@ class DeterministicSpreadModel:
         """
         self.hfa = hfa
         self.weights = {
-            'epa_margin': 100,      # EPA differential * 100 ≈ point spread
-            'nfelo_diff': 0.04,     # nfelo difference * 0.04 ≈ point spread
-            'substack_ovr_diff': 1.0  # Substack overall rating diff
+            'epa_margin': 35,       # EPA differential * 35 ≈ point spread (calibrated default)
+            'nfelo_diff': 0.02,     # nfelo difference * 0.02 ≈ point spread
+            'substack_ovr_diff': 0.5  # Substack overall rating diff
         }
 
     def predict(self, home_features, away_features):
