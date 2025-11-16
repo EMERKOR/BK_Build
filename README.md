@@ -2,7 +2,7 @@
 
 A leak-free, modular NFL spread prediction system that combines EPA analysis, power ratings, and machine learning to find value in betting markets.
 
-## 🎯 Project Goals
+## Project Goals
 
 Build a reliable NFL spread prediction system that:
 - Produces deterministic baseline spreads (v1.0)
@@ -11,9 +11,9 @@ Build a reliable NFL spread prediction system that:
 - Identifies value bets vs Vegas lines
 - Provides ROI analysis for bet sizing
 
-## 📊 Current Status
+## Current Status
 
-✅ **COMPLETE - Core System Built**
+**COMPLETE - Core System Built**
 
 - Team name normalization (handles all data sources)
 - Data loaders for nfelo, Substack, and nfl_data_py
@@ -23,7 +23,7 @@ Build a reliable NFL spread prediction system that:
 - Backtest and ROI analysis functions
 - Demo notebook with Week 11, 2025 predictions
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Run the Demo Notebook
 
@@ -49,7 +49,7 @@ python test_data_loading.py
 
 This validates that all data files load correctly with proper team name normalization.
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 BK_Build/
@@ -70,7 +70,7 @@ BK_Build/
 └── README.md                    # This file
 ```
 
-## 📈 Data Sources
+## Data Sources
 
 ### Current Week Data (Week 11, 2025)
 
@@ -132,7 +132,7 @@ Edge = Ball Knower Prediction - Vegas Line
 - **Positive edge**: Model likes away team more than Vegas → bet away
 - Only bet when `|Edge| >= 0.5 points` (configurable)
 
-## 🧪 Testing & Validation
+## Testing & Validation
 
 ### Leakage Prevention
 
@@ -203,10 +203,10 @@ All map to nfl_data_py standard: `LAR`, `KC`, `BUF`
 
 ### Model Status
 
-- ✅ v1.0 baseline complete and tested
-- ⚠️ v1.1 enhanced features - framework built, needs implementation
-- ⚠️ v1.2 ML correction - code written, needs training on historical data
-- ⚠️ Backtesting - needs historical feature engineering completed
+- v1.0 baseline complete and tested
+- v1.1 enhanced features - framework built, needs implementation
+- v1.2 ML correction - code written, needs training on historical data
+- Backtesting - needs historical feature engineering completed
 
 ### Data Quirks
 
@@ -215,7 +215,7 @@ All map to nfl_data_py standard: `LAR`, `KC`, `BUF`
 - QBs with multiple teams like "cle, cin" (take first team)
 - File naming: `nfelo_nfl_win_totals_2025_week_11 (1).csv` (duplicate upload?)
 
-## 💡 Key Design Decisions
+## Key Design Decisions
 
 ### Why Deterministic Baseline First?
 
@@ -247,7 +247,7 @@ A single leaked feature (e.g., using same-week EPA instead of past EPA) can:
 
 We validate every feature to prevent this.
 
-## 🤝 Contributing
+## Contributing
 
 This is a personal betting system, but the code structure follows best practices:
 
@@ -257,7 +257,7 @@ This is a personal betting system, but the code structure follows best practices
 - **Type-safe**: Sensible parameter types
 - **DRY**: Single config file, no duplicates
 
-## 📝 Lessons from Previous Attempts
+## Lessons from Previous Attempts
 
 ### What Failed Before (ChatGPT/Gemini):
 
@@ -270,20 +270,20 @@ This is a personal betting system, but the code structure follows best practices
 
 ### What We Fixed:
 
-1. ✅ Single `config.py` file
-2. ✅ Comprehensive team name mapping
-3. ✅ `.shift(1)` in all rolling calculations
-4. ✅ Deterministic, testable code
-5. ✅ Proper module imports
-6. ✅ Fresh execution from source
+1. Single `config.py` file
+2. Comprehensive team name mapping
+3. `.shift(1)` in all rolling calculations
+4. Deterministic, testable code
+5. Proper module imports
+6. Fresh execution from source
 
-## 📚 Resources
+## Resources
 
 - **nfl_data_py**: https://github.com/cooperdff/nfl_data_py
 - **nfelo**: https://www.nfeloapp.com
 - **Substack modelers**: (various independent analysts)
 
-## ⚖️ License
+## License
 
 Personal use only. Not financial advice. Gamble responsibly.
 
