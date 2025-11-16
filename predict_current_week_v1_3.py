@@ -52,12 +52,18 @@ print(f"  Test MAE:    {model_params['test_mae']:.2f} points")
 print("\n[2/5] Loading Week 11 2025 data...")
 
 # Get current week games
-games = nflverse.load_current_week_games()
+games = nflverse.games(season=2025, week=11)
+games = games[games['spread_line'].notna()].copy()
 
 print(f"  Loaded {len(games)} games with Vegas lines")
 
-# Get team ratings
-nfelo_snapshot = data_loader.load_nfelo_snapshot()
+# Get team ratings from nfelo snapshot
+nfelo_snapshot_url = 'https://raw.githubusercontent.com/greerreNFL/nfelo/main/output_data/elo_snapshot.csv'
+nfelo_snapshot = pd.read_csv(nfelo_snapshot_url)
+
+# Handle duplicate teams (take first occurrence)
+nfelo_snapshot = nfelo_snapshot.drop_duplicates(subset=['team'], keep='first')
+
 print(f"  Loaded {len(nfelo_snapshot)} team ratings")
 
 # ============================================================================
@@ -74,9 +80,7 @@ if not epa_file.exists():
 
 epa_df = pd.read_csv(epa_file)
 
-# Normalize team names
-epa_df['team'] = epa_df['team'].map(team_mapping.NFLVERSE_TO_STD).fillna(epa_df['team'])
-
+# EPA data already uses standard team abbreviations
 # Calculate recent form (last 3 games average)
 epa_df = epa_df.sort_values(['team', 'season', 'week'])
 
@@ -115,15 +119,13 @@ matchups = games[['away_team', 'home_team', 'spread_line',
 # CRITICAL FIX: Convert nflverse spread_line to home perspective
 matchups['spread_line'] = -1 * matchups['spread_line']
 
-# Normalize team names
-matchups['away_team'] = matchups['away_team'].map(team_mapping.NFLVERSE_TO_STD).fillna(matchups['away_team'])
-matchups['home_team'] = matchups['home_team'].map(team_mapping.NFLVERSE_TO_STD).fillna(matchups['home_team'])
+# Team names from nflverse already match standard format - no mapping needed
 
 # Merge nfelo ratings
-nfelo_home = nfelo_snapshot[['team', 'starting_nfelo', 'qb_adj']].copy()
+nfelo_home = nfelo_snapshot[['team', 'nfelo', 'qb_adj']].copy()
 nfelo_home.columns = ['home_team', 'home_nfelo', 'home_qb_adj']
 
-nfelo_away = nfelo_snapshot[['team', 'starting_nfelo', 'qb_adj']].copy()
+nfelo_away = nfelo_snapshot[['team', 'nfelo', 'qb_adj']].copy()
 nfelo_away.columns = ['away_team', 'away_nfelo', 'away_qb_adj']
 
 matchups = matchups.merge(nfelo_home, on='home_team', how='left')
@@ -345,11 +347,11 @@ if v1_2_file.exists():
     )
 
     comparison['edge_v1_2'] = comparison['bk_v1_2_spread'] - comparison['spread_line']
-    comparison['edge_diff'] = comparison['edge'] - comparison['edge_v1_2']
+    comparison['edge_diff'] = comparison['edge_v1_3'] - comparison['edge_v1_2']
 
     print("\nHow EPA changed the predictions:\n")
     print(comparison[['away_team', 'home_team', 'spread_line', 'bk_v1_2_spread',
-                      'bk_v1_3_spread', 'edge_v1_2', 'edge', 'edge_diff']].round(2).to_string(index=False))
+                      'bk_v1_3_spread', 'edge_v1_2', 'edge_v1_3', 'edge_diff']].round(2).to_string(index=False))
 
     print(f"\nMean absolute edge change: {comparison['edge_diff'].abs().mean():.2f} points")
 

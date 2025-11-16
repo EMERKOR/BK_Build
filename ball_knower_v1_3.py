@@ -54,8 +54,8 @@ print(f"  Seasons: {epa_df['season'].min()}-{epa_df['season'].max()}")
 print(f"  Teams: {epa_df['team'].nunique()}")
 print(f"  Columns: {epa_df.columns.tolist()}")
 
-# Normalize team names
-epa_df['team'] = epa_df['team'].map(team_mapping.NFLVERSE_TO_STD).fillna(epa_df['team'])
+# EPA data already uses standard team abbreviations (LA, LAC, LV, etc.)
+# No mapping needed
 
 # ============================================================================
 # LOAD NFELO HISTORICAL DATA
@@ -162,11 +162,12 @@ print(f"  v1.3 features: {len(v1_3_features)} (+{len(v1_3_features) - len(v1_2_f
 
 print("\n[5/7] Splitting train/test...")
 
-train_df = df_v1_3[df_v1_3['season'] < 2025].copy()
-test_df = df_v1_3[df_v1_3['season'] == 2025].copy()
+# Use 2024 as test year since EPA data ends in 2024
+train_df = df_v1_3[df_v1_3['season'] < 2024].copy()
+test_df = df_v1_3[df_v1_3['season'] == 2024].copy()
 
-print(f"  Training: {len(train_df):,} games (2013-2024)")
-print(f"  Test:     {len(test_df):,} games (2025)")
+print(f"  Training: {len(train_df):,} games (2013-2023)")
+print(f"  Test:     {len(test_df):,} games (2024)")
 
 X_train = train_df[v1_3_features].values
 y_train = train_df['vegas_line'].values
