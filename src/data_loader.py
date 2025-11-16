@@ -44,25 +44,29 @@ def load_historical_schedules(start_year, end_year):
             - home_score, away_score, spread_line, total_line
             - roof, surface, temp, wind
     """
-    try:
-        import nfl_data_py as nfl
-    except ImportError:
-        raise ImportError(
-            "nfl_data_py not installed. Install with: pip install nfl_data_py"
-        )
+    print(f"Loading schedules {start_year}-{end_year} from nflverse...")
 
-    print(f"Loading schedules {start_year}-{end_year}...")
-    years = list(range(start_year, end_year + 1))
-    schedules = nfl.import_schedules(years)
+    # Use nflverse GitHub raw data URL (works, doesn't get 403)
+    url = "https://raw.githubusercontent.com/nflverse/nfldata/master/data/games.csv"
+
+    schedules = pd.read_csv(url)
+
+    # Filter for requested years
+    schedules = schedules[
+        (schedules['season'] >= start_year) &
+        (schedules['season'] <= end_year)
+    ].copy()
 
     # Keep only regular season and playoffs (drop preseason)
-    schedules = schedules[schedules['game_type'].isin(['REG', 'WC', 'DIV', 'CON', 'SB'])].copy()
+    if 'game_type' in schedules.columns:
+        schedules = schedules[schedules['game_type'].isin(['REG', 'WC', 'DIV', 'CON', 'SB'])].copy()
 
-    # Rename columns for clarity
-    schedules.rename(columns={
-        'home_team': 'team_home',
-        'away_team': 'team_away',
-    }, inplace=True)
+    # Rename columns for clarity if needed
+    if 'home_team' in schedules.columns:
+        schedules.rename(columns={
+            'home_team': 'team_home',
+            'away_team': 'team_away',
+        }, inplace=True)
 
     print(f"✓ Loaded {len(schedules):,} games from {start_year}-{end_year}")
     return schedules

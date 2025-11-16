@@ -1,0 +1,10 @@
+# Ball Knower v1.0 - Regression Calibration
+# Fitted to Week 11 2025 Vegas lines (14 games)
+# MAE: 1.95 pts, RMSE: 2.28 pts, R²: 0.836
+
+nfelo_weight = -0.044703
+hfa = -2.67
+
+# Multi-feature models (for reference):
+# Model 2 (nfelo + epa): MAE=1.95, R²=0.845
+# Model 3 (nfelo + epa + substack): MAE=1.89, R²=0.850
