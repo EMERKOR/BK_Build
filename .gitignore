@@ -48,3 +48,14 @@ Thumbs.db
 *.log
 output/*.png
 output/*.csv
+output/*.json
+!output/ball_knower_v1_2_model.json
+
+# Large data files (raw play-by-play - use aggregated versions instead)
+data/*.parquet
+data/*.zip
+data/*.zip.*
+data/temp_pbp/
+
+# Keep aggregated data
+!data/team_week_epa_*.csv
