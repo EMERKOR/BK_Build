@@ -1,0 +1,8 @@
+# Ball Knower v1.0 Calibrated Weights
+# Fitted to Week 11 2025 Vegas lines (14 games)
+# MAE: 5.00 pts, RMSE: 6.20 pts
+
+nfelo_weight = 0.000000
+epa_weight = 0.000000
+substack_weight = 0.000000
+hfa = 2.5
