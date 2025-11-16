@@ -95,9 +95,10 @@ TEAM_NAME_MAPPING = {
     'Chargers': 'LAC', 'San Diego Chargers': 'LAC',
     'sdg': 'LAC', 'lac': 'LAC',
 
-    # Los Angeles Rams
-    'LAR': 'LAR', 'LA Rams': 'LAR', 'Los Angeles Rams': 'LAR', 'Rams': 'LAR',
-    'ram': 'LAR', 'lar': 'LAR',
+    # Los Angeles Rams (formerly St. Louis)
+    'LAR': 'LAR', 'STL': 'LAR', 'LA Rams': 'LAR', 'Los Angeles Rams': 'LAR',
+    'St. Louis Rams': 'LAR', 'St Louis Rams': 'LAR', 'Rams': 'LAR',
+    'ram': 'LAR', 'lar': 'LAR', 'stl': 'LAR',
 
     # Miami Dolphins
     'MIA': 'MIA', 'Miami': 'MIA', 'Dolphins': 'MIA', 'Miami Dolphins': 'MIA',
@@ -213,7 +214,9 @@ NFELO_TO_STD = {
     'CHI': 'CHI', 'PIT': 'PIT', 'DAL': 'DAL', 'MIN': 'MIN', 'ATL': 'ATL',
     'JAX': 'JAX', 'ARI': 'ARI', 'WAS': 'WAS', 'NYG': 'NYG', 'CIN': 'CIN',
     'NYJ': 'NYJ', 'CLE': 'CLE', 'MIA': 'MIA', 'CAR': 'CAR', 'OAK': 'LV',
-    'NO': 'NO', 'TEN': 'TEN'
+    'NO': 'NO', 'TEN': 'TEN',
+    # Historical relocations
+    'STL': 'LAR', 'SD': 'LAC', 'SDG': 'LAC'
 }
 
 SUBSTACK_NICKNAME_TO_STD = {
