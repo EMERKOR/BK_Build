@@ -1,5 +1,6 @@
 """
 Quick test script to verify data loading works with our actual files.
+Updated for Phase 3: Uses unified loaders from ball_knower.io
 """
 
 import sys
@@ -8,7 +9,8 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src import config, data_loader, team_mapping
+from src import config, team_mapping
+from ball_knower.io import loaders
 
 def test_config():
     """Test configuration."""
@@ -50,38 +52,45 @@ def test_team_normalization():
 
 
 def test_data_loading():
-    """Test loading actual data files."""
+    """Test loading actual data files using unified loaders."""
     print("="*60)
-    print("TESTING DATA LOADING")
+    print("TESTING DATA LOADING (Unified Loaders)")
     print("="*60 + "\n")
 
     # Test loading nfelo power ratings
-    nfelo_power = data_loader.load_nfelo_power_ratings()
+    nfelo_power = loaders.load_power_ratings('nfelo', config.CURRENT_SEASON, config.CURRENT_WEEK, './data')
+    assert nfelo_power is not None, "Failed to load nfelo power ratings"
     assert len(nfelo_power) == 32, f"Expected 32 teams, got {len(nfelo_power)}"
     assert 'team' in nfelo_power.columns, "Missing 'team' column"
     print(f"✓ nfelo power ratings: {len(nfelo_power)} teams")
     print(f"  Columns: {list(nfelo_power.columns[:5])}...")
 
     # Test loading nfelo EPA tiers
-    nfelo_epa = data_loader.load_nfelo_epa_tiers()
+    nfelo_epa = loaders.load_epa_tiers('nfelo', config.CURRENT_SEASON, config.CURRENT_WEEK, './data')
+    assert nfelo_epa is not None, "Failed to load nfelo EPA tiers"
     assert len(nfelo_epa) == 32, f"Expected 32 teams, got {len(nfelo_epa)}"
     assert 'epa_off' in nfelo_epa.columns, "Missing 'epa_off' column"
     assert 'epa_def' in nfelo_epa.columns, "Missing 'epa_def' column"
     print(f"✓ nfelo EPA tiers: {len(nfelo_epa)} teams")
 
     # Test loading Substack power ratings
-    substack_power = data_loader.load_substack_power_ratings()
+    substack_power = loaders.load_power_ratings('substack', config.CURRENT_SEASON, config.CURRENT_WEEK, './data')
+    assert substack_power is not None, "Failed to load substack power ratings"
     assert len(substack_power) >= 30, f"Expected ~32 teams, got {len(substack_power)}"
     assert 'team' in substack_power.columns, "Missing 'team' column"
     print(f"✓ Substack power ratings: {len(substack_power)} teams")
 
     # Test loading Substack weekly projections
-    substack_weekly = data_loader.load_substack_weekly_projections()
+    substack_weekly = loaders.load_weekly_projections_ppg('substack', config.CURRENT_SEASON, config.CURRENT_WEEK, './data')
+    assert substack_weekly is not None, "Failed to load substack weekly projections"
     assert len(substack_weekly) > 0, "No games in weekly projections"
     print(f"✓ Substack weekly projections: {len(substack_weekly)} games")
 
-    # Test merged ratings
-    merged = data_loader.merge_current_week_ratings()
+    # Test load_all_sources and merged ratings
+    data = loaders.load_all_sources(week=config.CURRENT_WEEK, season=config.CURRENT_SEASON, data_dir='./data')
+    assert 'merged_ratings' in data, "Missing merged_ratings in data"
+
+    merged = data['merged_ratings']
     assert len(merged) == 32, f"Expected 32 teams in merged, got {len(merged)}"
     assert 'nfelo' in merged.columns, "Missing nfelo in merged"
     assert 'epa_off' in merged.columns, "Missing epa_off in merged"

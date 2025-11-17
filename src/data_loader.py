@@ -1,7 +1,11 @@
 """
 Data Loading Module
 
-Handles loading and initial cleaning of all data sources:
+⚠️ DEPRECATED: This module is deprecated as of Phase 3.
+⚠️ New code should use: from ball_knower.io import loaders
+⚠️ See docs/DATA_MIGRATION_SUMMARY.md for migration guide.
+
+This module handles loading and initial cleaning of all data sources:
 - nfl_data_py historical data
 - nfelo ratings and stats
 - Substack ratings and projections
@@ -9,10 +13,18 @@ Handles loading and initial cleaning of all data sources:
 
 All data is normalized to use standard team abbreviations.
 
-COMPATIBILITY LAYER (Phase 2):
-This module now forwards calls to the new ball_knower.io.loaders module
-when available. Legacy functions are maintained for backward compatibility
-but will issue deprecation warnings.
+COMPATIBILITY LAYER (Phase 2 & 3):
+This module forwards calls to the new ball_knower.io.loaders module when available.
+Legacy functions are maintained for backward compatibility but will issue deprecation warnings.
+
+Migration Example:
+    OLD (deprecated):
+        from src import data_loader
+        data = data_loader.load_all_current_week_data()
+
+    NEW (recommended):
+        from ball_knower.io import loaders
+        data = loaders.load_all_sources(week=11, season=2025, data_dir='./data')
 """
 
 import pandas as pd

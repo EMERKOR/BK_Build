@@ -1,6 +1,6 @@
 """
 Ball Knower Demo Script
-Run Week 11 predictions
+Run Week 11 predictions using unified data loaders (Phase 3)
 """
 
 import sys
@@ -13,7 +13,8 @@ project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
 # Import Ball Knower modules
-from src import config, team_mapping, data_loader, models
+from src import config, team_mapping, models
+from ball_knower.io import loaders
 
 # Display settings
 pd.set_option('display.max_columns', None)
@@ -26,18 +27,18 @@ print("="*80)
 
 # Section 1: Load data
 print("\n[1/4] Loading Week 11 data...")
-data = data_loader.load_all_current_week_data()
+data = loaders.load_all_sources(week=config.CURRENT_WEEK, season=config.CURRENT_SEASON, data_dir='./data')
 
 # Section 2: Merge team ratings
 print("\n[2/4] Merging team ratings...")
-team_ratings = data_loader.merge_current_week_ratings()
+team_ratings = loaders.merge_team_ratings(data)
 
 print(f"\nTop 10 Teams by nfelo:")
 print(team_ratings[['team', 'nfelo', 'epa_off', 'epa_def', 'Ovr.']].sort_values('nfelo', ascending=False).head(10).to_string(index=False))
 
 # Section 3: Prepare matchups
 print("\n[3/4] Preparing matchups...")
-matchups = data['substack_weekly'][['team_away', 'team_home', 'substack_spread_line']].copy()
+matchups = data['weekly_projections_ppg_substack'][['team_away', 'team_home', 'substack_spread_line']].copy()
 
 # Add home team ratings
 matchups = matchups.merge(
