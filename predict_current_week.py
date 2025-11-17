@@ -48,12 +48,18 @@ print("\n[1/4] Loading Week 11 2025 data...")
 games = nflverse.games(season=2025, week=11)
 games = games[games['spread_line'].notna()].copy()
 
-# Load team ratings from nfelo snapshot
-nfelo_snapshot_url = 'https://raw.githubusercontent.com/greerreNFL/nfelo/main/output_data/elo_snapshot.csv'
-nfelo_ratings = pd.read_csv(nfelo_snapshot_url)
+# Load team ratings from CLEANED nfelo snapshot
+# Use cleaned data to avoid duplicates and team mapping issues
+cleaned_data_path = config.DATA_DIR / 'cache' / 'nfelo_snapshot_cleaned.csv'
 
-# Handle duplicate teams (take first occurrence - likely most recent)
-nfelo_ratings = nfelo_ratings.drop_duplicates(subset=['team'], keep='first')
+if not cleaned_data_path.exists():
+    print("\n🔴 ERROR: Cleaned nfelo data not found!")
+    print(f"Expected: {cleaned_data_path}")
+    print("\nPlease run: python validate_and_clean_data.py")
+    sys.exit(1)
+
+nfelo_ratings = pd.read_csv(cleaned_data_path)
+print(f"✓ Using CLEANED nfelo data (no duplicates, team names corrected)")
 
 print(f"Loaded {len(games)} games with Vegas lines")
 print(f"Loaded {len(nfelo_ratings)} team ratings")
