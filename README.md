@@ -75,15 +75,15 @@ BK_Build/
 ### Current Week Data (Week 11, 2025)
 
 **nfelo files** (`data/current_season/`):
-- `nfelo_power_ratings_2025_week_11.csv` - ELO ratings, QB adjustments
-- `nfelo_epa_tiers_off_def_2025_week_11.csv` - EPA per play (offense/defense)
-- `nfelo_strength_of_schedule_2025_week_11.csv` - SOS metrics
-- `nfelo_qb_rankings_2025_week_11.csv` - QB performance rankings
+- `power_ratings_nfelo_2025_week_11.csv` - ELO ratings, QB adjustments
+- `epa_tiers_nfelo_2025_week_11.csv` - EPA per play (offense/defense)
+- `strength_of_schedule_nfelo_2025_week_11.csv` - SOS metrics
+- `nfelo_qb_rankings_2025_week_11.csv` - QB performance rankings (reference)
 
 **Substack files** (`data/current_season/`):
-- `substack_power_ratings_2025_week_11.csv` - Offensive/Defensive/Overall ratings
-- `substack_qb_epa_2025_week_11.csv` - QB-level EPA data
-- `substack_weekly_proj_ppg_2025_week_11.csv` - Game projections & spreads
+- `power_ratings_substack_2025_week_11.csv` - Offensive/Defensive/Overall ratings
+- `qb_epa_substack_2025_week_11.csv` - QB-level EPA data
+- `weekly_projections_ppg_substack_2025_week_11.csv` - Game projections & spreads
 
 **Reference data** (`data/reference/`):
 - `nfl_head_coaches.csv` - Coach stats and tenure

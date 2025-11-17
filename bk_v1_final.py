@@ -1,4 +1,6 @@
 """
+ARCHIVE FILE — uses legacy loaders by design, do not modify
+
 Ball Knower v1.0 - Final Implementation
 
 Uses real Vegas lines from nflverse + nfelo power ratings.

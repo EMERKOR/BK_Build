@@ -4,11 +4,23 @@ Quick test script to verify data loading works with our actual files.
 
 import sys
 from pathlib import Path
+import importlib.util
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src import config, data_loader, team_mapping
+from ball_knower.io import loaders
+
+# Import config and team_mapping directly (avoid importing models via src/__init__.py)
+_project_root = Path(__file__).parent
+
+_config_spec = importlib.util.spec_from_file_location("config", _project_root / "src" / "config.py")
+config = importlib.util.module_from_spec(_config_spec)
+_config_spec.loader.exec_module(config)
+
+_team_mapping_spec = importlib.util.spec_from_file_location("team_mapping", _project_root / "src" / "team_mapping.py")
+team_mapping = importlib.util.module_from_spec(_team_mapping_spec)
+_team_mapping_spec.loader.exec_module(team_mapping)
 
 def test_config():
     """Test configuration."""
@@ -52,41 +64,56 @@ def test_team_normalization():
 def test_data_loading():
     """Test loading actual data files."""
     print("="*60)
-    print("TESTING DATA LOADING")
+    print("TESTING DATA LOADING (UNIFIED LOADER)")
     print("="*60 + "\n")
 
-    # Test loading nfelo power ratings
-    nfelo_power = data_loader.load_nfelo_power_ratings()
+    # Test loading all sources via unified loader
+    all_data = loaders.load_all_sources(season=2025, week=11)
+
+    # Test nfelo power ratings
+    nfelo_power = all_data['power_ratings_nfelo']
     assert len(nfelo_power) == 32, f"Expected 32 teams, got {len(nfelo_power)}"
     assert 'team' in nfelo_power.columns, "Missing 'team' column"
     print(f"✓ nfelo power ratings: {len(nfelo_power)} teams")
     print(f"  Columns: {list(nfelo_power.columns[:5])}...")
 
-    # Test loading nfelo EPA tiers
-    nfelo_epa = data_loader.load_nfelo_epa_tiers()
+    # Test nfelo EPA tiers
+    nfelo_epa = all_data['epa_tiers_nfelo']
     assert len(nfelo_epa) == 32, f"Expected 32 teams, got {len(nfelo_epa)}"
-    assert 'epa_off' in nfelo_epa.columns, "Missing 'epa_off' column"
-    assert 'epa_def' in nfelo_epa.columns, "Missing 'epa_def' column"
+    assert 'team' in nfelo_epa.columns, "Missing 'team' column"
     print(f"✓ nfelo EPA tiers: {len(nfelo_epa)} teams")
 
-    # Test loading Substack power ratings
-    substack_power = data_loader.load_substack_power_ratings()
+    # Test nfelo strength of schedule
+    nfelo_sos = all_data['strength_of_schedule_nfelo']
+    assert len(nfelo_sos) == 32, f"Expected 32 teams, got {len(nfelo_sos)}"
+    assert 'team' in nfelo_sos.columns, "Missing 'team' column"
+    print(f"✓ nfelo strength of schedule: {len(nfelo_sos)} teams")
+
+    # Test Substack power ratings
+    substack_power = all_data['power_ratings_substack']
     assert len(substack_power) >= 30, f"Expected ~32 teams, got {len(substack_power)}"
     assert 'team' in substack_power.columns, "Missing 'team' column"
     print(f"✓ Substack power ratings: {len(substack_power)} teams")
 
-    # Test loading Substack weekly projections
-    substack_weekly = data_loader.load_substack_weekly_projections()
+    # Test Substack QB EPA
+    substack_qb = all_data['qb_epa_substack']
+    assert len(substack_qb) > 0, "No QBs in QB EPA data"
+    assert 'team' in substack_qb.columns, "Missing 'team' column"
+    print(f"✓ Substack QB EPA: {len(substack_qb)} QBs")
+
+    # Test Substack weekly projections
+    substack_weekly = all_data['weekly_projections_ppg_substack']
     assert len(substack_weekly) > 0, "No games in weekly projections"
-    print(f"✓ Substack weekly projections: {len(substack_weekly)} games")
+    assert 'team' in substack_weekly.columns, "Missing 'team' column"
+    print(f"✓ Substack weekly projections PPG: {len(substack_weekly)} entries")
 
     # Test merged ratings
-    merged = data_loader.merge_current_week_ratings()
-    assert len(merged) == 32, f"Expected 32 teams in merged, got {len(merged)}"
-    assert 'nfelo' in merged.columns, "Missing nfelo in merged"
-    assert 'epa_off' in merged.columns, "Missing epa_off in merged"
-    print(f"✓ Merged ratings: {len(merged)} teams with {len(merged.columns)} features")
-    print(f"  Sample teams: {merged['team'].head(5).tolist()}")
+    merged = all_data['merged_ratings']
+    unique_teams = merged['team'].nunique()
+    assert unique_teams == 32, f"Expected 32 unique teams in merged, got {unique_teams}"
+    assert 'team' in merged.columns, "Missing 'team' in merged"
+    print(f"✓ Merged ratings: {len(merged)} rows with {unique_teams} unique teams and {len(merged.columns)} features")
+    print(f"  Sample teams: {merged['team'].unique()[:5].tolist()}")
 
     print("\n✓ Data loading test passed\n")
 

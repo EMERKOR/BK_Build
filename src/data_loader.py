@@ -1,10 +1,16 @@
 """
 Data Loading Module
 
+DEPRECATED: New code should use `from ball_knower.io import loaders` instead.
+
+This module provides compatibility with legacy code and historical data loading.
+Current-week data loaders now forward to the unified ball_knower.io.loaders API
+when available.
+
 Handles loading and initial cleaning of all data sources:
-- nfl_data_py historical data
-- nfelo ratings and stats
-- Substack ratings and projections
+- nfl_data_py historical data (still handled here)
+- nfelo ratings and stats (forwarded to unified loader)
+- Substack ratings and projections (forwarded to unified loader)
 - Reference data (coaches, AV)
 
 All data is normalized to use standard team abbreviations.
@@ -24,6 +30,13 @@ from .config import (
 )
 
 warnings.filterwarnings('ignore', category=FutureWarning)
+
+# Try to import unified loader module
+try:
+    from ball_knower.io import loaders as new_loaders
+    NEW_LOADERS_AVAILABLE = True
+except ImportError:
+    NEW_LOADERS_AVAILABLE = False
 
 
 # ============================================================================
@@ -105,9 +118,9 @@ def load_historical_team_stats(start_year, end_year, stat_type='weekly'):
 # NFELO LOADERS
 # ============================================================================
 
-def load_nfelo_power_ratings():
+def _legacy_load_nfelo_power_ratings():
     """
-    Load nfelo power ratings (Week 11, 2025).
+    LEGACY: Load nfelo power ratings (Week 11, 2025).
 
     Returns:
         pd.DataFrame: Team power ratings with standardized team column
@@ -124,9 +137,23 @@ def load_nfelo_power_ratings():
     return df
 
 
-def load_nfelo_epa_tiers():
+def load_nfelo_power_ratings():
     """
-    Load nfelo EPA tiers (offensive/defensive EPA per play).
+    Load nfelo power ratings (Week 11, 2025).
+
+    Forwards to unified loader when available, otherwise uses legacy implementation.
+
+    Returns:
+        pd.DataFrame: Team power ratings with standardized team column
+    """
+    if NEW_LOADERS_AVAILABLE:
+        return new_loaders.load_power_ratings("nfelo", CURRENT_SEASON, CURRENT_WEEK)
+    return _legacy_load_nfelo_power_ratings()
+
+
+def _legacy_load_nfelo_epa_tiers():
+    """
+    LEGACY: Load nfelo EPA tiers (offensive/defensive EPA per play).
 
     Returns:
         pd.DataFrame: EPA metrics by team
@@ -147,6 +174,20 @@ def load_nfelo_epa_tiers():
 
     print(f"✓ Loaded nfelo EPA tiers: {len(df)} teams")
     return df
+
+
+def load_nfelo_epa_tiers():
+    """
+    Load nfelo EPA tiers (offensive/defensive EPA per play).
+
+    Forwards to unified loader when available, otherwise uses legacy implementation.
+
+    Returns:
+        pd.DataFrame: EPA metrics by team
+    """
+    if NEW_LOADERS_AVAILABLE:
+        return new_loaders.load_epa_tiers("nfelo", CURRENT_SEASON, CURRENT_WEEK)
+    return _legacy_load_nfelo_epa_tiers()
 
 
 def load_nfelo_qb_rankings():
@@ -170,9 +211,9 @@ def load_nfelo_qb_rankings():
     return df
 
 
-def load_nfelo_sos():
+def _legacy_load_nfelo_sos():
     """
-    Load nfelo strength of schedule data.
+    LEGACY: Load nfelo strength of schedule data.
 
     Returns:
         pd.DataFrame: SOS metrics by team
@@ -185,13 +226,27 @@ def load_nfelo_sos():
     return df
 
 
+def load_nfelo_sos():
+    """
+    Load nfelo strength of schedule data.
+
+    Forwards to unified loader when available, otherwise uses legacy implementation.
+
+    Returns:
+        pd.DataFrame: SOS metrics by team
+    """
+    if NEW_LOADERS_AVAILABLE:
+        return new_loaders.load_strength_of_schedule("nfelo", CURRENT_SEASON, CURRENT_WEEK)
+    return _legacy_load_nfelo_sos()
+
+
 # ============================================================================
 # SUBSTACK LOADERS
 # ============================================================================
 
-def load_substack_power_ratings():
+def _legacy_load_substack_power_ratings():
     """
-    Load Substack power ratings.
+    LEGACY: Load Substack power ratings.
 
     Returns:
         pd.DataFrame: Power ratings with Off/Def/Ovr scores
@@ -219,9 +274,23 @@ def load_substack_power_ratings():
     return df
 
 
-def load_substack_qb_epa():
+def load_substack_power_ratings():
     """
-    Load Substack QB EPA data.
+    Load Substack power ratings.
+
+    Forwards to unified loader when available, otherwise uses legacy implementation.
+
+    Returns:
+        pd.DataFrame: Power ratings with Off/Def/Ovr scores
+    """
+    if NEW_LOADERS_AVAILABLE:
+        return new_loaders.load_power_ratings("substack", CURRENT_SEASON, CURRENT_WEEK)
+    return _legacy_load_substack_power_ratings()
+
+
+def _legacy_load_substack_qb_epa():
+    """
+    LEGACY: Load Substack QB EPA data.
 
     Returns:
         pd.DataFrame: QB-level EPA metrics
@@ -245,9 +314,23 @@ def load_substack_qb_epa():
     return df
 
 
-def load_substack_weekly_projections():
+def load_substack_qb_epa():
     """
-    Load Substack weekly game projections (spreads and win probabilities).
+    Load Substack QB EPA data.
+
+    Forwards to unified loader when available, otherwise uses legacy implementation.
+
+    Returns:
+        pd.DataFrame: QB-level EPA metrics
+    """
+    if NEW_LOADERS_AVAILABLE:
+        return new_loaders.load_qb_epa("substack", CURRENT_SEASON, CURRENT_WEEK)
+    return _legacy_load_substack_qb_epa()
+
+
+def _legacy_load_substack_weekly_projections():
+    """
+    LEGACY: Load Substack weekly game projections (spreads and win probabilities).
 
     Returns:
         pd.DataFrame: Weekly matchups with projected spreads
@@ -284,6 +367,20 @@ def load_substack_weekly_projections():
 
     print(f"✓ Loaded Substack weekly projections: {len(df)} games")
     return df
+
+
+def load_substack_weekly_projections():
+    """
+    Load Substack weekly game projections (spreads and win probabilities).
+
+    Forwards to unified loader when available, otherwise uses legacy implementation.
+
+    Returns:
+        pd.DataFrame: Weekly matchups with projected spreads
+    """
+    if NEW_LOADERS_AVAILABLE:
+        return new_loaders.load_weekly_projections_ppg("substack", CURRENT_SEASON, CURRENT_WEEK)
+    return _legacy_load_substack_weekly_projections()
 
 
 # ============================================================================

@@ -1,4 +1,6 @@
 """
+ARCHIVE FILE — uses legacy loaders by design, do not modify
+
 Calibrate Using Linear Regression
 
 Since we have strong correlations (0.915 for nfelo, 0.886 for substack),
