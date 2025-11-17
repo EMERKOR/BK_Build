@@ -1,4 +1,6 @@
 """
+ARCHIVE FILE — uses legacy loaders by design, do not modify
+
 Ball Knower v1.0 - Production Model
 Calibrated to Week 11 2025 Vegas Lines
 

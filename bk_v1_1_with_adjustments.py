@@ -1,4 +1,6 @@
 """
+ARCHIVE FILE — uses legacy loaders by design, do not modify
+
 Ball Knower v1.1 - Power Ratings + Situational Adjustments
 
 Base Model (v1.0): Power rating differential + HFA

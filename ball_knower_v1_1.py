@@ -1,4 +1,6 @@
 """
+ARCHIVE FILE — uses legacy loaders by design, do not modify
+
 Ball Knower v1.1 - Enhanced Situational Model
 
 Builds on v1.0 by adding:
