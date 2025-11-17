@@ -8,6 +8,10 @@ Model progression:
 
 All models predict spread from HOME TEAM perspective.
 Negative = home favored, Positive = home underdog
+
+IMPORTANT: Models now use CANONICAL FEATURE NAMES (provider-agnostic).
+Use ball_knower.io.feature_maps to convert provider-specific columns
+to canonical names before passing to models.
 """
 
 import pandas as pd
@@ -32,6 +36,12 @@ class DeterministicSpreadModel:
     - Home field advantage
 
     No ML, just weighted combination of known good predictors.
+
+    CANONICAL FEATURES USED:
+    - epa_margin: EPA differential
+    - overall_rating: Overall power rating (nfelo or substack)
+    - offensive_rating: Offensive strength (if available)
+    - defensive_rating: Defensive strength (if available)
     """
 
     def __init__(self, hfa=HOME_FIELD_ADVANTAGE):
@@ -41,9 +51,10 @@ class DeterministicSpreadModel:
         """
         self.hfa = hfa
         self.weights = {
-            'epa_margin': 35,       # EPA differential * 35 ≈ point spread (calibrated default)
-            'nfelo_diff': 0.02,     # nfelo difference * 0.02 ≈ point spread
-            'substack_ovr_diff': 0.5  # Substack overall rating diff
+            'epa_margin': 35,          # EPA differential * 35 ≈ point spread
+            'overall_rating': 0.02,    # Overall rating differential
+            'offensive_rating': 0.3,   # Offensive rating differential
+            'defensive_rating': 0.3,   # Defensive rating differential (higher defense = lower spread)
         }
 
     def predict(self, home_features, away_features):
@@ -51,11 +62,15 @@ class DeterministicSpreadModel:
         Predict spread from home team perspective.
 
         Args:
-            home_features (dict): Home team features
-            away_features (dict): Away team features
+            home_features (dict): Home team canonical features
+            away_features (dict): Away team canonical features
 
         Returns:
             float: Predicted spread (negative = home favored)
+
+        Note: Feature dicts should contain CANONICAL feature names.
+              Use ball_knower.io.feature_maps.get_canonical_features()
+              to convert provider columns to canonical names.
         """
         spread = -self.hfa  # Start with HFA (negative because home is favored)
 
@@ -64,15 +79,21 @@ class DeterministicSpreadModel:
             epa_diff = home_features['epa_margin'] - away_features['epa_margin']
             spread -= epa_diff * self.weights['epa_margin']
 
-        # Add nfelo contribution
-        if 'nfelo' in home_features and 'nfelo' in away_features:
-            nfelo_diff = home_features['nfelo'] - away_features['nfelo']
-            spread -= nfelo_diff * self.weights['nfelo_diff']
+        # Add overall rating contribution
+        if 'overall_rating' in home_features and 'overall_rating' in away_features:
+            rating_diff = home_features['overall_rating'] - away_features['overall_rating']
+            spread -= rating_diff * self.weights['overall_rating']
 
-        # Add Substack contribution
-        if 'Ovr.' in home_features and 'Ovr.' in away_features:
-            ovr_diff = home_features['Ovr.'] - away_features['Ovr.']
-            spread -= ovr_diff * self.weights['substack_ovr_diff']
+        # Add offensive rating contribution (if available)
+        if 'offensive_rating' in home_features and 'offensive_rating' in away_features:
+            off_diff = home_features['offensive_rating'] - away_features['offensive_rating']
+            spread -= off_diff * self.weights['offensive_rating']
+
+        # Add defensive rating contribution (if available)
+        # Higher defensive rating = better defense = favored
+        if 'defensive_rating' in home_features and 'defensive_rating' in away_features:
+            def_diff = home_features['defensive_rating'] - away_features['defensive_rating']
+            spread -= def_diff * self.weights['defensive_rating']
 
         return spread
 
@@ -108,6 +129,11 @@ class EnhancedSpreadModel(DeterministicSpreadModel):
     - Rest advantage
     - Recent form
     - QB adjustments
+
+    ADDITIONAL CANONICAL FEATURES USED:
+    - qb_adjustment: QB quality adjustment
+    - rest_days: Days since last game
+    - win_rate_L5: Win rate over last 5 games (if available)
     """
 
     def __init__(self, hfa=HOME_FIELD_ADVANTAGE):
@@ -117,11 +143,20 @@ class EnhancedSpreadModel(DeterministicSpreadModel):
         self.weights.update({
             'rest_advantage': 0.3,      # Points per day of rest advantage
             'win_rate_L5': 5.0,         # Recent win rate impact
-            'qb_adj_diff': 0.1,         # QB adjustment differential
+            'qb_adjustment': 0.1,       # QB adjustment differential (canonical name)
         })
 
     def predict(self, home_features, away_features):
-        """Predict with structural features."""
+        """
+        Predict with structural features.
+
+        Args:
+            home_features (dict): Home team canonical features
+            away_features (dict): Away team canonical features
+
+        Returns:
+            float: Predicted spread with structural adjustments
+        """
         # Start with base v1.0 prediction
         spread = super().predict(home_features, away_features)
 
@@ -135,10 +170,10 @@ class EnhancedSpreadModel(DeterministicSpreadModel):
             form_diff = home_features['win_rate_L5'] - away_features['win_rate_L5']
             spread -= form_diff * self.weights['win_rate_L5']
 
-        # Add QB adjustment
-        if 'QB Adj' in home_features and 'QB Adj' in away_features:
-            qb_diff = home_features['QB Adj'] - away_features['QB Adj']
-            spread -= qb_diff * self.weights['qb_adj_diff']
+        # Add QB adjustment (now using canonical name)
+        if 'qb_adjustment' in home_features and 'qb_adjustment' in away_features:
+            qb_diff = home_features['qb_adjustment'] - away_features['qb_adjustment']
+            spread -= qb_diff * self.weights['qb_adjustment']
 
         return spread
 

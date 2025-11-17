@@ -11,85 +11,79 @@ project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
 from src.nflverse_data import nflverse
-from ball_knower.io import loaders
+from ball_knower.io import loaders, feature_maps
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.width', 200)
 
 print("\n" + "="*80)
-print("DATA INVESTIGATION")
+print("DATA INVESTIGATION (Using Canonical Features)")
 print("="*80)
 
 # Load data using unified loader
 games = nflverse.games(season=2025, week=11)
 all_data = loaders.load_all_sources(season=2025, week=11)
-team_ratings = all_data['merged_ratings']
+
+# Get canonical feature view (provider-agnostic)
+canonical_ratings = feature_maps.get_canonical_features(
+    all_data['merged_ratings'],
+    features=['overall_rating', 'epa_margin', 'offensive_rating', 'defensive_rating']
+)
 
 games = games[games['spread_line'].notna()].copy()
-matchups = games[['away_team', 'home_team', 'spread_line']].copy()
 
-# Merge all ratings
-matchups = matchups.merge(
-    team_ratings[['team', 'nfelo', 'epa_margin', 'Ovr.']],
-    left_on='home_team',
-    right_on='team',
-    how='left'
-).drop(columns=['team']).rename(columns={
-    'nfelo': 'home_nfelo',
-    'epa_margin': 'home_epa',
-    'Ovr.': 'home_substack'
-})
+# Use feature_maps utility to get differentials
+matchups = feature_maps.get_feature_differential(
+    canonical_ratings,
+    games['home_team'],
+    games['away_team'],
+    features=['overall_rating', 'epa_margin', 'offensive_rating']
+)
 
-matchups = matchups.merge(
-    team_ratings[['team', 'nfelo', 'epa_margin', 'Ovr.']],
-    left_on='away_team',
-    right_on='team',
-    how='left'
-).drop(columns=['team']).rename(columns={
-    'nfelo': 'away_nfelo',
-    'epa_margin': 'away_epa',
-    'Ovr.': 'away_substack'
-})
+# Add spread_line back
+matchups['spread_line'] = games['spread_line'].values
 
-matchups['nfelo_diff'] = matchups['home_nfelo'] - matchups['away_nfelo']
-matchups['epa_diff'] = matchups['home_epa'] - matchups['away_epa']
-matchups['substack_diff'] = matchups['home_substack'] - matchups['away_substack']
-
-print("\nMatchup Data:")
-print(matchups[['away_team', 'home_team', 'spread_line', 'nfelo_diff', 'epa_diff', 'substack_diff']].to_string(index=False))
+print("\nMatchup Data (Canonical Features):")
+print(matchups[['away_team', 'home_team', 'spread_line',
+               'overall_rating_diff', 'epa_margin_diff', 'offensive_rating_diff']].to_string(index=False))
 
 print("\n" + "="*80)
-print("DESCRIPTIVE STATISTICS")
+print("DESCRIPTIVE STATISTICS (Canonical Feature Differentials)")
 print("="*80)
 
 print("\nVegas spread_line:")
 print(matchups['spread_line'].describe())
 
-print("\nnfelo_diff:")
-print(matchups['nfelo_diff'].describe())
+print("\noverall_rating_diff (canonical):")
+print(matchups['overall_rating_diff'].describe())
 
-print("\nepa_diff:")
-print(matchups['epa_diff'].describe())
+print("\nepa_margin_diff (canonical):")
+print(matchups['epa_margin_diff'].describe())
 
-print("\nsubstack_diff:")
-print(matchups['substack_diff'].describe())
+print("\noffensive_rating_diff (canonical):")
+print(matchups['offensive_rating_diff'].describe())
 
 print("\n" + "="*80)
-print("CORRELATIONS WITH VEGAS LINE")
+print("CORRELATIONS WITH VEGAS LINE (Canonical Features)")
 print("="*80)
 
 # Calculate correlations
-print(f"\nCorrelation between spread_line and nfelo_diff: {matchups['spread_line'].corr(matchups['nfelo_diff']):.3f}")
-print(f"Correlation between spread_line and epa_diff: {matchups['spread_line'].corr(matchups['epa_diff']):.3f}")
-print(f"Correlation between spread_line and substack_diff: {matchups['spread_line'].corr(matchups['substack_diff']):.3f}")
+print(f"\nCorrelation between spread_line and overall_rating_diff: {matchups['spread_line'].corr(matchups['overall_rating_diff']):.3f}")
+print(f"Correlation between spread_line and epa_margin_diff: {matchups['spread_line'].corr(matchups['epa_margin_diff']):.3f}")
+print(f"Correlation between spread_line and offensive_rating_diff: {matchups['spread_line'].corr(matchups['offensive_rating_diff']):.3f}")
 
 print("\n" + "="*80)
-print("TEAM RATINGS DISTRIBUTION")
+print("TEAM RATINGS DISTRIBUTION (Canonical Features)")
 print("="*80)
 
-print("\nnfelo ratings:")
-print(team_ratings[['team', 'nfelo']].sort_values('nfelo', ascending=False).head(10).to_string(index=False))
-print(f"\nRange: {team_ratings['nfelo'].min():.1f} to {team_ratings['nfelo'].max():.1f}")
-print(f"Std Dev: {team_ratings['nfelo'].std():.1f}")
+print("\nOverall ratings (canonical):")
+print(canonical_ratings[['team', 'overall_rating']].sort_values('overall_rating', ascending=False).head(10).to_string(index=False))
+print(f"\nRange: {canonical_ratings['overall_rating'].min():.1f} to {canonical_ratings['overall_rating'].max():.1f}")
+print(f"Std Dev: {canonical_ratings['overall_rating'].std():.1f}")
 
-print("\n" + "="*80 + "\n")
+print("\n" + "="*80)
+print("CANONICAL FEATURE AVAILABILITY REPORT")
+print("="*80)
+feature_maps.print_feature_availability(all_data['merged_ratings'])
+
+print("="*80 + "\n")
