@@ -1,8 +1,14 @@
 """
 Configuration Module
 
-Single source of truth for all paths, constants, and settings.
-NO DUPLICATE CONFIGS ALLOWED.
+Global constants and settings for Ball Knower.
+
+IMPORTANT CHANGES (v1.2+):
+- Week/season are now DYNAMIC - pass as function arguments, not from config
+- Data file paths are handled by ball_knower.io.loaders (category-first naming)
+- Provider-specific features replaced by canonical features (ball_knower.io.feature_maps)
+
+This module now contains ONLY truly global constants that don't change with week/season.
 """
 
 import os
@@ -15,7 +21,7 @@ from pathlib import Path
 # Project root directory
 PROJECT_ROOT = Path(__file__).parent.parent
 DATA_DIR = PROJECT_ROOT / 'data'
-CURRENT_SEASON_DIR = DATA_DIR / 'current_season'
+CURRENT_SEASON_DIR = DATA_DIR / 'current_season'  # Default data directory
 REFERENCE_DIR = DATA_DIR / 'reference'
 OUTPUT_DIR = PROJECT_ROOT / 'output'
 SRC_DIR = PROJECT_ROOT / 'src'
@@ -24,44 +30,29 @@ SRC_DIR = PROJECT_ROOT / 'src'
 OUTPUT_DIR.mkdir(exist_ok=True)
 
 # ============================================================================
-# DATA FILES
+# DATA FILES (STATIC REFERENCE DATA ONLY)
 # ============================================================================
 
-# nfelo data files (Week 11, 2025) - UPDATED TO CATEGORY-FIRST NAMING
-NFELO_POWER_RATINGS = CURRENT_SEASON_DIR / 'power_ratings_nfelo_2025_week_11.csv'
-NFELO_SOS = CURRENT_SEASON_DIR / 'strength_of_schedule_nfelo_2025_week_11.csv'
-NFELO_EPA_TIERS = CURRENT_SEASON_DIR / 'epa_tiers_nfelo_2025_week_11.csv'
-NFELO_WIN_TOTALS = CURRENT_SEASON_DIR / 'nfelo_nfl_win_totals_2025_week_11 (1).csv'  # Reference file
-NFELO_RECEIVING = CURRENT_SEASON_DIR / 'nfelo_nfl_receiving_leaders_2025_week_11.csv'  # Reference file
-NFELO_QB_RANKINGS = CURRENT_SEASON_DIR / 'nfelo_qb_rankings_2025_week_11.csv'  # Reference file
+# NOTE: Week-specific data files are now loaded via ball_knower.io.loaders
+# Use loaders.load_all_sources(season=XXXX, week=YY) instead of these constants
 
-# Substack data files (Week 11, 2025) - UPDATED TO CATEGORY-FIRST NAMING
-SUBSTACK_POWER_RATINGS = CURRENT_SEASON_DIR / 'power_ratings_substack_2025_week_11.csv'
-SUBSTACK_QB_EPA = CURRENT_SEASON_DIR / 'qb_epa_substack_2025_week_11.csv'
-SUBSTACK_WEEKLY_PROJ_ELO = CURRENT_SEASON_DIR / 'substack_weekly_proj_elo_2025_week_11.csv'  # Reference file
-SUBSTACK_WEEKLY_PROJ_PPG = CURRENT_SEASON_DIR / 'weekly_projections_ppg_substack_2025_week_11.csv'
-
-# Reference files
+# Reference files (not week-specific)
 NFL_HEAD_COACHES = REFERENCE_DIR / 'nfl_head_coaches.csv'
 NFL_AV_DATA = REFERENCE_DIR / 'nfl_AV_data_through_2024.xlsx'
 
-# Output files
-BACKTEST_RESULTS = OUTPUT_DIR / 'backtest_results.csv'
-WEEKLY_PREDICTIONS = OUTPUT_DIR / 'weekly_predictions.csv'
-MODEL_DIAGNOSTICS = OUTPUT_DIR / 'model_diagnostics.csv'
+# Output file templates (use .format() or f-strings for dynamic naming)
+def get_output_path(filename):
+    """Get output file path. Use this for dynamic output file naming."""
+    return OUTPUT_DIR / filename
 
 # ============================================================================
 # MODEL PARAMETERS
 # ============================================================================
 
-# Historical data range for training
+# Historical data range for training (defaults)
 TRAINING_START_YEAR = 2015
 TRAINING_END_YEAR = 2024
 VALIDATION_YEAR = 2024
-
-# Current season info
-CURRENT_SEASON = 2025
-CURRENT_WEEK = 11
 
 # Rolling window sizes for EPA features (must be leak-free)
 EPA_ROLLING_WINDOWS = [3, 5, 10]  # games
@@ -73,28 +64,9 @@ HOME_FIELD_ADVANTAGE = 2.5
 # FEATURE ENGINEERING
 # ============================================================================
 
-# Columns to use from nfelo
-NFELO_FEATURES = [
-    'nfelo',           # Main ELO rating
-    'QB Adj',          # QB adjustment
-    'Value',           # Overall value
-    'WoW',             # Week over week change
-    'YTD',             # Year to date performance
-]
-
-# Columns to use from Substack
-SUBSTACK_FEATURES = [
-    'Off.',            # Offensive rating
-    'Def.',            # Defensive rating
-    'Ovr.',            # Overall rating
-]
-
-# EPA features to engineer
-EPA_FEATURES = [
-    'epa_off',         # Offensive EPA per play
-    'epa_def',         # Defensive EPA per play
-    'epa_margin',      # EPA differential
-]
+# NOTE: Provider-specific feature lists have been DEPRECATED.
+# Use ball_knower.io.feature_maps for canonical, provider-agnostic features.
+# See ball_knower.io.feature_maps.CANONICAL_FEATURE_MAP for available features.
 
 # ============================================================================
 # SPREAD CONVENTIONS
@@ -140,8 +112,19 @@ def setup_colab_paths():
         print("✗ Google Drive not found. Using local paths.")
 
 
-def get_config_summary():
-    """Print configuration summary for verification."""
+def get_config_summary(season=None, week=None):
+    """
+    Print configuration summary for verification.
+
+    Args:
+        season (int, optional): Season to display in summary
+        week (int, optional): Week to display in summary
+
+    Returns:
+        str: Formatted configuration summary
+    """
+    season_info = f"{season} Week {week}" if season and week else "Dynamic (pass as arguments)"
+
     summary = f"""
     ═══════════════════════════════════════════════════════════
     BALL KNOWER - CONFIGURATION SUMMARY
@@ -152,13 +135,15 @@ def get_config_summary():
     OUTPUT DIRECTORY: {OUTPUT_DIR}
 
     TRAINING PERIOD:  {TRAINING_START_YEAR}-{TRAINING_END_YEAR}
-    CURRENT SEASON:   {CURRENT_SEASON} (Week {CURRENT_WEEK})
+    SEASON/WEEK:      {season_info}
 
-    nfelo FILES:      {len([f for f in Path(CURRENT_SEASON_DIR).glob('nfelo_*.csv')])} found
-    Substack FILES:   {len([f for f in Path(CURRENT_SEASON_DIR).glob('substack_*.csv')])} found
+    DATA FILES:       {len([f for f in Path(CURRENT_SEASON_DIR).glob('*.csv')])} CSV files found
 
     HOME FIELD ADV:   {HOME_FIELD_ADVANTAGE} points
     MIN BET EDGE:     {MIN_BET_EDGE} points
+
+    NOTE: Use ball_knower.io.loaders.load_all_sources(season, week)
+          to load week-specific data dynamically.
 
     ═══════════════════════════════════════════════════════════
     """

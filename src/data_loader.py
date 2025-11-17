@@ -7,6 +7,9 @@ This module provides compatibility with legacy code and historical data loading.
 Current-week data loaders now forward to the unified ball_knower.io.loaders API
 when available.
 
+IMPORTANT: Week and season are now passed as function parameters (no longer from config).
+Archive scripts still use hardcoded paths for reproducibility.
+
 Handles loading and initial cleaning of all data sources:
 - nfl_data_py historical data (still handled here)
 - nfelo ratings and stats (forwarded to unified loader)
@@ -22,14 +25,14 @@ from pathlib import Path
 import warnings
 
 from .team_mapping import normalize_team_name, normalize_team_column
-from .config import (
-    NFELO_POWER_RATINGS, NFELO_SOS, NFELO_EPA_TIERS,
-    NFELO_QB_RANKINGS, SUBSTACK_POWER_RATINGS, SUBSTACK_QB_EPA,
-    SUBSTACK_WEEKLY_PROJ_ELO, SUBSTACK_WEEKLY_PROJ_PPG,
-    NFL_HEAD_COACHES, CURRENT_SEASON, CURRENT_WEEK
-)
+from .config import NFL_HEAD_COACHES, CURRENT_SEASON_DIR
 
 warnings.filterwarnings('ignore', category=FutureWarning)
+
+# Default season and week for legacy compatibility
+# Archive scripts should pass these explicitly
+DEFAULT_SEASON = 2025
+DEFAULT_WEEK = 11
 
 # Try to import unified loader module
 try:
@@ -118,14 +121,20 @@ def load_historical_team_stats(start_year, end_year, stat_type='weekly'):
 # NFELO LOADERS
 # ============================================================================
 
-def _legacy_load_nfelo_power_ratings():
+def _legacy_load_nfelo_power_ratings(season=DEFAULT_SEASON, week=DEFAULT_WEEK):
     """
-    LEGACY: Load nfelo power ratings (Week 11, 2025).
+    LEGACY: Load nfelo power ratings from hardcoded file path.
+
+    Args:
+        season (int): Season year (default: 2025)
+        week (int): Week number (default: 11)
 
     Returns:
         pd.DataFrame: Team power ratings with standardized team column
     """
-    df = pd.read_csv(NFELO_POWER_RATINGS)
+    # Hardcoded path for legacy archive compatibility
+    legacy_path = CURRENT_SEASON_DIR / f'power_ratings_nfelo_{season}_week_{week}.csv'
+    df = pd.read_csv(legacy_path)
 
     # Standardize team names
     df = normalize_team_column(df, column_name='Team', new_column_name='team')
@@ -137,28 +146,37 @@ def _legacy_load_nfelo_power_ratings():
     return df
 
 
-def load_nfelo_power_ratings():
+def load_nfelo_power_ratings(season=DEFAULT_SEASON, week=DEFAULT_WEEK):
     """
-    Load nfelo power ratings (Week 11, 2025).
+    Load nfelo power ratings.
 
     Forwards to unified loader when available, otherwise uses legacy implementation.
+
+    Args:
+        season (int): Season year (default: 2025)
+        week (int): Week number (default: 11)
 
     Returns:
         pd.DataFrame: Team power ratings with standardized team column
     """
     if NEW_LOADERS_AVAILABLE:
-        return new_loaders.load_power_ratings("nfelo", CURRENT_SEASON, CURRENT_WEEK)
-    return _legacy_load_nfelo_power_ratings()
+        return new_loaders.load_power_ratings("nfelo", season, week)
+    return _legacy_load_nfelo_power_ratings(season, week)
 
 
-def _legacy_load_nfelo_epa_tiers():
+def _legacy_load_nfelo_epa_tiers(season=DEFAULT_SEASON, week=DEFAULT_WEEK):
     """
-    LEGACY: Load nfelo EPA tiers (offensive/defensive EPA per play).
+    LEGACY: Load nfelo EPA tiers from hardcoded file path.
+
+    Args:
+        season (int): Season year (default: 2025)
+        week (int): Week number (default: 11)
 
     Returns:
         pd.DataFrame: EPA metrics by team
     """
-    df = pd.read_csv(NFELO_EPA_TIERS)
+    legacy_path = CURRENT_SEASON_DIR / f'epa_tiers_nfelo_{season}_week_{week}.csv'
+    df = pd.read_csv(legacy_path)
 
     # Standardize team names
     df = normalize_team_column(df, column_name='Team', new_column_name='team')
@@ -176,18 +194,22 @@ def _legacy_load_nfelo_epa_tiers():
     return df
 
 
-def load_nfelo_epa_tiers():
+def load_nfelo_epa_tiers(season=DEFAULT_SEASON, week=DEFAULT_WEEK):
     """
     Load nfelo EPA tiers (offensive/defensive EPA per play).
 
     Forwards to unified loader when available, otherwise uses legacy implementation.
 
+    Args:
+        season (int): Season year (default: 2025)
+        week (int): Week number (default: 11)
+
     Returns:
         pd.DataFrame: EPA metrics by team
     """
     if NEW_LOADERS_AVAILABLE:
-        return new_loaders.load_epa_tiers("nfelo", CURRENT_SEASON, CURRENT_WEEK)
-    return _legacy_load_nfelo_epa_tiers()
+        return new_loaders.load_epa_tiers("nfelo", season, week)
+    return _legacy_load_nfelo_epa_tiers(season, week)
 
 
 def load_nfelo_qb_rankings():
@@ -211,14 +233,19 @@ def load_nfelo_qb_rankings():
     return df
 
 
-def _legacy_load_nfelo_sos():
+def _legacy_load_nfelo_sos(season=DEFAULT_SEASON, week=DEFAULT_WEEK):
     """
-    LEGACY: Load nfelo strength of schedule data.
+    LEGACY: Load nfelo strength of schedule data from hardcoded file path.
+
+    Args:
+        season (int): Season year (default: 2025)
+        week (int): Week number (default: 11)
 
     Returns:
         pd.DataFrame: SOS metrics by team
     """
-    df = pd.read_csv(NFELO_SOS)
+    legacy_path = CURRENT_SEASON_DIR / f'strength_of_schedule_nfelo_{season}_week_{week}.csv'
+    df = pd.read_csv(legacy_path)
 
     df = normalize_team_column(df, column_name='Team', new_column_name='team')
 
@@ -226,33 +253,42 @@ def _legacy_load_nfelo_sos():
     return df
 
 
-def load_nfelo_sos():
+def load_nfelo_sos(season=DEFAULT_SEASON, week=DEFAULT_WEEK):
     """
     Load nfelo strength of schedule data.
 
     Forwards to unified loader when available, otherwise uses legacy implementation.
 
+    Args:
+        season (int): Season year (default: 2025)
+        week (int): Week number (default: 11)
+
     Returns:
         pd.DataFrame: SOS metrics by team
     """
     if NEW_LOADERS_AVAILABLE:
-        return new_loaders.load_strength_of_schedule("nfelo", CURRENT_SEASON, CURRENT_WEEK)
-    return _legacy_load_nfelo_sos()
+        return new_loaders.load_strength_of_schedule("nfelo", season, week)
+    return _legacy_load_nfelo_sos(season, week)
 
 
 # ============================================================================
 # SUBSTACK LOADERS
 # ============================================================================
 
-def _legacy_load_substack_power_ratings():
+def _legacy_load_substack_power_ratings(season=DEFAULT_SEASON, week=DEFAULT_WEEK):
     """
-    LEGACY: Load Substack power ratings.
+    LEGACY: Load Substack power ratings from hardcoded file path.
+
+    Args:
+        season (int): Season year (default: 2025)
+        week (int): Week number (default: 11)
 
     Returns:
         pd.DataFrame: Power ratings with Off/Def/Ovr scores
     """
+    legacy_path = CURRENT_SEASON_DIR / f'power_ratings_substack_{season}_week_{week}.csv'
     # File has 2 header rows - skip first, use second as column names
-    df = pd.read_csv(SUBSTACK_POWER_RATINGS, encoding='utf-8-sig', skiprows=1)
+    df = pd.read_csv(legacy_path, encoding='utf-8-sig', skiprows=1)
 
     # Remove weird header artifacts (X.1, X.2, etc.)
     df = df.loc[:, ~df.columns.str.startswith('X.')]
@@ -274,29 +310,38 @@ def _legacy_load_substack_power_ratings():
     return df
 
 
-def load_substack_power_ratings():
+def load_substack_power_ratings(season=DEFAULT_SEASON, week=DEFAULT_WEEK):
     """
     Load Substack power ratings.
 
     Forwards to unified loader when available, otherwise uses legacy implementation.
 
+    Args:
+        season (int): Season year (default: 2025)
+        week (int): Week number (default: 11)
+
     Returns:
         pd.DataFrame: Power ratings with Off/Def/Ovr scores
     """
     if NEW_LOADERS_AVAILABLE:
-        return new_loaders.load_power_ratings("substack", CURRENT_SEASON, CURRENT_WEEK)
-    return _legacy_load_substack_power_ratings()
+        return new_loaders.load_power_ratings("substack", season, week)
+    return _legacy_load_substack_power_ratings(season, week)
 
 
-def _legacy_load_substack_qb_epa():
+def _legacy_load_substack_qb_epa(season=DEFAULT_SEASON, week=DEFAULT_WEEK):
     """
-    LEGACY: Load Substack QB EPA data.
+    LEGACY: Load Substack QB EPA data from hardcoded file path.
+
+    Args:
+        season (int): Season year (default: 2025)
+        week (int): Week number (default: 11)
 
     Returns:
         pd.DataFrame: QB-level EPA metrics
     """
+    legacy_path = CURRENT_SEASON_DIR / f'qb_epa_substack_{season}_week_{week}.csv'
     # File has 2 header rows - skip first, use second as column names
-    df = pd.read_csv(SUBSTACK_QB_EPA, encoding='utf-8-sig', skiprows=1)
+    df = pd.read_csv(legacy_path, encoding='utf-8-sig', skiprows=1)
 
     # Remove weird header artifacts
     df = df.loc[:, ~df.columns.str.startswith('X.')]
@@ -314,29 +359,38 @@ def _legacy_load_substack_qb_epa():
     return df
 
 
-def load_substack_qb_epa():
+def load_substack_qb_epa(season=DEFAULT_SEASON, week=DEFAULT_WEEK):
     """
     Load Substack QB EPA data.
 
     Forwards to unified loader when available, otherwise uses legacy implementation.
 
+    Args:
+        season (int): Season year (default: 2025)
+        week (int): Week number (default: 11)
+
     Returns:
         pd.DataFrame: QB-level EPA metrics
     """
     if NEW_LOADERS_AVAILABLE:
-        return new_loaders.load_qb_epa("substack", CURRENT_SEASON, CURRENT_WEEK)
-    return _legacy_load_substack_qb_epa()
+        return new_loaders.load_qb_epa("substack", season, week)
+    return _legacy_load_substack_qb_epa(season, week)
 
 
-def _legacy_load_substack_weekly_projections():
+def _legacy_load_substack_weekly_projections(season=DEFAULT_SEASON, week=DEFAULT_WEEK):
     """
-    LEGACY: Load Substack weekly game projections (spreads and win probabilities).
+    LEGACY: Load Substack weekly game projections from hardcoded file path.
+
+    Args:
+        season (int): Season year (default: 2025)
+        week (int): Week number (default: 11)
 
     Returns:
         pd.DataFrame: Weekly matchups with projected spreads
     """
+    legacy_path = CURRENT_SEASON_DIR / f'weekly_projections_ppg_substack_{season}_week_{week}.csv'
     # Try PPG file first
-    df = pd.read_csv(SUBSTACK_WEEKLY_PROJ_PPG, encoding='utf-8-sig')
+    df = pd.read_csv(legacy_path, encoding='utf-8-sig')
 
     # Remove weird header artifacts
     df = df.loc[:, ~df.columns.str.startswith('X.')]
@@ -369,18 +423,22 @@ def _legacy_load_substack_weekly_projections():
     return df
 
 
-def load_substack_weekly_projections():
+def load_substack_weekly_projections(season=DEFAULT_SEASON, week=DEFAULT_WEEK):
     """
     Load Substack weekly game projections (spreads and win probabilities).
 
     Forwards to unified loader when available, otherwise uses legacy implementation.
 
+    Args:
+        season (int): Season year (default: 2025)
+        week (int): Week number (default: 11)
+
     Returns:
         pd.DataFrame: Weekly matchups with projected spreads
     """
     if NEW_LOADERS_AVAILABLE:
-        return new_loaders.load_weekly_projections_ppg("substack", CURRENT_SEASON, CURRENT_WEEK)
-    return _legacy_load_substack_weekly_projections()
+        return new_loaders.load_weekly_projections_ppg("substack", season, week)
+    return _legacy_load_substack_weekly_projections(season, week)
 
 
 # ============================================================================
@@ -407,9 +465,16 @@ def load_head_coaches():
 # COMBINED LOADERS
 # ============================================================================
 
-def load_all_current_week_data():
+def load_all_current_week_data(season=DEFAULT_SEASON, week=DEFAULT_WEEK):
     """
-    Load all current week (Week 11, 2025) external ratings data.
+    Load all external ratings data for a given season and week.
+
+    NOTE: This is a DEPRECATED compatibility function.
+    New code should use: ball_knower.io.loaders.load_all_sources(season, week)
+
+    Args:
+        season (int): Season year (default: 2025)
+        week (int): Week number (default: 11)
 
     Returns:
         dict: Dictionary with all loaded DataFrames
@@ -417,37 +482,44 @@ def load_all_current_week_data():
     data = {}
 
     print("\n" + "="*60)
-    print("LOADING CURRENT WEEK DATA (Week 11, 2025)")
+    print(f"LOADING DATA (Season {season}, Week {week})")
     print("="*60 + "\n")
 
     # Load nfelo data
-    data['nfelo_power'] = load_nfelo_power_ratings()
-    data['nfelo_epa'] = load_nfelo_epa_tiers()
-    data['nfelo_sos'] = load_nfelo_sos()
+    data['nfelo_power'] = load_nfelo_power_ratings(season, week)
+    data['nfelo_epa'] = load_nfelo_epa_tiers(season, week)
+    data['nfelo_sos'] = load_nfelo_sos(season, week)
 
     # Load Substack data
-    data['substack_power'] = load_substack_power_ratings()
-    data['substack_qb_epa'] = load_substack_qb_epa()
-    data['substack_weekly'] = load_substack_weekly_projections()
+    data['substack_power'] = load_substack_power_ratings(season, week)
+    data['substack_qb_epa'] = load_substack_qb_epa(season, week)
+    data['substack_weekly'] = load_substack_weekly_projections(season, week)
 
     # Load reference data
     data['coaches'] = load_head_coaches()
 
     print("\n" + "="*60)
-    print("✓ ALL CURRENT WEEK DATA LOADED")
+    print(f"✓ ALL DATA LOADED FOR {season} WEEK {week}")
     print("="*60 + "\n")
 
     return data
 
 
-def merge_current_week_ratings():
+def merge_current_week_ratings(season=DEFAULT_SEASON, week=DEFAULT_WEEK):
     """
-    Merge all current week ratings into a single team-level DataFrame.
+    Merge all ratings for a given season and week into a single team-level DataFrame.
+
+    NOTE: This is a DEPRECATED compatibility function.
+    New code should use: ball_knower.io.loaders.load_all_sources(season, week)['merged_ratings']
+
+    Args:
+        season (int): Season year (default: 2025)
+        week (int): Week number (default: 11)
 
     Returns:
         pd.DataFrame: Combined ratings with all features per team
     """
-    data = load_all_current_week_data()
+    data = load_all_current_week_data(season, week)
 
     # Start with nfelo power ratings as base
     merged = data['nfelo_power'][['team', 'nfelo', 'QB Adj', 'Value']].copy()
@@ -467,5 +539,5 @@ def merge_current_week_ratings():
         suffixes=('', '_substack')
     )
 
-    print(f"✓ Merged current week ratings: {len(merged)} teams")
+    print(f"✓ Merged ratings for {season} Week {week}: {len(merged)} teams")
     return merged
