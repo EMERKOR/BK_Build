@@ -11,7 +11,7 @@ project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
 from src.nflverse_data import nflverse
-from src import data_loader
+from ball_knower.io import loaders
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.width', 200)
@@ -20,9 +20,10 @@ print("\n" + "="*80)
 print("DATA INVESTIGATION")
 print("="*80)
 
-# Load data
+# Load data using unified loader
 games = nflverse.games(season=2025, week=11)
-team_ratings = data_loader.merge_current_week_ratings()
+all_data = loaders.load_all_sources(season=2025, week=11)
+team_ratings = all_data['merged_ratings']
 
 games = games[games['spread_line'].notna()].copy()
 matchups = games[['away_team', 'home_team', 'spread_line']].copy()
