@@ -8,6 +8,11 @@ Handles loading and initial cleaning of all data sources:
 - Reference data (coaches, AV)
 
 All data is normalized to use standard team abbreviations.
+
+COMPATIBILITY LAYER (Phase 2):
+This module now forwards calls to the new ball_knower.io.loaders module
+when available. Legacy functions are maintained for backward compatibility
+but will issue deprecation warnings.
 """
 
 import pandas as pd
@@ -24,6 +29,18 @@ from .config import (
 )
 
 warnings.filterwarnings('ignore', category=FutureWarning)
+
+# ============================================================================
+# PHASE 2: COMPATIBILITY LAYER - NEW UNIFIED LOADERS
+# ============================================================================
+
+# Try to import the new unified loader module
+NEW_LOADERS_AVAILABLE = False
+try:
+    from ball_knower.io import loaders
+    NEW_LOADERS_AVAILABLE = True
+except ImportError:
+    loaders = None
 
 
 # ============================================================================
@@ -314,9 +331,51 @@ def load_all_current_week_data():
     """
     Load all current week (Week 11, 2025) external ratings data.
 
+    DEPRECATED: Use ball_knower.io.loaders.load_all_sources() instead.
+
     Returns:
         dict: Dictionary with all loaded DataFrames
     """
+    # PHASE 2: Forward to new unified loaders if available
+    if NEW_LOADERS_AVAILABLE:
+        warnings.warn(
+            "load_all_current_week_data() is deprecated. "
+            "Use ball_knower.io.loaders.load_all_sources() instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+
+        print("\n" + "="*60)
+        print("LOADING CURRENT WEEK DATA (Week 11, 2025)")
+        print("="*60 + "\n")
+
+        # Forward to new loader
+        new_data = loaders.load_all_sources(
+            week=CURRENT_WEEK,
+            season=CURRENT_SEASON,
+            data_dir='./data'
+        )
+
+        # Map new keys to legacy keys for backward compatibility
+        data = {
+            'nfelo_power': new_data.get('power_ratings_nfelo'),
+            'nfelo_epa': new_data.get('epa_tiers_nfelo'),
+            'nfelo_sos': new_data.get('strength_of_schedule_nfelo'),
+            'substack_power': new_data.get('power_ratings_substack'),
+            'substack_qb_epa': new_data.get('qb_epa_substack'),
+            'substack_weekly': new_data.get('weekly_projections_ppg_substack'),
+        }
+
+        # Legacy function still loads coaches
+        data['coaches'] = load_head_coaches()
+
+        print("\n" + "="*60)
+        print("✓ ALL CURRENT WEEK DATA LOADED")
+        print("="*60 + "\n")
+
+        return data
+
+    # LEGACY: Fall back to old implementation
     data = {}
 
     print("\n" + "="*60)
