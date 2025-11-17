@@ -33,8 +33,11 @@ all_data = loaders.load_all_sources(season=2025, week=11)
 print("\n[2/4] Merging team ratings...")
 team_ratings = all_data['merged_ratings']
 
+# Derive EPA margin from offensive and defensive EPA
+team_ratings['epa_margin'] = team_ratings['EPA/Play'] - team_ratings['EPA/Play Against']
+
 print(f"\nTop 10 Teams by nfelo:")
-print(team_ratings[['team', 'nfelo', 'epa_off', 'epa_def', 'Ovr.']].sort_values('nfelo', ascending=False).head(10).to_string(index=False))
+print(team_ratings[['team', 'nfelo', 'EPA/Play', 'EPA/Play Against', 'Ovr.']].sort_values('nfelo', ascending=False).head(10).to_string(index=False))
 
 # Section 3: Prepare matchups
 print("\n[3/4] Preparing matchups...")
