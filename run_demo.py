@@ -12,8 +12,9 @@ import numpy as np
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
-# Import Ball Knower modules
-from src import config, team_mapping, data_loader, models
+# Import Ball Knower modules - use unified loader
+from ball_knower.io import loaders
+from src import config, team_mapping, models
 
 # Display settings
 pd.set_option('display.max_columns', None)
@@ -26,18 +27,23 @@ print("="*80)
 
 # Section 1: Load data
 print("\n[1/4] Loading Week 11 data...")
-data = data_loader.load_all_current_week_data()
+all_data = loaders.load_all_sources(season=2025, week=11)
 
 # Section 2: Merge team ratings
 print("\n[2/4] Merging team ratings...")
-team_ratings = data_loader.merge_current_week_ratings()
+team_ratings = all_data['merged_ratings']
 
 print(f"\nTop 10 Teams by nfelo:")
 print(team_ratings[['team', 'nfelo', 'epa_off', 'epa_def', 'Ovr.']].sort_values('nfelo', ascending=False).head(10).to_string(index=False))
 
 # Section 3: Prepare matchups
 print("\n[3/4] Preparing matchups...")
-matchups = data['substack_weekly'][['team_away', 'team_home', 'substack_spread_line']].copy()
+# Note: weekly projections contain matchup data, but need to extract team matchups
+# For now, we'll need to adapt this - the unified loader returns raw DataFrames
+# We'll use the legacy data_loader for weekly projections parsing until we enhance the unified loader
+from src import data_loader
+weekly_data = data_loader.load_substack_weekly_projections()
+matchups = weekly_data[['team_away', 'team_home', 'substack_spread_line']].copy()
 
 # Add home team ratings
 matchups = matchups.merge(
