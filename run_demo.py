@@ -27,7 +27,7 @@ print("="*80)
 
 # Section 1: Load data
 print("\n[1/4] Loading Week 11 data...")
-data = loaders.load_all_sources(week=config.CURRENT_WEEK, season=config.CURRENT_SEASON, data_dir='./data')
+data = loaders.load_all_sources(week=config.CURRENT_WEEK, season=config.CURRENT_SEASON, data_dir='./data/current_season')
 
 # Section 2: Merge team ratings
 print("\n[2/4] Merging team ratings...")

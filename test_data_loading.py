@@ -58,7 +58,7 @@ def test_data_loading():
     print("="*60 + "\n")
 
     # Test loading nfelo power ratings
-    nfelo_power = loaders.load_power_ratings('nfelo', config.CURRENT_SEASON, config.CURRENT_WEEK, './data')
+    nfelo_power = loaders.load_power_ratings('nfelo', config.CURRENT_SEASON, config.CURRENT_WEEK, './data/current_season')
     assert nfelo_power is not None, "Failed to load nfelo power ratings"
     assert len(nfelo_power) == 32, f"Expected 32 teams, got {len(nfelo_power)}"
     assert 'team' in nfelo_power.columns, "Missing 'team' column"
@@ -66,7 +66,7 @@ def test_data_loading():
     print(f"  Columns: {list(nfelo_power.columns[:5])}...")
 
     # Test loading nfelo EPA tiers
-    nfelo_epa = loaders.load_epa_tiers('nfelo', config.CURRENT_SEASON, config.CURRENT_WEEK, './data')
+    nfelo_epa = loaders.load_epa_tiers('nfelo', config.CURRENT_SEASON, config.CURRENT_WEEK, './data/current_season')
     assert nfelo_epa is not None, "Failed to load nfelo EPA tiers"
     assert len(nfelo_epa) == 32, f"Expected 32 teams, got {len(nfelo_epa)}"
     assert 'epa_off' in nfelo_epa.columns, "Missing 'epa_off' column"
@@ -74,20 +74,20 @@ def test_data_loading():
     print(f"✓ nfelo EPA tiers: {len(nfelo_epa)} teams")
 
     # Test loading Substack power ratings
-    substack_power = loaders.load_power_ratings('substack', config.CURRENT_SEASON, config.CURRENT_WEEK, './data')
+    substack_power = loaders.load_power_ratings('substack', config.CURRENT_SEASON, config.CURRENT_WEEK, './data/current_season')
     assert substack_power is not None, "Failed to load substack power ratings"
     assert len(substack_power) >= 30, f"Expected ~32 teams, got {len(substack_power)}"
     assert 'team' in substack_power.columns, "Missing 'team' column"
     print(f"✓ Substack power ratings: {len(substack_power)} teams")
 
     # Test loading Substack weekly projections
-    substack_weekly = loaders.load_weekly_projections_ppg('substack', config.CURRENT_SEASON, config.CURRENT_WEEK, './data')
+    substack_weekly = loaders.load_weekly_projections_ppg('substack', config.CURRENT_SEASON, config.CURRENT_WEEK, './data/current_season')
     assert substack_weekly is not None, "Failed to load substack weekly projections"
     assert len(substack_weekly) > 0, "No games in weekly projections"
     print(f"✓ Substack weekly projections: {len(substack_weekly)} games")
 
     # Test load_all_sources and merged ratings
-    data = loaders.load_all_sources(week=config.CURRENT_WEEK, season=config.CURRENT_SEASON, data_dir='./data')
+    data = loaders.load_all_sources(week=config.CURRENT_WEEK, season=config.CURRENT_SEASON, data_dir='./data/current_season')
     assert 'merged_ratings' in data, "Missing merged_ratings in data"
 
     merged = data['merged_ratings']

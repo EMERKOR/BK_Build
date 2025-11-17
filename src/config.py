@@ -27,19 +27,19 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 # DATA FILES
 # ============================================================================
 
-# nfelo data files (Week 11, 2025)
-NFELO_POWER_RATINGS = CURRENT_SEASON_DIR / 'nfelo_power_ratings_2025_week_11.csv'
-NFELO_SOS = CURRENT_SEASON_DIR / 'nfelo_strength_of_schedule_2025_week_11.csv'
-NFELO_EPA_TIERS = CURRENT_SEASON_DIR / 'nfelo_epa_tiers_off_def_2025_week_11.csv'
-NFELO_WIN_TOTALS = CURRENT_SEASON_DIR / 'nfelo_nfl_win_totals_2025_week_11 (1).csv'
-NFELO_RECEIVING = CURRENT_SEASON_DIR / 'nfelo_nfl_receiving_leaders_2025_week_11.csv'
-NFELO_QB_RANKINGS = CURRENT_SEASON_DIR / 'nfelo_qb_rankings_2025_week_11.csv'
+# nfelo data files (Week 11, 2025) - UPDATED TO CATEGORY-FIRST NAMING
+NFELO_POWER_RATINGS = CURRENT_SEASON_DIR / 'power_ratings_nfelo_2025_week_11.csv'
+NFELO_SOS = CURRENT_SEASON_DIR / 'strength_of_schedule_nfelo_2025_week_11.csv'
+NFELO_EPA_TIERS = CURRENT_SEASON_DIR / 'epa_tiers_nfelo_2025_week_11.csv'
+NFELO_WIN_TOTALS = CURRENT_SEASON_DIR / 'nfelo_nfl_win_totals_2025_week_11 (1).csv'  # Not renamed (reference)
+NFELO_RECEIVING = CURRENT_SEASON_DIR / 'nfelo_nfl_receiving_leaders_2025_week_11.csv'  # Not renamed (reference)
+NFELO_QB_RANKINGS = CURRENT_SEASON_DIR / 'nfelo_qb_rankings_2025_week_11.csv'  # Not renamed (reference)
 
-# Substack data files (Week 11, 2025)
-SUBSTACK_POWER_RATINGS = CURRENT_SEASON_DIR / 'substack_power_ratings_2025_week_11.csv'
-SUBSTACK_QB_EPA = CURRENT_SEASON_DIR / 'substack_qb_epa_2025_week_11.csv'
-SUBSTACK_WEEKLY_PROJ_ELO = CURRENT_SEASON_DIR / 'substack_weekly_proj_elo_2025_week_11.csv'
-SUBSTACK_WEEKLY_PROJ_PPG = CURRENT_SEASON_DIR / 'substack_weekly_proj_ppg_2025_week_11.csv'
+# Substack data files (Week 11, 2025) - UPDATED TO CATEGORY-FIRST NAMING
+SUBSTACK_POWER_RATINGS = CURRENT_SEASON_DIR / 'power_ratings_substack_2025_week_11.csv'
+SUBSTACK_QB_EPA = CURRENT_SEASON_DIR / 'qb_epa_substack_2025_week_11.csv'
+SUBSTACK_WEEKLY_PROJ_ELO = CURRENT_SEASON_DIR / 'substack_weekly_proj_elo_2025_week_11.csv'  # Not renamed (reference)
+SUBSTACK_WEEKLY_PROJ_PPG = CURRENT_SEASON_DIR / 'weekly_projections_ppg_substack_2025_week_11.csv'
 
 # Reference files
 NFL_HEAD_COACHES = REFERENCE_DIR / 'nfl_head_coaches.csv'

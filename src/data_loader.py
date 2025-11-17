@@ -365,7 +365,7 @@ def load_all_current_week_data():
         new_data = loaders.load_all_sources(
             week=CURRENT_WEEK,
             season=CURRENT_SEASON,
-            data_dir='./data'
+            data_dir='./data/current_season'
         )
 
         # Map new keys to legacy keys for backward compatibility
