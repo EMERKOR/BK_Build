@@ -1,0 +1,4 @@
+  File "/home/user/BK_Build/train_ball_knower_v2_0.py", line 517
+    """)
+       ^
+SyntaxError: f-string: single '}' is not allowed
