@@ -1,0 +1,70 @@
+
+================================================================================
+DATA VALIDATION REPORT
+================================================================================
+Generated: 2025-11-17 00:00:56
+
+🔴 Critical Issues: 3
+🟡 Warnings: 3
+ℹ️  Info: 4
+
+================================================================================
+CRITICAL ISSUES (Must Fix)
+================================================================================
+
+1. [NFELO_DUPLICATES] Team NE appears 2 times in 2025 Week 11
+   Details: {
+  "team": "NE",
+  "season": 2025,
+  "week": 11,
+  "ratings": [
+    1519.7628869607352,
+    1516.811761815777
+  ]
+}
+
+2. [NFELO_DUPLICATES] Team NYJ appears 2 times in 2025 Week 11
+   Details: {
+  "team": "NYJ",
+  "season": 2025,
+  "week": 11,
+  "ratings": [
+    1396.253281303425,
+    1392.2940413437082
+  ]
+}
+
+3. [TEAM_NAME_MISMATCH] Teams in games but not in nfelo: ['LA', 'LV', 'SD', 'STL']
+   Details: {
+  "teams": [
+    "LA",
+    "LV",
+    "SD",
+    "STL"
+  ]
+}
+
+================================================================================
+WARNINGS (Should Review)
+================================================================================
+
+1. [NFELO_MISSING_TEAMS] Missing 2 current NFL teams: ['LA', 'LV']
+   Details: {
+  "missing_teams": [
+    "LA",
+    "LV"
+  ]
+}
+
+2. [NFELO_CHRONOLOGY] Data is not sorted chronologically by season/week
+
+3. [TEAM_NAME_EXTRA] Teams in nfelo but not in games: ['LAR']
+   Details: {
+  "teams": [
+    "LAR"
+  ]
+}
+
+================================================================================
+❌ DATA QUALITY: POOR - Critical issues must be resolved
+================================================================================

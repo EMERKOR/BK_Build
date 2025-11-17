@@ -1,0 +1,21 @@
+
+================================================================================
+DATA CLEANING SUMMARY
+================================================================================
+Fixes Applied: 14
+
+1. [NFELO_DUPLICATES] Removed 1 duplicate(s) for NE in 2025 Week 11
+2. [NFELO_DUPLICATES] Removed 1 duplicate(s) for NYJ in 2025 Week 11
+3. [NFELO_DUPLICATES] Total duplicates removed: 2
+4. [TEAM_NAMES] Standardized 1 occurrences: OAK -> LV (column: team)
+5. [SORTING] Sorted data chronologically by season/week
+6. [TEAM_NAMES] Standardized 171 occurrences: OAK -> LV (column: away_team)
+7. [TEAM_NAMES] Standardized 90 occurrences: LA -> LAR (column: away_team)
+8. [TEAM_NAMES] Standardized 149 occurrences: SD -> LAC (column: away_team)
+9. [TEAM_NAMES] Standardized 141 occurrences: STL -> LAR (column: away_team)
+10. [TEAM_NAMES] Standardized 173 occurrences: OAK -> LV (column: home_team)
+11. [TEAM_NAMES] Standardized 88 occurrences: LA -> LAR (column: home_team)
+12. [TEAM_NAMES] Standardized 149 occurrences: SD -> LAC (column: home_team)
+13. [TEAM_NAMES] Standardized 141 occurrences: STL -> LAR (column: home_team)
+14. [SORTING] Sorted data chronologically by season/week
+================================================================================
