@@ -1,4 +1,6 @@
 """
+ARCHIVE FILE — uses legacy loaders by design, do not modify
+
 Simple Calibration - Fit nfelo Weight Only
 
 With only 14 games in Week 11, we can't fit 3 parameters.

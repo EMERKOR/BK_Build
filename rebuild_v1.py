@@ -1,4 +1,6 @@
 """
+ARCHIVE FILE — uses legacy loaders by design, do not modify
+
 Ball Knower v1.0 - CORRECT Implementation
 
 Deterministic spread model using power rating differentials.

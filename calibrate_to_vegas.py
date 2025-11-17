@@ -1,4 +1,6 @@
 """
+ARCHIVE FILE — uses legacy loaders by design, do not modify
+
 Calibrate Ball Knower Model to Current Vegas Lines
 
 Simpler approach: Fit model weights to minimize difference from current Vegas lines.

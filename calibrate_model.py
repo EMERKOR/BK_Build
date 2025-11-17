@@ -1,4 +1,6 @@
 """
+ARCHIVE FILE — uses legacy loaders by design, do not modify
+
 Calibrate Ball Knower v1.0 Model Weights
 
 Fits model weights on historical data (2015-2024) to match Vegas lines.
