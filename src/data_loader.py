@@ -23,6 +23,17 @@ from .config import (
     NFL_HEAD_COACHES, CURRENT_SEASON, CURRENT_WEEK
 )
 
+# Try to import new unified loaders
+try:
+    from ball_knower.io import loaders as new_loaders
+    NEW_LOADERS_AVAILABLE = True
+except ImportError:
+    NEW_LOADERS_AVAILABLE = False
+    warnings.warn(
+        "ball_knower.io.loaders not available; using legacy data_loader implementations.",
+        UserWarning,
+    )
+
 warnings.filterwarnings('ignore', category=FutureWarning)
 
 
@@ -105,13 +116,8 @@ def load_historical_team_stats(start_year, end_year, stat_type='weekly'):
 # NFELO LOADERS
 # ============================================================================
 
-def load_nfelo_power_ratings():
-    """
-    Load nfelo power ratings (Week 11, 2025).
-
-    Returns:
-        pd.DataFrame: Team power ratings with standardized team column
-    """
+def _legacy_load_nfelo_power_ratings():
+    """Legacy implementation of load_nfelo_power_ratings."""
     df = pd.read_csv(NFELO_POWER_RATINGS)
 
     # Standardize team names
@@ -124,13 +130,35 @@ def load_nfelo_power_ratings():
     return df
 
 
-def load_nfelo_epa_tiers():
+def load_nfelo_power_ratings():
     """
-    Load nfelo EPA tiers (offensive/defensive EPA per play).
+    Load nfelo power ratings (current week).
+
+    DEPRECATED: Use ball_knower.io.loaders.load_power_ratings('nfelo', season, week) instead.
+    This compatibility wrapper will be removed in a future version.
 
     Returns:
-        pd.DataFrame: EPA metrics by team
+        pd.DataFrame: Team power ratings with standardized team column
     """
+    warnings.warn(
+        "load_nfelo_power_ratings() is deprecated and will be removed in a future version. "
+        "Use ball_knower.io.loaders.load_power_ratings('nfelo', season, week) instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
+    if NEW_LOADERS_AVAILABLE:
+        return new_loaders.load_power_ratings(
+            provider="nfelo",
+            season=CURRENT_SEASON,
+            week=CURRENT_WEEK,
+        )
+
+    return _legacy_load_nfelo_power_ratings()
+
+
+def _legacy_load_nfelo_epa_tiers():
+    """Legacy implementation of load_nfelo_epa_tiers."""
     df = pd.read_csv(NFELO_EPA_TIERS)
 
     # Standardize team names
@@ -149,13 +177,35 @@ def load_nfelo_epa_tiers():
     return df
 
 
-def load_nfelo_qb_rankings():
+def load_nfelo_epa_tiers():
     """
-    Load nfelo QB rankings.
+    Load nfelo EPA tiers (offensive/defensive EPA per play).
+
+    DEPRECATED: Use ball_knower.io.loaders.load_epa_tiers('nfelo', season, week) instead.
+    This compatibility wrapper will be removed in a future version.
 
     Returns:
-        pd.DataFrame: QB rankings by team
+        pd.DataFrame: EPA metrics by team
     """
+    warnings.warn(
+        "load_nfelo_epa_tiers() is deprecated and will be removed in a future version. "
+        "Use ball_knower.io.loaders.load_epa_tiers('nfelo', season, week) instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
+    if NEW_LOADERS_AVAILABLE:
+        return new_loaders.load_epa_tiers(
+            provider="nfelo",
+            season=CURRENT_SEASON,
+            week=CURRENT_WEEK,
+        )
+
+    return _legacy_load_nfelo_epa_tiers()
+
+
+def _legacy_load_nfelo_qb_rankings():
+    """Legacy implementation of load_nfelo_qb_rankings."""
     df = pd.read_csv(NFELO_QB_RANKINGS)
 
     # Check if Team column exists
@@ -170,13 +220,35 @@ def load_nfelo_qb_rankings():
     return df
 
 
-def load_nfelo_sos():
+def load_nfelo_qb_rankings():
     """
-    Load nfelo strength of schedule data.
+    Load nfelo QB rankings.
+
+    DEPRECATED: Use ball_knower.io.loaders.load_qb_rankings('nfelo', season, week) instead.
+    This compatibility wrapper will be removed in a future version.
 
     Returns:
-        pd.DataFrame: SOS metrics by team
+        pd.DataFrame: QB rankings by team
     """
+    warnings.warn(
+        "load_nfelo_qb_rankings() is deprecated and will be removed in a future version. "
+        "Use ball_knower.io.loaders.load_qb_rankings('nfelo', season, week) instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
+    if NEW_LOADERS_AVAILABLE:
+        return new_loaders.load_qb_rankings(
+            provider="nfelo",
+            season=CURRENT_SEASON,
+            week=CURRENT_WEEK,
+        )
+
+    return _legacy_load_nfelo_qb_rankings()
+
+
+def _legacy_load_nfelo_sos():
+    """Legacy implementation of load_nfelo_sos."""
     df = pd.read_csv(NFELO_SOS)
 
     df = normalize_team_column(df, column_name='Team', new_column_name='team')
@@ -185,17 +257,39 @@ def load_nfelo_sos():
     return df
 
 
+def load_nfelo_sos():
+    """
+    Load nfelo strength of schedule data.
+
+    DEPRECATED: Use ball_knower.io.loaders.load_strength_of_schedule('nfelo', season, week) instead.
+    This compatibility wrapper will be removed in a future version.
+
+    Returns:
+        pd.DataFrame: SOS metrics by team
+    """
+    warnings.warn(
+        "load_nfelo_sos() is deprecated and will be removed in a future version. "
+        "Use ball_knower.io.loaders.load_strength_of_schedule('nfelo', season, week) instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
+    if NEW_LOADERS_AVAILABLE:
+        return new_loaders.load_strength_of_schedule(
+            provider="nfelo",
+            season=CURRENT_SEASON,
+            week=CURRENT_WEEK,
+        )
+
+    return _legacy_load_nfelo_sos()
+
+
 # ============================================================================
 # SUBSTACK LOADERS
 # ============================================================================
 
-def load_substack_power_ratings():
-    """
-    Load Substack power ratings.
-
-    Returns:
-        pd.DataFrame: Power ratings with Off/Def/Ovr scores
-    """
+def _legacy_load_substack_power_ratings():
+    """Legacy implementation of load_substack_power_ratings."""
     # File has 2 header rows - skip first, use second as column names
     df = pd.read_csv(SUBSTACK_POWER_RATINGS, encoding='utf-8-sig', skiprows=1)
 
@@ -219,13 +313,35 @@ def load_substack_power_ratings():
     return df
 
 
-def load_substack_qb_epa():
+def load_substack_power_ratings():
     """
-    Load Substack QB EPA data.
+    Load Substack power ratings.
+
+    DEPRECATED: Use ball_knower.io.loaders.load_power_ratings('substack', season, week) instead.
+    This compatibility wrapper will be removed in a future version.
 
     Returns:
-        pd.DataFrame: QB-level EPA metrics
+        pd.DataFrame: Power ratings with Off/Def/Ovr scores
     """
+    warnings.warn(
+        "load_substack_power_ratings() is deprecated and will be removed in a future version. "
+        "Use ball_knower.io.loaders.load_power_ratings('substack', season, week) instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
+    if NEW_LOADERS_AVAILABLE:
+        return new_loaders.load_power_ratings(
+            provider="substack",
+            season=CURRENT_SEASON,
+            week=CURRENT_WEEK,
+        )
+
+    return _legacy_load_substack_power_ratings()
+
+
+def _legacy_load_substack_qb_epa():
+    """Legacy implementation of load_substack_qb_epa."""
     # File has 2 header rows - skip first, use second as column names
     df = pd.read_csv(SUBSTACK_QB_EPA, encoding='utf-8-sig', skiprows=1)
 
@@ -245,13 +361,35 @@ def load_substack_qb_epa():
     return df
 
 
-def load_substack_weekly_projections():
+def load_substack_qb_epa():
     """
-    Load Substack weekly game projections (spreads and win probabilities).
+    Load Substack QB EPA data.
+
+    DEPRECATED: Use ball_knower.io.loaders.load_qb_epa('substack', season, week) instead.
+    This compatibility wrapper will be removed in a future version.
 
     Returns:
-        pd.DataFrame: Weekly matchups with projected spreads
+        pd.DataFrame: QB-level EPA metrics
     """
+    warnings.warn(
+        "load_substack_qb_epa() is deprecated and will be removed in a future version. "
+        "Use ball_knower.io.loaders.load_qb_epa('substack', season, week) instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
+    if NEW_LOADERS_AVAILABLE:
+        return new_loaders.load_qb_epa(
+            provider="substack",
+            season=CURRENT_SEASON,
+            week=CURRENT_WEEK,
+        )
+
+    return _legacy_load_substack_qb_epa()
+
+
+def _legacy_load_substack_weekly_projections():
+    """Legacy implementation of load_substack_weekly_projections."""
     # Try PPG file first
     df = pd.read_csv(SUBSTACK_WEEKLY_PROJ_PPG, encoding='utf-8-sig')
 
@@ -286,6 +424,33 @@ def load_substack_weekly_projections():
     return df
 
 
+def load_substack_weekly_projections():
+    """
+    Load Substack weekly game projections (spreads and win probabilities).
+
+    DEPRECATED: Use ball_knower.io.loaders.load_weekly_projections_ppg('substack', season, week) instead.
+    This compatibility wrapper will be removed in a future version.
+
+    Returns:
+        pd.DataFrame: Weekly matchups with projected spreads
+    """
+    warnings.warn(
+        "load_substack_weekly_projections() is deprecated and will be removed in a future version. "
+        "Use ball_knower.io.loaders.load_weekly_projections_ppg('substack', season, week) instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
+    if NEW_LOADERS_AVAILABLE:
+        return new_loaders.load_weekly_projections_ppg(
+            provider="substack",
+            season=CURRENT_SEASON,
+            week=CURRENT_WEEK,
+        )
+
+    return _legacy_load_substack_weekly_projections()
+
+
 # ============================================================================
 # REFERENCE DATA LOADERS
 # ============================================================================
@@ -310,13 +475,8 @@ def load_head_coaches():
 # COMBINED LOADERS
 # ============================================================================
 
-def load_all_current_week_data():
-    """
-    Load all current week (Week 11, 2025) external ratings data.
-
-    Returns:
-        dict: Dictionary with all loaded DataFrames
-    """
+def _legacy_load_all_current_week_data():
+    """Legacy implementation of load_all_current_week_data."""
     data = {}
 
     print("\n" + "="*60)
@@ -324,14 +484,14 @@ def load_all_current_week_data():
     print("="*60 + "\n")
 
     # Load nfelo data
-    data['nfelo_power'] = load_nfelo_power_ratings()
-    data['nfelo_epa'] = load_nfelo_epa_tiers()
-    data['nfelo_sos'] = load_nfelo_sos()
+    data['nfelo_power'] = _legacy_load_nfelo_power_ratings()
+    data['nfelo_epa'] = _legacy_load_nfelo_epa_tiers()
+    data['nfelo_sos'] = _legacy_load_nfelo_sos()
 
     # Load Substack data
-    data['substack_power'] = load_substack_power_ratings()
-    data['substack_qb_epa'] = load_substack_qb_epa()
-    data['substack_weekly'] = load_substack_weekly_projections()
+    data['substack_power'] = _legacy_load_substack_power_ratings()
+    data['substack_qb_epa'] = _legacy_load_substack_qb_epa()
+    data['substack_weekly'] = _legacy_load_substack_weekly_projections()
 
     # Load reference data
     data['coaches'] = load_head_coaches()
@@ -343,14 +503,49 @@ def load_all_current_week_data():
     return data
 
 
-def merge_current_week_ratings():
+def load_all_current_week_data():
     """
-    Merge all current week ratings into a single team-level DataFrame.
+    Load all current week external ratings data.
+
+    DEPRECATED: Use ball_knower.io.loaders.load_all_sources(week, season) instead.
+    This compatibility wrapper will be removed in a future version.
 
     Returns:
-        pd.DataFrame: Combined ratings with all features per team
+        dict: Dictionary with all loaded DataFrames (keys differ from new loaders)
     """
-    data = load_all_current_week_data()
+    warnings.warn(
+        "load_all_current_week_data() is deprecated and will be removed in a future version. "
+        "Use ball_knower.io.loaders.load_all_sources(week, season) instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
+    if NEW_LOADERS_AVAILABLE:
+        # Load data using new loaders
+        new_data = new_loaders.load_all_sources(
+            week=CURRENT_WEEK,
+            season=CURRENT_SEASON,
+        )
+
+        # Map new keys to legacy keys for backward compatibility
+        legacy_data = {
+            'nfelo_power': new_data.get('power_ratings_nfelo'),
+            'nfelo_epa': new_data.get('epa_tiers_nfelo'),
+            'nfelo_sos': new_data.get('strength_of_schedule_nfelo'),
+            'substack_power': new_data.get('power_ratings_substack'),
+            'substack_qb_epa': new_data.get('qb_epa_substack'),
+            'substack_weekly': new_data.get('weekly_projections_ppg_substack'),
+            'coaches': load_head_coaches(),  # Still load coaches with legacy function
+        }
+
+        return legacy_data
+
+    return _legacy_load_all_current_week_data()
+
+
+def _legacy_merge_current_week_ratings():
+    """Legacy implementation of merge_current_week_ratings."""
+    data = _legacy_load_all_current_week_data()
 
     # Start with nfelo power ratings as base
     merged = data['nfelo_power'][['team', 'nfelo', 'QB Adj', 'Value']].copy()
@@ -372,3 +567,30 @@ def merge_current_week_ratings():
 
     print(f"✓ Merged current week ratings: {len(merged)} teams")
     return merged
+
+
+def merge_current_week_ratings():
+    """
+    Merge all current week ratings into a single team-level DataFrame.
+
+    DEPRECATED: Use ball_knower.io.loaders.load_all_sources(...)['merged_ratings'] instead.
+    This compatibility wrapper will be removed in a future version.
+
+    Returns:
+        pd.DataFrame: Combined ratings with all features per team
+    """
+    warnings.warn(
+        "merge_current_week_ratings() is deprecated and will be removed in a future version. "
+        'Use ball_knower.io.loaders.load_all_sources(...)["merged_ratings"] instead.',
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
+    if NEW_LOADERS_AVAILABLE:
+        data = new_loaders.load_all_sources(
+            week=CURRENT_WEEK,
+            season=CURRENT_SEASON,
+        )
+        return data["merged_ratings"]
+
+    return _legacy_merge_current_week_ratings()
