@@ -1,0 +1,44 @@
+{
+  "timestamp": "20251118_201315",
+  "n_predictors": 2,
+  "results": [
+    {
+      "predictor": "Vegas",
+      "n_games": 144,
+      "mae": 13.78125,
+      "rmse": 17.302406303427535,
+      "mean_error": -4.086805555555555,
+      "median_error": -4.0,
+      "std_error": 16.812830940682453,
+      "ats_accuracy": 0.3333333333333333,
+      "ats_correct": 48,
+      "mae_spread_0_3": 9.9,
+      "mae_spread_3_7": 12.733870967741936,
+      "mae_spread_7_14": 19.397058823529413,
+      "mae_spread_14_100": 30.0,
+      "mean_edge": NaN,
+      "max_edge": NaN,
+      "beat_vegas_pct": NaN,
+      "beat_vegas_games": NaN
+    },
+    {
+      "predictor": "bk_line",
+      "n_games": 144,
+      "mae": 14.423599744335194,
+      "rmse": 18.115635338574798,
+      "mean_error": -4.600972083344037,
+      "median_error": -3.88851896942593,
+      "std_error": 17.521623772028345,
+      "ats_accuracy": 0.3055555555555556,
+      "ats_correct": 44,
+      "mae_spread_0_3": 8.663236658562255,
+      "mae_spread_3_7": 12.301050646939315,
+      "mae_spread_7_14": 23.74857990308504,
+      "mae_spread_14_100": NaN,
+      "mean_edge": 2.5442301832972354,
+      "max_edge": 7.867703236069019,
+      "beat_vegas_pct": 0.4305555555555556,
+      "beat_vegas_games": 62.0
+    }
+  ]
+}
