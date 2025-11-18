@@ -23,21 +23,35 @@ from ball_knower.v2 import data_config
 
 def load_actual_columns():
     """
-    Load actual column names from all data sources.
+    Load actual column names from all data sources and apply column_name_mapping.
 
     Returns:
-        dict: Mapping of dataset name to list of columns
+        dict: Mapping of dataset name to dict with 'raw' and 'canonical' column lists
     """
     data_dir = project_root / 'data'
     current_season_dir = data_dir / 'current_season'
 
     actual_columns = {}
 
+    def process_columns(dataset_name, raw_columns):
+        """Apply column_name_mapping to raw columns."""
+        canonical_columns = []
+        for col in raw_columns:
+            # Apply mapping if it exists, otherwise keep original
+            canonical_col = data_config.column_name_mapping.get(col, col)
+            canonical_columns.append(canonical_col)
+        return {
+            'raw': raw_columns,
+            'canonical': canonical_columns
+        }
+
     # Historical EPA data
     epa_file = data_dir / 'team_week_epa_2013_2024.csv'
     if epa_file.exists():
         df = pd.read_csv(epa_file, nrows=1)
-        actual_columns['team_week_epa_2013_2024'] = list(df.columns)
+        actual_columns['team_week_epa_2013_2024'] = process_columns(
+            'team_week_epa_2013_2024', list(df.columns)
+        )
         print(f"✓ Loaded {len(df.columns)} columns from team_week_epa_2013_2024.csv")
     else:
         print(f"⚠ Warning: {epa_file} not found")
@@ -46,7 +60,9 @@ def load_actual_columns():
     nfelo_files = list(current_season_dir.glob('power_ratings_nfelo_*.csv'))
     if nfelo_files:
         df = pd.read_csv(nfelo_files[0])
-        actual_columns['power_ratings_nfelo'] = list(df.columns)
+        actual_columns['power_ratings_nfelo'] = process_columns(
+            'power_ratings_nfelo', list(df.columns)
+        )
         print(f"✓ Loaded {len(df.columns)} columns from power_ratings_nfelo")
     else:
         print(f"⚠ Warning: No power_ratings_nfelo files found")
@@ -56,7 +72,9 @@ def load_actual_columns():
     if substack_files:
         # Skip first row (decorative header), use second row as column names
         df = pd.read_csv(substack_files[0], skiprows=[0])
-        actual_columns['power_ratings_substack'] = list(df.columns)
+        actual_columns['power_ratings_substack'] = process_columns(
+            'power_ratings_substack', list(df.columns)
+        )
         print(f"✓ Loaded {len(df.columns)} columns from power_ratings_substack")
     else:
         print(f"⚠ Warning: No power_ratings_substack files found")
@@ -65,28 +83,36 @@ def load_actual_columns():
     epa_tier_files = list(current_season_dir.glob('epa_tiers_nfelo_*.csv'))
     if epa_tier_files:
         df = pd.read_csv(epa_tier_files[0])
-        actual_columns['epa_tiers_nfelo'] = list(df.columns)
+        actual_columns['epa_tiers_nfelo'] = process_columns(
+            'epa_tiers_nfelo', list(df.columns)
+        )
         print(f"✓ Loaded {len(df.columns)} columns from epa_tiers_nfelo")
 
     # nfelo SOS
     sos_files = list(current_season_dir.glob('strength_of_schedule_nfelo_*.csv'))
     if sos_files:
         df = pd.read_csv(sos_files[0])
-        actual_columns['strength_of_schedule_nfelo'] = list(df.columns)
+        actual_columns['strength_of_schedule_nfelo'] = process_columns(
+            'strength_of_schedule_nfelo', list(df.columns)
+        )
         print(f"✓ Loaded {len(df.columns)} columns from strength_of_schedule_nfelo")
 
-    # Substack weekly projections
+    # Substack weekly projections (NO decorative header, first row is real header)
     weekly_files = list(current_season_dir.glob('weekly_projections_ppg_substack_*.csv'))
     if weekly_files:
-        df = pd.read_csv(weekly_files[0], skiprows=[0])
-        actual_columns['weekly_projections_substack'] = list(df.columns)
+        df = pd.read_csv(weekly_files[0])  # Don't skip any rows
+        actual_columns['weekly_projections_substack'] = process_columns(
+            'weekly_projections_substack', list(df.columns)
+        )
         print(f"✓ Loaded {len(df.columns)} columns from weekly_projections_substack")
 
     # Substack QB EPA
     qb_files = list(current_season_dir.glob('qb_epa_substack_*.csv'))
     if qb_files:
         df = pd.read_csv(qb_files[0], skiprows=[0])
-        actual_columns['qb_epa_substack'] = list(df.columns)
+        actual_columns['qb_epa_substack'] = process_columns(
+            'qb_epa_substack', list(df.columns)
+        )
         print(f"✓ Loaded {len(df.columns)} columns from qb_epa_substack")
 
     return actual_columns
@@ -94,15 +120,15 @@ def load_actual_columns():
 
 def verify_feature_coverage(actual_columns):
     """
-    Verify that defined feature tiers cover all actual columns.
+    Verify that defined feature tiers cover all actual columns (after mapping).
 
     Args:
-        actual_columns (dict): Actual columns from data sources
+        actual_columns (dict): Actual columns from data sources (with raw and canonical)
 
     Returns:
         dict: Verification results
     """
-    # Get all defined features
+    # Get all defined features (in tier lists)
     all_defined = set(
         data_config.STRUCTURAL_KEYS +
         data_config.TEAM_STRENGTH_FEATURES +
@@ -111,18 +137,23 @@ def verify_feature_coverage(actual_columns):
         data_config.FORBIDDEN_FEATURES
     )
 
-    # Get all actual columns
+    # Get all actual canonical columns (after mapping)
     all_actual = set()
-    for dataset, columns in actual_columns.items():
-        all_actual.update(columns)
+    for dataset, col_info in actual_columns.items():
+        all_actual.update(col_info['canonical'])
+
+    # Get ignored columns
+    ignored = data_config.ignored_columns
 
     # Find missing and extra features
-    missing_from_config = all_actual - all_defined
+    # Exclude ignored columns from the missing check
+    missing_from_config = all_actual - all_defined - ignored
     extra_in_config = all_defined - all_actual
 
     return {
         'all_defined': all_defined,
         'all_actual': all_actual,
+        'ignored': ignored,
         'missing_from_config': missing_from_config,
         'extra_in_config': extra_in_config,
     }
@@ -187,9 +218,10 @@ def generate_report(actual_columns, verification_results, duplicates):
     # Data source coverage
     report_lines.append("DATA SOURCE COVERAGE")
     report_lines.append("-"*80)
-    for dataset, columns in actual_columns.items():
-        report_lines.append(f"  {dataset:40s}: {len(columns):3d} columns")
+    for dataset, col_info in actual_columns.items():
+        report_lines.append(f"  {dataset:40s}: {len(col_info['canonical']):3d} columns")
     report_lines.append(f"  {'TOTAL UNIQUE COLUMNS':40s}: {len(verification_results['all_actual']):3d}")
+    report_lines.append(f"  {'IGNORED COLUMNS':40s}: {len(verification_results['ignored']):3d}")
     report_lines.append("")
 
     # Tier consistency check
@@ -209,12 +241,24 @@ def generate_report(actual_columns, verification_results, duplicates):
     if verification_results['missing_from_config']:
         report_lines.append(f"  ⚠ WARNING: {len(verification_results['missing_from_config'])} features found in data but not categorized:")
         for feature in sorted(verification_results['missing_from_config']):
-            # Find which dataset(s) contain this feature
-            sources = [ds for ds, cols in actual_columns.items() if feature in cols]
+            # Find which dataset(s) contain this feature (check canonical columns)
+            sources = [ds for ds, col_info in actual_columns.items() if feature in col_info['canonical']]
             report_lines.append(f"    - {feature:40s} (from: {', '.join(sources)})")
     else:
-        report_lines.append("  ✓ PASS: All data columns are categorized")
+        report_lines.append("  ✓ PASS: All data columns are categorized or explicitly ignored")
     report_lines.append("")
+
+    # Ignored columns report
+    if verification_results['ignored']:
+        report_lines.append("IGNORED COLUMNS (explicitly excluded)")
+        report_lines.append("-"*80)
+        report_lines.append(f"  ℹ INFO: {len(verification_results['ignored'])} columns explicitly ignored:")
+        for feature in sorted(verification_results['ignored']):
+            # Find which dataset(s) contain this feature
+            sources = [ds for ds, col_info in actual_columns.items() if feature in col_info['canonical']]
+            if sources:
+                report_lines.append(f"    - {feature:40s} (from: {', '.join(sources)})")
+        report_lines.append("")
 
     # Extra features
     report_lines.append("EXTRA FEATURES (in config but not in data)")
@@ -236,7 +280,7 @@ def generate_report(actual_columns, verification_results, duplicates):
     if forbidden_in_data:
         report_lines.append(f"  ⚠ WARNING: {len(forbidden_in_data)} forbidden features found in data sources:")
         for feature in sorted(forbidden_in_data):
-            sources = [ds for ds, cols in actual_columns.items() if feature in cols]
+            sources = [ds for ds, col_info in actual_columns.items() if feature in col_info['canonical']]
             report_lines.append(f"    - {feature:40s} (from: {', '.join(sources)})")
         report_lines.append("  ACTION REQUIRED: Ensure these features are never used in model training!")
     else:

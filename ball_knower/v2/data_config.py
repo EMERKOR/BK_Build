@@ -24,12 +24,14 @@ STRUCTURAL_KEYS = [
     'week',
     'gameday',
     'game_date',
+    'game_time',
 
     # Team identifiers
     'team',
     'team_home',
     'team_away',
     'opponent',
+    'division',
 
     # Game identifiers
     'game_id',
@@ -87,6 +89,22 @@ TEAM_STRENGTH_FEATURES = [
     'Off.',            # Offensive rating
     'Def.',            # Defensive rating
     'Ovr.',            # Overall rating
+
+    # nfelo defensive metrics (suffixed versions from power_ratings_nfelo)
+    'def_play_efficiency',   # Defensive play efficiency
+    'def_pass_efficiency',   # Defensive pass efficiency
+    'def_rush_efficiency',   # Defensive rush efficiency
+
+    # QB performance metrics (from qb_epa_substack)
+    'qb_plays',              # QB number of plays
+    'qb_value_per_play',     # QB value per play
+    'qb_epa_total',          # QB total EPA
+    'qb_epa_vs_avg',         # QB EPA vs average
+    'qb_epa_vs_replacement', # QB EPA vs replacement
+
+    # Strength of schedule ratings (from strength_of_schedule_nfelo)
+    'sos_original_rating',   # Pre-season SOS rating
+    'sos_current_rating',    # Current SOS rating
 ]
 
 
@@ -111,6 +129,7 @@ MARKET_FEATURES = [
 
     # Team context
     'qb_name',         # Starting QB
+    'qb_age',          # QB age
     'qb_change',       # QB change indicator
     'coach_tenure',    # Head coach tenure
 
@@ -120,6 +139,15 @@ MARKET_FEATURES = [
     'Div%',            # Division win probability
     'Cnf%',            # Conference win probability
     'SB%',             # Super Bowl win probability
+
+    # Win totals and projections
+    'projected_wins',      # Projected season wins (from SOS data)
+    'projected_win_prob',  # Game-specific win probability
+
+    # Strength of schedule context
+    'sos_avg_opp_rating',        # Average opponent rating
+    'sos_avg_opp_rating_past',   # Average past opponent rating
+    'sos_avg_opp_rating_future', # Average future opponent rating
 ]
 
 
@@ -155,6 +183,12 @@ EXPERIMENTAL_FEATURES = [
     # Interaction terms
     'rest_x_elo_diff',       # Rest advantage × ELO differential
     'qb_adj_x_def_epa',      # QB adjustment × defensive EPA
+    'net_play_efficiency',   # Net play efficiency (offense - defense)
+
+    # Ranking features (derived from ratings)
+    'sos_rank',              # Overall SOS rank
+    'sos_rank_past',         # Past games SOS rank
+    'sos_rank_future',       # Future games SOS rank
 ]
 
 
@@ -171,6 +205,7 @@ FORBIDDEN_FEATURES = [
     'moneyline_away',
     'opening_spread',
     'closing_spread',
+    'favorite_with_spread',  # Favorite team with spread (contains line)
 
     # Game outcomes (future information)
     'home_score',
@@ -204,20 +239,98 @@ SAFE_FEATURES = (
 # ============================================================================
 # COLUMN RENAMING MAP
 # ============================================================================
-# Placeholder for standardizing column names across data sources
+# Maps raw column names from data sources to canonical names in tier lists
 # Format: {'source_name': 'canonical_name'}
 
 column_name_mapping = {
-    # nfelo → canonical
+    # ===== Common mappings across all sources =====
     'Team': 'team',
     'Season': 'season',
 
-    # Substack → canonical
-    'Off.': 'substack_off',
-    'Def.': 'substack_def',
-    'Ovr.': 'substack_ovr',
+    # ===== team_week_epa_2013_2024.csv =====
+    # (already uses canonical names, no mapping needed)
 
-    # Add more mappings as sources are integrated
+    # ===== power_ratings_nfelo_*.csv =====
+    'QB Adj': 'QB Adj',    # Keep as-is (in T1)
+    'Value': 'Value',      # Keep as-is (in T1)
+    'WoW': 'WoW',          # Keep as-is (in T1)
+    'YTD': 'YTD',          # Keep as-is (in T1)
+    'Play': 'Play',        # Offensive play efficiency (T1)
+    'Pass': 'Pass',        # Offensive pass efficiency (T1)
+    'Rush': 'Rush',        # Offensive rush efficiency (T1)
+    'Play.1': 'def_play_efficiency',  # Defensive play efficiency
+    'Pass.1': 'def_pass_efficiency',  # Defensive pass efficiency
+    'Rush.1': 'def_rush_efficiency',  # Defensive rush efficiency
+    'Play.2': 'net_play_efficiency',  # Net play efficiency (T3)
+    'For': 'For',          # Keep as-is (in T1)
+    'Against': 'Against',  # Keep as-is (in T1)
+    'Dif': 'Dif',          # Keep as-is (in T1)
+    'Wins': 'Wins',        # Keep as-is (in T1)
+    'Pythag': 'Pythag',    # Keep as-is (in T1)
+    'Elo': 'Elo',          # Keep as-is (in T1)
+    'Film': 'Film',        # Keep as-is (in T1)
+    'nfelo': 'nfelo',      # Keep as-is (in T1)
+
+    # ===== power_ratings_substack_*.csv =====
+    # Second row has real column names (after skipping decorative header)
+    'Div.': 'division',
+    'Off.': 'Off.',        # Keep as-is (in T1)
+    'Def.': 'Def.',        # Keep as-is (in T1)
+    'Ovr.': 'Ovr.',        # Keep as-is (in T1)
+    'Avg. Wins': 'Avg. Wins',  # Keep as-is (in T2)
+    'PO%': 'PO%',          # Keep as-is (in T2)
+    'Div%': 'Div%',        # Keep as-is (in T2)
+    'Cnf%': 'Cnf%',        # Keep as-is (in T2)
+    'SB%': 'SB%',          # Keep as-is (in T2)
+
+    # ===== epa_tiers_nfelo_*.csv =====
+    'EPA/Play': 'off_epa_per_play',      # Maps to existing T1 feature
+    'EPA/Play Against': 'def_epa_per_play',  # Maps to existing T1 feature
+
+    # ===== strength_of_schedule_nfelo_*.csv =====
+    'Original Rating': 'sos_original_rating',
+    'Current Rating': 'sos_current_rating',
+    'Win Total': 'projected_wins',
+    'Total Result': 'sos_result',  # Will be ignored (meta)
+    'Avg. Opp. Rating': 'sos_avg_opp_rating',  # First occurrence
+    'Avg. Opp. Rating.1': 'sos_avg_opp_rating_past',
+    'Avg. Opp. Rating.2': 'sos_avg_opp_rating_future',
+    'Rank': 'sos_rank',    # First occurrence
+    'Rank.1': 'sos_rank_past',
+    'Rank.2': 'sos_rank_future',
+
+    # ===== weekly_projections_ppg_substack_*.csv =====
+    'Date': 'game_date',
+    'Time (ET)': 'game_time',
+    'Matchup': 'matchup',
+    'Favorite': 'favorite_with_spread',  # TX - forbidden
+    'Win Prob.': 'projected_win_prob',
+
+    # ===== qb_epa_substack_*.csv =====
+    # Second row has real column names (after skipping decorative header)
+    'Player': 'qb_name',
+    'Age': 'qb_age',
+    'Tms': 'qb_teams',     # Will be ignored (meta)
+    'Prim.': 'qb_primary_team',  # Will be ignored (meta)
+    'Plays': 'qb_plays',
+    'Val/Pl': 'qb_value_per_play',
+    'EPA': 'qb_epa_total',
+    'vs Avg': 'qb_epa_vs_avg',
+    'vs Rep': 'qb_epa_vs_replacement',
+}
+
+
+# ============================================================================
+# IGNORED COLUMNS
+# ============================================================================
+# Columns that exist in raw data but should be explicitly ignored
+# (metadata, decorative headers, or low-value features)
+
+ignored_columns = {
+    # Metadata columns
+    'sos_result',       # Text description (e.g., "Active")
+    'qb_teams',         # Number of teams QB played for
+    'qb_primary_team',  # Primary team indicator
 }
 
 
@@ -228,37 +341,116 @@ column_name_mapping = {
 # Format: {'dataset_name': {'role': str, 'priority': int, 'columns': list}}
 
 dataset_roles = {
+    # Historical EPA stats (2013-2024)
     'team_week_epa_2013_2024': {
-        'role': 'historical_stats',
+        'role': 'historical_team_stats',
+        'description': 'Historical team EPA metrics by week (2013-2024)',
         'priority': 1,
-        'columns': [
+        'keys': ['season', 'week', 'team'],
+        'expected_columns': [
             'season', 'week', 'team',
             'off_epa_total', 'off_epa_per_play', 'off_success_rate',
             'def_epa_total', 'def_epa_per_play', 'def_success_rate',
             'off_plays', 'off_pass_plays', 'off_rush_plays', 'def_plays'
         ],
         'time_range': (2013, 2024),
+        'update_frequency': 'historical',
     },
 
+    # Current season power ratings from nfelo
     'power_ratings_nfelo': {
-        'role': 'current_ratings',
+        'role': 'current_power_ratings',
+        'description': 'nfelo power ratings for current season',
         'priority': 2,
-        'columns': [
-            'Team', 'Season', 'nfelo', 'QB Adj', 'Value', 'WoW', 'YTD',
-            'Play', 'Pass', 'Rush', 'For', 'Against', 'Dif',
+        'keys': ['season', 'team'],
+        'expected_columns': [
+            'team', 'season', 'nfelo', 'QB Adj', 'Value', 'WoW', 'YTD',
+            'Play', 'Pass', 'Rush', 'def_play_efficiency', 'def_pass_efficiency',
+            'def_rush_efficiency', 'net_play_efficiency', 'For', 'Against', 'Dif',
             'Wins', 'Pythag', 'Elo', 'Film'
         ],
         'time_range': (2025, 2025),
+        'update_frequency': 'weekly',
+        'file_pattern': 'current_season/power_ratings_nfelo_*.csv',
     },
 
+    # Current season power ratings from Substack
     'power_ratings_substack': {
-        'role': 'current_ratings',
+        'role': 'current_power_ratings',
+        'description': 'Substack power ratings and forecasts for current season',
         'priority': 2,
-        'columns': ['Team', 'Off.', 'Def.', 'Ovr.', 'Avg. Wins', 'PO%', 'Div%', 'Cnf%', 'SB%'],
+        'keys': ['team'],
+        'expected_columns': [
+            'team', 'division', 'Off.', 'Def.', 'Ovr.',
+            'Avg. Wins', 'PO%', 'Div%', 'Cnf%', 'SB%'
+        ],
         'time_range': (2025, 2025),
+        'update_frequency': 'weekly',
+        'file_pattern': 'current_season/power_ratings_substack_*.csv',
+        'skip_rows': [0],  # Skip decorative header row
     },
 
-    # Placeholder for additional datasets
+    # EPA tier classifications from nfelo
+    'epa_tiers_nfelo': {
+        'role': 'current_team_stats',
+        'description': 'EPA per play tiers for current season',
+        'priority': 3,
+        'keys': ['season', 'team'],
+        'expected_columns': [
+            'team', 'season', 'off_epa_per_play', 'def_epa_per_play'
+        ],
+        'time_range': (2025, 2025),
+        'update_frequency': 'weekly',
+        'file_pattern': 'current_season/epa_tiers_nfelo_*.csv',
+    },
+
+    # Strength of schedule from nfelo
+    'strength_of_schedule_nfelo': {
+        'role': 'schedule_context',
+        'description': 'Strength of schedule metrics for current season',
+        'priority': 3,
+        'keys': ['season', 'team'],
+        'expected_columns': [
+            'team', 'season', 'sos_original_rating', 'sos_current_rating',
+            'projected_wins', 'sos_avg_opp_rating', 'sos_avg_opp_rating_past',
+            'sos_avg_opp_rating_future', 'sos_rank', 'sos_rank_past', 'sos_rank_future'
+        ],
+        'time_range': (2025, 2025),
+        'update_frequency': 'weekly',
+        'file_pattern': 'current_season/strength_of_schedule_nfelo_*.csv',
+    },
+
+    # Weekly game projections from Substack
+    'weekly_projections_substack': {
+        'role': 'game_projections',
+        'description': 'Weekly game-by-game projections from Substack',
+        'priority': 4,
+        'keys': ['game_date', 'matchup'],
+        'expected_columns': [
+            'game_date', 'game_time', 'matchup',
+            'favorite_with_spread', 'projected_win_prob'
+        ],
+        'time_range': (2025, 2025),
+        'update_frequency': 'weekly',
+        'file_pattern': 'current_season/weekly_projections_ppg_substack_*.csv',
+        # No skip_rows - first row is real header
+    },
+
+    # QB EPA stats from Substack
+    'qb_epa_substack': {
+        'role': 'player_stats',
+        'description': 'QB EPA performance metrics from Substack',
+        'priority': 3,
+        'keys': ['qb_name'],
+        'expected_columns': [
+            'qb_name', 'qb_age', 'qb_plays', 'qb_value_per_play',
+            'qb_epa_total', 'qb_epa_vs_avg', 'qb_epa_vs_replacement'
+        ],
+        'time_range': (2025, 2025),
+        'update_frequency': 'weekly',
+        'file_pattern': 'current_season/qb_epa_substack_*.csv',
+        'skip_rows': [0],  # Skip decorative header row
+    },
 }
 
 
@@ -269,50 +461,477 @@ dataset_roles = {
 # Format: {'column_name': {'dtype': str, 'description': str, 'tier': str}}
 
 canonical_schema = {
-    # T0: Structural Keys
+    # =========================================================================
+    # T0: STRUCTURAL KEYS
+    # =========================================================================
     'season': {
         'dtype': 'int',
         'description': 'NFL season year',
         'tier': 'T0',
-        'required': True,
+        'role': 'id_key',
+        'allow_null': False,
     },
     'week': {
         'dtype': 'int',
         'description': 'Week number (1-18 regular season, 19-22 playoffs)',
         'tier': 'T0',
-        'required': True,
+        'role': 'id_key',
+        'allow_null': False,
     },
     'team': {
         'dtype': 'str',
         'description': 'Team abbreviation (nfl_data_py standard)',
         'tier': 'T0',
-        'required': True,
+        'role': 'id_key',
+        'allow_null': False,
+    },
+    'game_date': {
+        'dtype': 'str',
+        'description': 'Game date (YYYY-MM-DD format)',
+        'tier': 'T0',
+        'role': 'id_key',
+        'allow_null': False,
+    },
+    'game_time': {
+        'dtype': 'str',
+        'description': 'Game time (ET)',
+        'tier': 'T0',
+        'role': 'meta_misc',
+        'allow_null': True,
+    },
+    'matchup': {
+        'dtype': 'str',
+        'description': 'Game matchup description',
+        'tier': 'T0',
+        'role': 'id_key',
+        'allow_null': True,
+    },
+    'division': {
+        'dtype': 'str',
+        'description': 'Team division (e.g., NFCW, AFCE)',
+        'tier': 'T0',
+        'role': 'pre_game_structure',
+        'allow_null': True,
     },
 
-    # T1: Core Features (examples)
+    # =========================================================================
+    # T1: CORE TEAM STRENGTH FEATURES
+    # =========================================================================
+
+    # EPA metrics (from team_week_epa_2013_2024.csv)
+    'off_epa_total': {
+        'dtype': 'float',
+        'description': 'Total offensive EPA',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
     'off_epa_per_play': {
         'dtype': 'float',
         'description': 'Offensive EPA per play',
         'tier': 'T1',
-        'required': False,
-        'source': 'team_week_epa_2013_2024',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'off_success_rate': {
+        'dtype': 'float',
+        'description': 'Offensive success rate',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'def_epa_total': {
+        'dtype': 'float',
+        'description': 'Total defensive EPA',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
     },
     'def_epa_per_play': {
         'dtype': 'float',
         'description': 'Defensive EPA per play',
         'tier': 'T1',
-        'required': False,
-        'source': 'team_week_epa_2013_2024',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
     },
+    'def_success_rate': {
+        'dtype': 'float',
+        'description': 'Defensive success rate',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'off_plays': {
+        'dtype': 'int',
+        'description': 'Number of offensive plays',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'off_pass_plays': {
+        'dtype': 'int',
+        'description': 'Number of offensive pass plays',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'off_rush_plays': {
+        'dtype': 'int',
+        'description': 'Number of offensive rush plays',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'def_plays': {
+        'dtype': 'int',
+        'description': 'Number of defensive plays',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+
+    # nfelo ratings (from power_ratings_nfelo_*.csv)
     'nfelo': {
         'dtype': 'float',
         'description': 'nfelo rating',
         'tier': 'T1',
-        'required': False,
-        'source': 'power_ratings_nfelo',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'QB Adj': {
+        'dtype': 'float',
+        'description': 'QB adjustment to rating',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'Value': {
+        'dtype': 'float',
+        'description': 'Overall value rating',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'WoW': {
+        'dtype': 'float',
+        'description': 'Week-over-week change',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'YTD': {
+        'dtype': 'float',
+        'description': 'Year-to-date performance',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'Play': {
+        'dtype': 'float',
+        'description': 'Overall play efficiency',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'Pass': {
+        'dtype': 'float',
+        'description': 'Pass efficiency',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'Rush': {
+        'dtype': 'float',
+        'description': 'Rush efficiency',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'For': {
+        'dtype': 'float',
+        'description': 'Points for',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'Against': {
+        'dtype': 'float',
+        'description': 'Points against',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'Dif': {
+        'dtype': 'float',
+        'description': 'Point differential',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'Wins': {
+        'dtype': 'int',
+        'description': 'Win count',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'Pythag': {
+        'dtype': 'float',
+        'description': 'Pythagorean wins',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'Elo': {
+        'dtype': 'float',
+        'description': 'Base Elo rating',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'Film': {
+        'dtype': 'float',
+        'description': 'Film grade',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'def_play_efficiency': {
+        'dtype': 'float',
+        'description': 'Defensive play efficiency',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'def_pass_efficiency': {
+        'dtype': 'float',
+        'description': 'Defensive pass efficiency',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'def_rush_efficiency': {
+        'dtype': 'float',
+        'description': 'Defensive rush efficiency',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
     },
 
-    # Add more schema definitions as pipeline develops
+    # Substack ratings (from power_ratings_substack_*.csv)
+    'Off.': {
+        'dtype': 'float',
+        'description': 'Offensive rating',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'Def.': {
+        'dtype': 'float',
+        'description': 'Defensive rating',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'Ovr.': {
+        'dtype': 'float',
+        'description': 'Overall rating',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+
+    # QB performance metrics (from qb_epa_substack)
+    'qb_plays': {
+        'dtype': 'int',
+        'description': 'QB number of plays',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'qb_value_per_play': {
+        'dtype': 'float',
+        'description': 'QB value per play',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'qb_epa_total': {
+        'dtype': 'float',
+        'description': 'QB total EPA',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'qb_epa_vs_avg': {
+        'dtype': 'float',
+        'description': 'QB EPA vs average',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'qb_epa_vs_replacement': {
+        'dtype': 'float',
+        'description': 'QB EPA vs replacement',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+
+    # Strength of schedule ratings (from strength_of_schedule_nfelo)
+    'sos_original_rating': {
+        'dtype': 'float',
+        'description': 'Pre-season SOS rating',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'sos_current_rating': {
+        'dtype': 'float',
+        'description': 'Current SOS rating',
+        'tier': 'T1',
+        'role': 'pre_game_team_strength',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+
+    # =========================================================================
+    # T2: MARKET & SITUATIONAL FEATURES
+    # =========================================================================
+
+    'qb_name': {
+        'dtype': 'str',
+        'description': 'Starting QB name',
+        'tier': 'T2',
+        'role': 'pre_game_structure',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'qb_age': {
+        'dtype': 'int',
+        'description': 'QB age',
+        'tier': 'T2',
+        'role': 'pre_game_structure',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'Avg. Wins': {
+        'dtype': 'float',
+        'description': 'Average projected wins',
+        'tier': 'T2',
+        'role': 'pre_game_market',
+        'allow_null': True,
+        'leakage': 'medium',
+    },
+    'PO%': {
+        'dtype': 'float',
+        'description': 'Playoff probability',
+        'tier': 'T2',
+        'role': 'pre_game_market',
+        'allow_null': True,
+        'leakage': 'medium',
+    },
+    'Div%': {
+        'dtype': 'float',
+        'description': 'Division win probability',
+        'tier': 'T2',
+        'role': 'pre_game_market',
+        'allow_null': True,
+        'leakage': 'medium',
+    },
+    'Cnf%': {
+        'dtype': 'float',
+        'description': 'Conference win probability',
+        'tier': 'T2',
+        'role': 'pre_game_market',
+        'allow_null': True,
+        'leakage': 'medium',
+    },
+    'SB%': {
+        'dtype': 'float',
+        'description': 'Super Bowl win probability',
+        'tier': 'T2',
+        'role': 'pre_game_market',
+        'allow_null': True,
+        'leakage': 'medium',
+    },
+    'projected_wins': {
+        'dtype': 'float',
+        'description': 'Projected season wins',
+        'tier': 'T2',
+        'role': 'pre_game_market',
+        'allow_null': True,
+        'leakage': 'medium',
+    },
+    'projected_win_prob': {
+        'dtype': 'float',
+        'description': 'Game-specific win probability',
+        'tier': 'T2',
+        'role': 'pre_game_market',
+        'allow_null': True,
+        'leakage': 'medium',
+    },
+    'sos_avg_opp_rating': {
+        'dtype': 'float',
+        'description': 'Average opponent rating',
+        'tier': 'T2',
+        'role': 'pre_game_structure',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'sos_avg_opp_rating_past': {
+        'dtype': 'float',
+        'description': 'Average past opponent rating',
+        'tier': 'T2',
+        'role': 'pre_game_structure',
+        'allow_null': True,
+        'leakage': 'low',
+    },
+    'sos_avg_opp_rating_future': {
+        'dtype': 'float',
+        'description': 'Average future opponent rating',
+        'tier': 'T2',
+        'role': 'pre_game_structure',
+        'allow_null': True,
+        'leakage': 'low',
+    },
 }
 
 
