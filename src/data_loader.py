@@ -24,7 +24,8 @@ import warnings
 from .team_mapping import normalize_team_name, normalize_team_column
 from .config import (
     NFELO_POWER_RATINGS, NFELO_SOS, NFELO_EPA_TIERS,
-    NFELO_QB_RANKINGS, SUBSTACK_POWER_RATINGS, SUBSTACK_QB_EPA,
+    NFELO_QB_RANKINGS, NFELO_RECEIVING, NFELO_WIN_TOTALS,
+    SUBSTACK_POWER_RATINGS, SUBSTACK_QB_EPA,
     SUBSTACK_WEEKLY_PROJ_ELO, SUBSTACK_WEEKLY_PROJ_PPG,
     NFL_HEAD_COACHES, CURRENT_SEASON, CURRENT_WEEK
 )
@@ -190,9 +191,9 @@ def load_nfelo_epa_tiers():
     return _legacy_load_nfelo_epa_tiers()
 
 
-def load_nfelo_qb_rankings():
+def _legacy_load_nfelo_qb_rankings():
     """
-    Load nfelo QB rankings.
+    LEGACY: Load nfelo QB rankings.
 
     Returns:
         pd.DataFrame: QB rankings by team
@@ -209,6 +210,20 @@ def load_nfelo_qb_rankings():
 
     print(f"✓ Loaded nfelo QB rankings: {len(df)} records")
     return df
+
+
+def load_nfelo_qb_rankings():
+    """
+    Load nfelo QB rankings.
+
+    Forwards to unified loader when available, otherwise uses legacy implementation.
+
+    Returns:
+        pd.DataFrame: QB rankings by team
+    """
+    if NEW_LOADERS_AVAILABLE:
+        return new_loaders.load_qb_rankings("nfelo", CURRENT_SEASON, CURRENT_WEEK)
+    return _legacy_load_nfelo_qb_rankings()
 
 
 def _legacy_load_nfelo_sos():
@@ -238,6 +253,65 @@ def load_nfelo_sos():
     if NEW_LOADERS_AVAILABLE:
         return new_loaders.load_strength_of_schedule("nfelo", CURRENT_SEASON, CURRENT_WEEK)
     return _legacy_load_nfelo_sos()
+
+
+def _legacy_load_nfelo_receiving_leaders():
+    """
+    LEGACY: Load nfelo receiving leaders.
+
+    Returns:
+        pd.DataFrame: Receiving leader statistics
+    """
+    from .config import NFELO_RECEIVING
+    df = pd.read_csv(NFELO_RECEIVING)
+    print(f"✓ Loaded nfelo receiving leaders: {len(df)} records")
+    return df
+
+
+def load_nfelo_receiving_leaders():
+    """
+    Load nfelo receiving leaders.
+
+    Forwards to unified loader when available, otherwise uses legacy implementation.
+
+    Returns:
+        pd.DataFrame: Receiving leader statistics
+    """
+    if NEW_LOADERS_AVAILABLE:
+        return new_loaders.load_receiving_leaders("nfelo", CURRENT_SEASON, CURRENT_WEEK)
+    return _legacy_load_nfelo_receiving_leaders()
+
+
+def _legacy_load_nfelo_win_totals():
+    """
+    LEGACY: Load nfelo win totals.
+
+    Returns:
+        pd.DataFrame: Season win total projections
+    """
+    from .config import NFELO_WIN_TOTALS
+    df = pd.read_csv(NFELO_WIN_TOTALS)
+
+    # Normalize team column if present
+    if 'Team' in df.columns:
+        df = normalize_team_column(df, column_name='Team', new_column_name='team')
+
+    print(f"✓ Loaded nfelo win totals: {len(df)} records")
+    return df
+
+
+def load_nfelo_win_totals():
+    """
+    Load nfelo win totals.
+
+    Forwards to unified loader when available, otherwise uses legacy implementation.
+
+    Returns:
+        pd.DataFrame: Season win total projections
+    """
+    if NEW_LOADERS_AVAILABLE:
+        return new_loaders.load_win_totals("nfelo", CURRENT_SEASON, CURRENT_WEEK)
+    return _legacy_load_nfelo_win_totals()
 
 
 # ============================================================================
@@ -381,6 +455,37 @@ def load_substack_weekly_projections():
     if NEW_LOADERS_AVAILABLE:
         return new_loaders.load_weekly_projections_ppg("substack", CURRENT_SEASON, CURRENT_WEEK)
     return _legacy_load_substack_weekly_projections()
+
+
+def _legacy_load_substack_weekly_proj_elo():
+    """
+    LEGACY: Load Substack weekly Elo projections.
+
+    Returns:
+        pd.DataFrame: Weekly Elo projections
+    """
+    from .config import SUBSTACK_WEEKLY_PROJ_ELO
+    df = pd.read_csv(SUBSTACK_WEEKLY_PROJ_ELO, encoding='utf-8-sig')
+
+    # Remove weird header artifacts
+    df = df.loc[:, ~df.columns.str.startswith('X.')]
+
+    print(f"✓ Loaded Substack weekly Elo projections: {len(df)} records")
+    return df
+
+
+def load_substack_weekly_proj_elo():
+    """
+    Load Substack weekly Elo projections.
+
+    Forwards to unified loader when available, otherwise uses legacy implementation.
+
+    Returns:
+        pd.DataFrame: Weekly Elo projections
+    """
+    if NEW_LOADERS_AVAILABLE:
+        return new_loaders.load_weekly_proj_elo("substack", CURRENT_SEASON, CURRENT_WEEK)
+    return _legacy_load_substack_weekly_proj_elo()
 
 
 # ============================================================================

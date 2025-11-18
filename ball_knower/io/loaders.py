@@ -18,6 +18,10 @@ Supported categories:
     - strength_of_schedule
     - qb_epa
     - weekly_projections_ppg
+    - qb_rankings
+    - receiving_leaders
+    - win_totals
+    - weekly_proj_elo
 
 Supported providers:
     - nfelo
@@ -115,6 +119,11 @@ def _resolve_file(
         base_dir / f"{provider}_{category}_{season}_week_{week}.csv",
         base_dir / f"{provider}_{category}_off_def_{season}_week_{week}.csv",
         base_dir / f"{provider}_{category_short}_{season}_week_{week}.csv",
+        # Handle "nfl_" prefix in some reference files
+        base_dir / f"{provider}_nfl_{category}_{season}_week_{week}.csv",
+        # Handle files with "(1)" suffix (duplicate downloads)
+        base_dir / f"{provider}_{category}_{season}_week_{week} (1).csv",
+        base_dir / f"{provider}_nfl_{category}_{season}_week_{week} (1).csv",
     ]
 
     if primary.exists():
@@ -329,6 +338,145 @@ def load_weekly_projections_ppg(
         # Add a dummy 'team' column to avoid errors
         df['team'] = None
         return df
+
+
+def load_qb_rankings(
+    provider: str,
+    season: int,
+    week: int,
+    data_dir: Optional[Union[str, Path]] = None
+) -> pd.DataFrame:
+    """
+    Load quarterback rankings.
+
+    Args:
+        provider: Data provider ("nfelo" or "substack")
+        season: NFL season year
+        week: NFL week number
+        data_dir: Optional data directory
+
+    Returns:
+        DataFrame with QB rankings data
+    """
+    path = _resolve_file("qb_rankings", provider, season, week, data_dir)
+    df = pd.read_csv(path)
+
+    # Handle potential multi-row headers
+    if (df.iloc[0].isna().all() or
+        df.iloc[0, 0] == df.columns[0] or
+        any(col.startswith('X.') for col in df.columns[:3])):
+        df = pd.read_csv(path, skiprows=1)
+
+    # Remove weird header artifacts (X.1, X.2, etc.)
+    df = df.loc[:, ~df.columns.str.startswith('X.')]
+
+    return df
+
+
+def load_receiving_leaders(
+    provider: str,
+    season: int,
+    week: int,
+    data_dir: Optional[Union[str, Path]] = None
+) -> pd.DataFrame:
+    """
+    Load receiving leaders statistics.
+
+    Args:
+        provider: Data provider ("nfelo" or "substack")
+        season: NFL season year
+        week: NFL week number
+        data_dir: Optional data directory
+
+    Returns:
+        DataFrame with receiving leader data
+    """
+    path = _resolve_file("receiving_leaders", provider, season, week, data_dir)
+    df = pd.read_csv(path)
+
+    # Handle potential multi-row headers
+    if (df.iloc[0].isna().all() or
+        df.iloc[0, 0] == df.columns[0] or
+        any(col.startswith('X.') for col in df.columns[:3])):
+        df = pd.read_csv(path, skiprows=1)
+
+    # Remove weird header artifacts (X.1, X.2, etc.)
+    df = df.loc[:, ~df.columns.str.startswith('X.')]
+
+    return df
+
+
+def load_win_totals(
+    provider: str,
+    season: int,
+    week: int,
+    data_dir: Optional[Union[str, Path]] = None
+) -> pd.DataFrame:
+    """
+    Load season win totals and projections.
+
+    Args:
+        provider: Data provider ("nfelo" or "substack")
+        season: NFL season year
+        week: NFL week number
+        data_dir: Optional data directory
+
+    Returns:
+        DataFrame with win total projections
+    """
+    path = _resolve_file("win_totals", provider, season, week, data_dir)
+    df = pd.read_csv(path)
+
+    # Handle potential multi-row headers
+    if (df.iloc[0].isna().all() or
+        df.iloc[0, 0] == df.columns[0] or
+        any(col.startswith('X.') for col in df.columns[:3])):
+        df = pd.read_csv(path, skiprows=1)
+
+    # Remove weird header artifacts (X.1, X.2, etc.)
+    df = df.loc[:, ~df.columns.str.startswith('X.')]
+
+    # Normalize team column if present
+    if 'Team' in df.columns:
+        df = df.rename(columns={'Team': 'team'})
+        return _normalize_team_column(df, team_col="team")
+    elif 'team' in df.columns:
+        return _normalize_team_column(df, team_col="team")
+
+    return df
+
+
+def load_weekly_proj_elo(
+    provider: str,
+    season: int,
+    week: int,
+    data_dir: Optional[Union[str, Path]] = None
+) -> pd.DataFrame:
+    """
+    Load weekly Elo projections.
+
+    Args:
+        provider: Data provider ("nfelo" or "substack")
+        season: NFL season year
+        week: NFL week number
+        data_dir: Optional data directory
+
+    Returns:
+        DataFrame with weekly Elo projections
+    """
+    path = _resolve_file("weekly_proj_elo", provider, season, week, data_dir)
+    df = pd.read_csv(path)
+
+    # Handle potential multi-row headers
+    if (df.iloc[0].isna().all() or
+        df.iloc[0, 0] == df.columns[0] or
+        any(col.startswith('X.') for col in df.columns[:3])):
+        df = pd.read_csv(path, skiprows=1)
+
+    # Remove weird header artifacts (X.1, X.2, etc.)
+    df = df.loc[:, ~df.columns.str.startswith('X.')]
+
+    return df
 
 
 def merge_team_ratings(

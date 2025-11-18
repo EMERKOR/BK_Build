@@ -24,22 +24,30 @@ SRC_DIR = PROJECT_ROOT / 'src'
 OUTPUT_DIR.mkdir(exist_ok=True)
 
 # ============================================================================
+# CURRENT SEASON PARAMETERS
+# ============================================================================
+
+# Current season info (update these for each week)
+CURRENT_SEASON = 2025
+CURRENT_WEEK = 11
+
+# ============================================================================
 # DATA FILES
 # ============================================================================
 
-# nfelo data files (Week 11, 2025) - UPDATED TO CATEGORY-FIRST NAMING
-NFELO_POWER_RATINGS = CURRENT_SEASON_DIR / 'power_ratings_nfelo_2025_week_11.csv'
-NFELO_SOS = CURRENT_SEASON_DIR / 'strength_of_schedule_nfelo_2025_week_11.csv'
-NFELO_EPA_TIERS = CURRENT_SEASON_DIR / 'epa_tiers_nfelo_2025_week_11.csv'
-NFELO_WIN_TOTALS = CURRENT_SEASON_DIR / 'nfelo_nfl_win_totals_2025_week_11 (1).csv'  # Reference file
-NFELO_RECEIVING = CURRENT_SEASON_DIR / 'nfelo_nfl_receiving_leaders_2025_week_11.csv'  # Reference file
-NFELO_QB_RANKINGS = CURRENT_SEASON_DIR / 'nfelo_qb_rankings_2025_week_11.csv'  # Reference file
+# nfelo data files - UPDATED TO CATEGORY-FIRST NAMING (parameterized by season/week)
+NFELO_POWER_RATINGS = CURRENT_SEASON_DIR / f'power_ratings_nfelo_{CURRENT_SEASON}_week_{CURRENT_WEEK}.csv'
+NFELO_SOS = CURRENT_SEASON_DIR / f'strength_of_schedule_nfelo_{CURRENT_SEASON}_week_{CURRENT_WEEK}.csv'
+NFELO_EPA_TIERS = CURRENT_SEASON_DIR / f'epa_tiers_nfelo_{CURRENT_SEASON}_week_{CURRENT_WEEK}.csv'
+NFELO_WIN_TOTALS = CURRENT_SEASON_DIR / f'nfelo_nfl_win_totals_{CURRENT_SEASON}_week_{CURRENT_WEEK} (1).csv'  # Reference file (has (1) suffix)
+NFELO_RECEIVING = CURRENT_SEASON_DIR / f'nfelo_nfl_receiving_leaders_{CURRENT_SEASON}_week_{CURRENT_WEEK}.csv'  # Reference file
+NFELO_QB_RANKINGS = CURRENT_SEASON_DIR / f'nfelo_qb_rankings_{CURRENT_SEASON}_week_{CURRENT_WEEK}.csv'  # Reference file
 
-# Substack data files (Week 11, 2025) - UPDATED TO CATEGORY-FIRST NAMING
-SUBSTACK_POWER_RATINGS = CURRENT_SEASON_DIR / 'power_ratings_substack_2025_week_11.csv'
-SUBSTACK_QB_EPA = CURRENT_SEASON_DIR / 'qb_epa_substack_2025_week_11.csv'
-SUBSTACK_WEEKLY_PROJ_ELO = CURRENT_SEASON_DIR / 'substack_weekly_proj_elo_2025_week_11.csv'  # Reference file
-SUBSTACK_WEEKLY_PROJ_PPG = CURRENT_SEASON_DIR / 'weekly_projections_ppg_substack_2025_week_11.csv'
+# Substack data files - UPDATED TO CATEGORY-FIRST NAMING (parameterized by season/week)
+SUBSTACK_POWER_RATINGS = CURRENT_SEASON_DIR / f'power_ratings_substack_{CURRENT_SEASON}_week_{CURRENT_WEEK}.csv'
+SUBSTACK_QB_EPA = CURRENT_SEASON_DIR / f'qb_epa_substack_{CURRENT_SEASON}_week_{CURRENT_WEEK}.csv'
+SUBSTACK_WEEKLY_PROJ_ELO = CURRENT_SEASON_DIR / f'substack_weekly_proj_elo_{CURRENT_SEASON}_week_{CURRENT_WEEK}.csv'  # Reference file
+SUBSTACK_WEEKLY_PROJ_PPG = CURRENT_SEASON_DIR / f'weekly_projections_ppg_substack_{CURRENT_SEASON}_week_{CURRENT_WEEK}.csv'
 
 # Reference files
 NFL_HEAD_COACHES = REFERENCE_DIR / 'nfl_head_coaches.csv'
@@ -58,10 +66,6 @@ MODEL_DIAGNOSTICS = OUTPUT_DIR / 'model_diagnostics.csv'
 TRAINING_START_YEAR = 2015
 TRAINING_END_YEAR = 2024
 VALIDATION_YEAR = 2024
-
-# Current season info
-CURRENT_SEASON = 2025
-CURRENT_WEEK = 11
 
 # Rolling window sizes for EPA features (must be leak-free)
 EPA_ROLLING_WINDOWS = [3, 5, 10]  # games
