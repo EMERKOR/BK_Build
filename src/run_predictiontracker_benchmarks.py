@@ -237,9 +237,20 @@ def run_benchmark(pt_data, bk_predictions=None, output_path=None):
             home_score_col = col
         if 'awayscore' in col.lower():
             away_score_col = col
-        if 'spread' in col.lower() or 'line' in col.lower():
+        if 'spread' in col.lower() or col == 'line':
             if vegas_spread_col is None:  # Use first found
                 vegas_spread_col = col
+
+    # IMPORTANT: PredictionTracker 'line' column is from ROAD/AWAY perspective
+    # (positive = home favored), but Ball Knower uses HOME perspective
+    # (negative = home favored). Convert PT to match BK convention.
+    if vegas_spread_col == 'line':
+        pt_data['vegas_spread_home'] = -pt_data['line']  # Flip sign
+        vegas_spread_col = 'vegas_spread_home'
+
+    # Also convert PT average to home perspective for fair comparison
+    if 'lineavg' in pt_data.columns:
+        pt_data['pt_avg_home'] = -pt_data['lineavg']
 
     # Calculate actual margin if scores available
     if 'home_score_col' in locals() and 'away_score_col' in locals():
@@ -314,6 +325,12 @@ def run_benchmark(pt_data, bk_predictions=None, output_path=None):
                         bk_preds, vegas_lines, actuals
                     ) * 100
 
+            # MAE vs PredictionTracker consensus
+            if 'pt_avg_home' in matched_data.columns:
+                bk_preds = matched_data['predicted_spread'].values
+                pt_consensus = matched_data['pt_avg_home'].values
+                results['bk_mae_vs_pt_consensus'] = calculate_mae(bk_preds, pt_consensus)
+
         # Save detailed results
         if output_path:
             output_file = Path(output_path)
@@ -349,6 +366,11 @@ def print_summary(results):
         print(f"  MAE vs Vegas Spread: {results['bk_mae_vs_vegas']:.2f} points")
         if results.get('bk_ats_accuracy'):
             print(f"  ATS Accuracy: {results['bk_ats_accuracy']:.1f}%")
+        print()
+
+    if results.get('bk_mae_vs_pt_consensus') is not None:
+        print(f"Ball Knower vs PredictionTracker Consensus:")
+        print(f"  MAE vs PT Average: {results['bk_mae_vs_pt_consensus']:.2f} points")
         print()
 
     print(f"{'='*60}\n")

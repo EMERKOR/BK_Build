@@ -1,7 +1,7 @@
 """
 Current Week Predictions - Ball Knower v1.2
 
-Generates betting recommendations for Week 11, 2025 using the trained v1.2 model.
+Generates betting recommendations using the trained v1.2 model.
 
 Model Performance (trained on 2009-2024):
 - Test R² = 0.884
@@ -10,6 +10,7 @@ Model Performance (trained on 2009-2024):
 """
 
 import sys
+import argparse
 from pathlib import Path
 import pandas as pd
 import numpy as np
@@ -24,8 +25,19 @@ from src import config, betting_utils
 pd.set_option('display.max_columns', None)
 pd.set_option('display.width', 150)
 
+# Parse command line arguments
+parser = argparse.ArgumentParser(description='Generate Ball Knower v1.2 predictions for a given week')
+parser.add_argument('--season', type=int, default=config.CURRENT_SEASON,
+                    help=f'NFL season year (default: {config.CURRENT_SEASON})')
+parser.add_argument('--week', type=int, required=True,
+                    help='Week number (required)')
+args = parser.parse_args()
+
+SEASON = args.season
+WEEK = args.week
+
 print("\n" + "="*80)
-print("BALL KNOWER v1.2 - CURRENT WEEK PREDICTIONS")
+print(f"BALL KNOWER v1.2 - WEEK {WEEK} {SEASON} PREDICTIONS")
 print("="*80)
 
 # Load trained model
@@ -42,10 +54,10 @@ print(f"  Test MAE:    {model_params['test_mae']:.2f} points")
 # LOAD CURRENT WEEK DATA
 # ============================================================================
 
-print("\n[1/4] Loading Week 11 2025 data...")
+print(f"\n[1/4] Loading Week {WEEK} {SEASON} data...")
 
 # Load games
-games = nflverse.games(season=2025, week=11)
+games = nflverse.games(season=SEASON, week=WEEK)
 games = games[games['spread_line'].notna()].copy()
 
 # Load team ratings from nfelo snapshot
@@ -194,7 +206,7 @@ print(f"✓ Added win probabilities and Kelly sizing")
 print("\n[4/4] Identifying value bets...")
 
 print("\n" + "="*80)
-print("ALL WEEK 11 PREDICTIONS")
+print(f"ALL WEEK {WEEK} PREDICTIONS")
 print("="*80)
 
 display_cols = ['away_team', 'home_team', 'spread_line', 'bk_v1_2_spread',
@@ -300,13 +312,13 @@ print("="*80)
 
 comparison = matchups[['away_team', 'home_team', 'spread_line', 'bk_v1_2_spread', 'edge']].copy()
 
-print("\nv1.2 Performance on Week 11:")
+print(f"\nv1.2 Performance on Week {WEEK}:")
 print(f"  Mean absolute edge: {matchups['abs_edge'].mean():.2f} points")
 print(f"  Median edge: {matchups['edge'].median():.2f} points")
 print(f"  Std dev: {matchups['edge'].std():.2f} points")
 
 # Save predictions
-output_file = config.OUTPUT_DIR / 'week_11_value_bets_v1_2.csv'
+output_file = config.OUTPUT_DIR / f'week_{WEEK}_value_bets_v1_2.csv'
 matchups.to_csv(output_file, index=False)
 
 print(f"\n✓ Predictions saved to: {output_file}")
