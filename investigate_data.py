@@ -7,11 +7,17 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 
-project_root = Path(__file__).parent
-sys.path.insert(0, str(project_root))
+PROJECT_ROOT = Path(__file__).resolve().parents[0]
+sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.nflverse_data import nflverse
-from src import data_loader
+from ball_knower.io import loaders
+from src import config
+
+# Data directory and current week settings
+DATA_DIR = PROJECT_ROOT / "data" / "current_season"
+CURRENT_SEASON = config.CURRENT_SEASON
+CURRENT_WEEK = config.CURRENT_WEEK
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.width', 200)
@@ -21,8 +27,15 @@ print("DATA INVESTIGATION")
 print("="*80)
 
 # Load data
-games = nflverse.games(season=2025, week=11)
-team_ratings = data_loader.merge_current_week_ratings()
+games = nflverse.games(season=CURRENT_SEASON, week=CURRENT_WEEK)
+all_data = loaders.load_all_sources(season=CURRENT_SEASON, week=CURRENT_WEEK, data_dir=DATA_DIR)
+team_ratings = all_data['merged_ratings']
+
+# Compute derived EPA metrics for compatibility
+if 'EPA/Play' in team_ratings.columns and 'EPA/Play Against' in team_ratings.columns:
+    team_ratings['epa_off'] = team_ratings['EPA/Play']
+    team_ratings['epa_def'] = team_ratings['EPA/Play Against']
+    team_ratings['epa_margin'] = team_ratings['EPA/Play'] - team_ratings['EPA/Play Against']
 
 games = games[games['spread_line'].notna()].copy()
 matchups = games[['away_team', 'home_team', 'spread_line']].copy()
@@ -92,3 +105,7 @@ print(f"\nRange: {team_ratings['nfelo'].min():.1f} to {team_ratings['nfelo'].max
 print(f"Std Dev: {team_ratings['nfelo'].std():.1f}")
 
 print("\n" + "="*80 + "\n")
+
+# Sanity check: verify data loaded correctly
+print("Investigate merged ratings shape:", team_ratings.shape)
+print("Investigate sample columns:", list(team_ratings.columns)[:12])
