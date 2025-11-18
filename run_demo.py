@@ -33,16 +33,45 @@ all_data = loaders.load_all_sources(season=2025, week=11)
 print("\n[2/4] Merging team ratings...")
 team_ratings = all_data['merged_ratings']
 
+# Calculate epa_margin if EPA columns are available
+if 'EPA/Play' in team_ratings.columns and 'EPA/Play Against' in team_ratings.columns:
+    team_ratings['epa_margin'] = team_ratings['EPA/Play'] - team_ratings['EPA/Play Against']
+else:
+    team_ratings['epa_margin'] = 0  # Fallback
+
 print(f"\nTop 10 Teams by nfelo:")
-print(team_ratings[['team', 'nfelo', 'epa_off', 'epa_def', 'Ovr.']].sort_values('nfelo', ascending=False).head(10).to_string(index=False))
+display_cols = ['team', 'nfelo']
+if 'EPA/Play' in team_ratings.columns:
+    display_cols.append('EPA/Play')
+if 'Ovr.' in team_ratings.columns:
+    display_cols.append('Ovr.')
+print(team_ratings[display_cols].sort_values('nfelo', ascending=False).head(10).to_string(index=False))
 
 # Section 3: Prepare matchups
 print("\n[3/4] Preparing matchups...")
-# Note: weekly projections contain matchup data, but need to extract team matchups
-# For now, we'll need to adapt this - the unified loader returns raw DataFrames
-# We'll use the legacy data_loader for weekly projections parsing until we enhance the unified loader
-from src import data_loader
-weekly_data = data_loader.load_substack_weekly_projections()
+# Get weekly projections and parse matchups
+weekly_data = all_data['weekly_projections_ppg_substack']
+
+# Parse matchup column (e.g., "Team1 at Team2")
+def parse_matchup(matchup):
+    if ' at ' in matchup:
+        teams = matchup.split(' at ')
+        return pd.Series({'team_away_full': teams[0], 'team_home_full': teams[1]})
+    elif ' vs ' in matchup:
+        teams = matchup.split(' vs ')
+        return pd.Series({'team_away_full': teams[0], 'team_home_full': teams[1]})
+    else:
+        return pd.Series({'team_away_full': None, 'team_home_full': None})
+
+weekly_data[['team_away_full', 'team_home_full']] = weekly_data['Matchup'].apply(parse_matchup)
+
+# Normalize team names
+weekly_data['team_away'] = weekly_data['team_away_full'].apply(team_mapping.normalize_team_name)
+weekly_data['team_home'] = weekly_data['team_home_full'].apply(team_mapping.normalize_team_name)
+
+# Parse spread from Favorite column (e.g., "ATL -5.5")
+weekly_data['substack_spread_line'] = weekly_data['Favorite'].str.extract(r'([-+]?\d+\.?\d*)')[0].astype(float)
+
 matchups = weekly_data[['team_away', 'team_home', 'substack_spread_line']].copy()
 
 # Add home team ratings

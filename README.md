@@ -70,6 +70,45 @@ BK_Build/
 └── README.md                    # This file
 ```
 
+## Data Loading
+
+### Unified Loader API (Recommended)
+
+**New code should use the unified loader:**
+
+```python
+from ball_knower.io import loaders
+from src import config
+
+# Load all current-season data sources
+all_data = loaders.load_all_sources(season=config.CURRENT_SEASON, week=config.CURRENT_WEEK)
+
+# Access individual data sources
+power_ratings = loaders.load_power_ratings(provider="nfelo", season=2025, week=11)
+qb_epa = loaders.load_qb_epa(provider="substack", season=2025, week=11)
+```
+
+**Reference implementations:**
+- `run_demo.py` - Loads all sources, merges ratings, generates predictions
+- `predict_current_week.py` - Loads power ratings for v1.2 model predictions
+
+**Legacy compatibility:**
+- `src/data_loader.py` - Remains available as compatibility layer for legacy scripts
+- Internally forwards to unified loader where possible
+- Will be deprecated in future phases
+
+### File Naming Conventions
+
+The unified loader supports both category-first (new) and provider-first (legacy) naming:
+
+**Category-first (preferred):**
+- `power_ratings_nfelo_2025_week_11.csv`
+- `qb_epa_substack_2025_week_11.csv`
+
+**Provider-first (legacy, with fallback):**
+- `nfelo_power_ratings_2025_week_11.csv`
+- `substack_qb_epa_2025_week_11.csv`
+
 ## Data Sources
 
 ### Current Week Data (Week 11, 2025)

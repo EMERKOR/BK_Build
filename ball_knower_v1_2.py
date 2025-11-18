@@ -9,6 +9,9 @@ Properly trained model using historical data with:
 
 Training data: 2009-2024 seasons (4,345 games)
 Test data: 2025 season (165 games)
+
+Note: This script trains on historical nfelo games data (loaded from remote URL).
+For current-season predictions, see predict_current_week.py which uses ball_knower.io.loaders.
 """
 
 import pandas as pd
@@ -19,6 +22,9 @@ from sklearn.model_selection import TimeSeriesSplit
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import warnings
 warnings.filterwarnings('ignore')
+
+# Note: ball_knower.io.loaders is available for current-season data if needed
+# from ball_knower.io import loaders
 
 print("\n" + "="*80)
 print("BALL KNOWER v1.2 - ML CORRECTION LAYER")

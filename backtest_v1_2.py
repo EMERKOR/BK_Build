@@ -10,6 +10,9 @@ Evaluates v1.2 model performance using:
 
 Model: Ridge regression trained on 2009-2024 (4,345 games)
 Test period: 2025 season (165 games)
+
+Note: This script backtests on historical nfelo games data (loaded from remote URL).
+For current-week predictions, see predict_current_week.py which uses ball_knower.io.loaders.
 """
 
 import sys
@@ -25,6 +28,9 @@ project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
 from src import betting_utils, config
+
+# Note: ball_knower.io.loaders is available for current-season data if needed
+# from ball_knower.io import loaders
 
 print("\n" + "="*80)
 print("BALL KNOWER v1.2 - PROFESSIONAL BACKTEST")

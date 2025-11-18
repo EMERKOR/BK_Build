@@ -20,6 +20,7 @@ sys.path.insert(0, str(project_root))
 
 from src.nflverse_data import nflverse
 from src import config, betting_utils
+from ball_knower.io import loaders
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.width', 150)
@@ -44,13 +45,12 @@ print(f"  Test MAE:    {model_params['test_mae']:.2f} points")
 
 print("\n[1/4] Loading Week 11 2025 data...")
 
-# Load games
-games = nflverse.games(season=2025, week=11)
+# Load games from nflverse (schedules and Vegas lines)
+games = nflverse.games(season=config.CURRENT_SEASON, week=config.CURRENT_WEEK)
 games = games[games['spread_line'].notna()].copy()
 
-# Load team ratings from nfelo snapshot
-nfelo_snapshot_url = 'https://raw.githubusercontent.com/greerreNFL/nfelo/main/output_data/elo_snapshot.csv'
-nfelo_ratings = pd.read_csv(nfelo_snapshot_url)
+# Load team ratings from local current_season data using unified loader
+nfelo_ratings = loaders.load_power_ratings(provider="nfelo", season=config.CURRENT_SEASON, week=config.CURRENT_WEEK)
 
 # Handle duplicate teams (take first occurrence - likely most recent)
 nfelo_ratings = nfelo_ratings.drop_duplicates(subset=['team'], keep='first')
