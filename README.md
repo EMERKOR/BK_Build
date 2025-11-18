@@ -158,6 +158,47 @@ python run_weekly_predictions.py --season 2025 --week 11 --model v1.0
 - `weekly_projections_ppg_substack_{season}_week_{week}.csv` (contains matchups & Vegas lines)
 - `strength_of_schedule_nfelo_{season}_week_{week}.csv`
 
+### Run Backtests
+
+```bash
+# Backtest v1.2 from 2019-2024 with 0.5 point edge threshold
+python src/run_backtests.py --start-season 2019 --end-season 2024 --model v1.2 --edge-threshold 0.5
+
+# Backtest v1.0 for all available seasons
+python src/run_backtests.py --model v1.0
+
+# Quick test on recent seasons only
+python src/run_backtests.py --start-season 2022 --end-season 2024 --model v1.2
+```
+
+**What it does**:
+1. Loads historical nfelo data for the specified season range
+2. Engineers features for the selected model (v1.0 or v1.2)
+3. Generates predictions using calibrated model weights
+4. Computes season-by-season performance metrics
+5. Saves results to CSV in `output/backtest_{model}_{start}_{end}.csv`
+
+**Output CSV columns**:
+- `season` - NFL season year
+- `model` - Model version used (v1.0 or v1.2)
+- `edge_threshold` - Minimum edge filter applied
+- `n_games` - Total games in the season
+- `n_bets` - Games meeting edge threshold
+- `mae_vs_vegas` - Mean absolute error vs Vegas lines (points)
+- `ats_wins` - Against-the-spread wins (if game outcomes available)
+- `ats_losses` - Against-the-spread losses (if game outcomes available)
+- `ats_pushes` - Against-the-spread pushes (if game outcomes available)
+- `flat_roi` - Return on investment assuming flat $100 bets at -110 odds
+
+**Command-line options**:
+- `--start-season` - First season to include (default: 2009)
+- `--end-season` - Last season to include (default: 2024)
+- `--model` - Model version: v1.0 or v1.2 (default: v1.2)
+- `--edge-threshold` - Minimum absolute edge in points (default: 0.0)
+- `--output` - Custom output CSV path (optional)
+
+**Note**: ATS metrics (wins/losses/pushes) and ROI calculations require actual game outcomes in the data. If not available, these will be zero but MAE metrics will still be computed.
+
 ### Run Tests
 
 ```bash
@@ -180,7 +221,9 @@ BK_Build/
 │   ├── data_loader.py          # Load nfelo, Substack, nfl_data_py
 │   ├── features.py             # Leak-free rolling EPA features
 │   ├── models.py               # v1.0, v1.1, v1.2 spread models + backtest
-│   └── betting_utils.py        # EV, Kelly, probability utilities
+│   ├── betting_utils.py        # EV, Kelly, probability utilities
+│   ├── backtest_utils.py       # Shared backtest logic for all models
+│   └── run_backtests.py        # Unified backtest driver CLI
 ├── ball_knower/                 # Unified data loading package
 │   └── io/
 │       └── loaders.py          # Unified loaders for all data sources
