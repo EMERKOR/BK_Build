@@ -47,15 +47,15 @@ PT_TEAM_MAPPING = {
     'Indianapolis': 'IND', 'Colts': 'IND', 'Indianapolis Colts': 'IND',
     'Jacksonville': 'JAX', 'Jaguars': 'JAX', 'Jacksonville Jaguars': 'JAX',
     'Kansas City': 'KC', 'Chiefs': 'KC', 'Kansas City Chiefs': 'KC',
-    'LA Chargers': 'LAC', 'Los Angeles Chargers': 'LAC', 'Chargers': 'LAC',
-    'LA Rams': 'LAR', 'Los Angeles Rams': 'LAR', 'Rams': 'LAR',
+    'LA Chargers': 'LAC', 'L.A. Chargers': 'LAC', 'Los Angeles Chargers': 'LAC', 'Chargers': 'LAC',
+    'LA Rams': 'LAR', 'L.A. Rams': 'LAR', 'Los Angeles Rams': 'LAR', 'Rams': 'LAR',
     'Las Vegas': 'LV', 'Raiders': 'LV', 'Las Vegas Raiders': 'LV',
     'Miami': 'MIA', 'Dolphins': 'MIA', 'Miami Dolphins': 'MIA',
     'Minnesota': 'MIN', 'Vikings': 'MIN', 'Minnesota Vikings': 'MIN',
     'New England': 'NE', 'Patriots': 'NE', 'New England Patriots': 'NE',
     'New Orleans': 'NO', 'Saints': 'NO', 'New Orleans Saints': 'NO',
-    'NY Giants': 'NYG', 'New York Giants': 'NYG', 'Giants': 'NYG',
-    'NY Jets': 'NYJ', 'New York Jets': 'NYJ', 'Jets': 'NYJ',
+    'NY Giants': 'NYG', 'N.Y. Giants': 'NYG', 'New York Giants': 'NYG', 'Giants': 'NYG',
+    'NY Jets': 'NYJ', 'N.Y. Jets': 'NYJ', 'New York Jets': 'NYJ', 'Jets': 'NYJ',
     'Philadelphia': 'PHI', 'Eagles': 'PHI', 'Philadelphia Eagles': 'PHI',
     'Pittsburgh': 'PIT', 'Steelers': 'PIT', 'Pittsburgh Steelers': 'PIT',
     'San Francisco': 'SF', '49ers': 'SF', 'San Francisco 49ers': 'SF',
@@ -109,11 +109,16 @@ def load_predictiontracker_csv(csv_path, season=None, week=None):
     if week is not None and 'Week' in df.columns:
         df = df[df['Week'] == week].copy()
 
-    # Normalize team names
+    # Normalize team names - handle multiple column name formats
     if 'HomeTeam' in df.columns:
         df['home_team'] = df['HomeTeam'].apply(normalize_pt_team_name)
+    elif 'home' in df.columns:
+        df['home_team'] = df['home'].apply(normalize_pt_team_name)
+
     if 'AwayTeam' in df.columns:
         df['away_team'] = df['AwayTeam'].apply(normalize_pt_team_name)
+    elif 'road' in df.columns:
+        df['away_team'] = df['road'].apply(normalize_pt_team_name)
 
     print(f"Loaded {len(df)} games from PredictionTracker")
 
@@ -133,11 +138,12 @@ def load_ball_knower_predictions(season, week):
     """
     # Try multiple potential locations
     potential_paths = [
+        f'output/week_{week}_value_bets_v1_2.csv',
+        f'output/week{week}_predictions.csv',
         f'predictions/week{week}_predictions_{season}.csv',
         f'predictions/week_{week}_{season}.csv',
         f'predictions/{season}_week{week}.csv',
         f'output/predictions_week{week}_{season}.csv',
-        f'output/week{week}_predictions.csv',
     ]
 
     for path in potential_paths:
@@ -243,12 +249,23 @@ def run_benchmark(pt_data, bk_predictions=None, output_path=None):
 
     # If Ball Knower predictions provided, merge and compare
     if bk_predictions is not None:
+        # Determine which BK column names are available
+        bk_spread_col = 'bk_v1_2_spread' if 'bk_v1_2_spread' in bk_predictions.columns else 'predicted_spread'
+
+        merge_cols = ['home_team', 'away_team', bk_spread_col]
+        if 'predicted_margin' in bk_predictions.columns:
+            merge_cols.append('predicted_margin')
+
         merged = pt_data.merge(
-            bk_predictions[['home_team', 'away_team', 'predicted_spread', 'predicted_margin']],
+            bk_predictions[merge_cols],
             on=['home_team', 'away_team'],
             how='left',
             suffixes=('_pt', '_bk')
         )
+
+        # Rename to standard column name for consistency
+        if bk_spread_col in merged.columns:
+            merged['predicted_spread'] = merged[bk_spread_col]
 
         results['matched_games'] = merged['predicted_spread'].notna().sum()
         results['unmatched_games'] = merged['predicted_spread'].isna().sum()
@@ -271,9 +288,14 @@ def run_benchmark(pt_data, bk_predictions=None, output_path=None):
         matched_data = merged[merged['predicted_spread'].notna()].copy()
 
         if len(matched_data) > 0:
-            # MAE vs actual margin
+            # MAE vs actual margin (if we have both predicted margin and actual scores)
             if actual_margin_col and actual_margin_col in matched_data.columns:
-                bk_preds = matched_data['predicted_margin'].values
+                # Use predicted_margin if available, otherwise use predicted_spread
+                if 'predicted_margin' in matched_data.columns:
+                    bk_preds = matched_data['predicted_margin'].values
+                else:
+                    bk_preds = -matched_data['predicted_spread'].values  # Negative because spread is home team perspective
+
                 actuals = matched_data[actual_margin_col].values
                 results['bk_mae_vs_actual'] = calculate_mae(bk_preds, actuals)
                 results['bk_rmse_vs_actual'] = calculate_rmse(bk_preds, actuals)
