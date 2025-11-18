@@ -120,6 +120,44 @@ The demo notebook will:
 3. Generate spread predictions with v1.0 model
 4. Identify value bets vs Vegas lines
 
+### Run Weekly Predictions CLI
+
+```bash
+# Generate predictions for a specific week
+python run_weekly_predictions.py --season 2025 --week 11
+
+# Custom output location
+python run_weekly_predictions.py --season 2025 --week 12 --output my_predictions.csv
+
+# Use v1.0 model instead of default v1.1
+python run_weekly_predictions.py --season 2025 --week 11 --model v1.0
+```
+
+**What it does**:
+1. Loads all data sources for the specified week (nfelo, Substack, EPA, QB metrics)
+2. Merges team ratings and builds feature matrix
+3. Generates predictions using calibrated model weights (from `output/calibrated_weights_v1.json`)
+4. Calculates edge vs Vegas lines
+5. Saves predictions to CSV in `output/predictions_{season}_week_{week}.csv`
+
+**Output CSV columns**:
+- `game_id` - Unique identifier (e.g., `2025_11_BUF_KC`)
+- `season` - NFL season year
+- `week` - Week number
+- `away_team` - Away team abbreviation
+- `home_team` - Home team abbreviation
+- `bk_line` - Ball Knower predicted spread (negative = home favored)
+- `vegas_line` - Closing spread from data source
+- `edge` - Difference (bk_line - vegas_line)
+
+**Required data files** (must exist in `data/current_season/`):
+- `power_ratings_nfelo_{season}_week_{week}.csv`
+- `power_ratings_substack_{season}_week_{week}.csv`
+- `epa_tiers_nfelo_{season}_week_{week}.csv`
+- `qb_epa_substack_{season}_week_{week}.csv`
+- `weekly_projections_ppg_substack_{season}_week_{week}.csv` (contains matchups & Vegas lines)
+- `strength_of_schedule_nfelo_{season}_week_{week}.csv`
+
 ### Run Tests
 
 ```bash
@@ -141,10 +179,19 @@ BK_Build/
 │   ├── team_mapping.py         # Normalize team names across data sources
 │   ├── data_loader.py          # Load nfelo, Substack, nfl_data_py
 │   ├── features.py             # Leak-free rolling EPA features
-│   └── models.py               # v1.0, v1.1, v1.2 spread models + backtest
+│   ├── models.py               # v1.0, v1.1, v1.2 spread models + backtest
+│   └── betting_utils.py        # EV, Kelly, probability utilities
+├── ball_knower/                 # Unified data loading package
+│   └── io/
+│       └── loaders.py          # Unified loaders for all data sources
 ├── notebooks/                   # Jupyter notebooks
 │   └── ball_knower_demo.ipynb  # Quick start demo
 ├── output/                      # Model predictions and backtest results
+│   └── calibrated_weights_v1.json  # Calibrated model weights
+├── run_weekly_predictions.py   # CLI for weekly predictions
+├── run_demo.py                 # Quick demo script
+├── backtest_v1_2.py            # Professional backtest with EV analysis
+├── calibrate_v1_json.py        # Generate calibrated weights JSON
 ├── test_data_loading.py        # Data loading validation tests
 └── README.md                    # This file
 ```
@@ -266,11 +313,20 @@ All map to nfl_data_py standard: `LAR`, `KC`, `BUF`
 ### To Run Weekly Predictions:
 
 1. Download latest CSVs from nfelo and Substack
-2. Update `CURRENT_WEEK` in `src/config.py`
-3. Replace files in `data/current_season/`
-4. Run `notebooks/ball_knower_demo.ipynb`
-5. Compare predictions to Bovada lines
-6. Bet where edge exists!
+2. Place files in `data/current_season/` with correct naming:
+   - `power_ratings_nfelo_{season}_week_{week}.csv`
+   - `power_ratings_substack_{season}_week_{week}.csv`
+   - `epa_tiers_nfelo_{season}_week_{week}.csv`
+   - `qb_epa_substack_{season}_week_{week}.csv`
+   - `weekly_projections_ppg_substack_{season}_week_{week}.csv`
+   - `strength_of_schedule_nfelo_{season}_week_{week}.csv`
+3. Run the weekly predictions CLI:
+   ```bash
+   python run_weekly_predictions.py --season 2025 --week {week}
+   ```
+4. Review output CSV in `output/predictions_{season}_week_{week}.csv`
+5. Compare predictions to live betting lines
+6. Bet where edge exists (edge >= 0.5 points recommended)
 
 ## 🐛 Known Issues & Limitations
 
