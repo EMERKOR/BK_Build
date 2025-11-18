@@ -38,12 +38,23 @@ print(team_ratings[['team', 'nfelo', 'epa_off', 'epa_def', 'Ovr.']].sort_values(
 
 # Section 3: Prepare matchups
 print("\n[3/4] Preparing matchups...")
-# Note: weekly projections contain matchup data, but need to extract team matchups
-# For now, we'll need to adapt this - the unified loader returns raw DataFrames
-# We'll use the legacy data_loader for weekly projections parsing until we enhance the unified loader
-from src import data_loader
-weekly_data = data_loader.load_substack_weekly_projections()
-matchups = weekly_data[['team_away', 'team_home', 'substack_spread_line']].copy()
+# Load weekly projections from unified loader
+weekly_raw = loaders.load_weekly_projections_ppg("substack", season=2025, week=11)
+
+# Parse matchup data if available, otherwise use team data directly
+if 'team_away' in weekly_raw.columns and 'team_home' in weekly_raw.columns:
+    matchups = weekly_raw[['team_away', 'team_home']].copy()
+    # Extract spread line if available from Favorite column
+    if 'Favorite' in weekly_raw.columns:
+        matchups['substack_spread_line'] = weekly_raw['Favorite'].str.extract(r'([-+]?\d+\.?\d*)')[0].astype(float)
+else:
+    # Fallback: Try to parse Matchup column if needed
+    from src.team_mapping import normalize_team_name
+    weekly_raw['team_away'] = weekly_raw['Matchup'].str.split(' at | vs ').str[0].apply(normalize_team_name)
+    weekly_raw['team_home'] = weekly_raw['Matchup'].str.split(' at | vs ').str[1].apply(normalize_team_name)
+    if 'Favorite' in weekly_raw.columns:
+        weekly_raw['substack_spread_line'] = weekly_raw['Favorite'].str.extract(r'([-+]?\d+\.?\d*)')[0].astype(float)
+    matchups = weekly_raw[['team_away', 'team_home', 'substack_spread_line']].copy()
 
 # Add home team ratings
 matchups = matchups.merge(

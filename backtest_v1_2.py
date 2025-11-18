@@ -142,7 +142,14 @@ df['bet_prob'] = df.apply(
     axis=1
 )
 
-# Assume standard -110 odds for spread bets
+# TODO: EV/Juice Logic - Current Simplification
+# The model currently assumes flat -110 juice (vigorish) for all spread bets.
+# This is a reasonable default for spread betting, but could be refined if:
+#   1. Line-specific juice data is added to the dataset (e.g., -105/-115 for specific games)
+#   2. Different bet types are considered (moneyline, totals have different juice structures)
+#   3. Sportsbook-specific odds are tracked (different books offer different lines)
+# For now, -110 is standard across most US sportsbooks for spread bets and provides
+# a conservative baseline for EV calculations.
 standard_odds = -110
 
 # Calculate EV for betting on the edge side
