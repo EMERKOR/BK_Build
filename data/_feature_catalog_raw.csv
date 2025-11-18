@@ -1,0 +1,208 @@
+column_name,source_files,dtype_candidates,missing_rate_overall,role,leakage_risk,example_values,notes
+/ Catch,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"0.359246, 0.693648, 0.853612, 0.901315, 1.17522",Could not classify - manual review needed
+/ DB,current_season/nfelo_qb_rankings_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"0.249, 0.2533, 0.2591, 0.2658, 0.2681",Could not classify - manual review needed
+/ Game,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"3.03363, 4.93261, 5.97529, 6.39841, 7.43585",Could not classify - manual review needed
+/ Route,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,float64,100.00%,meta_misc,unknown,,Could not classify - manual review needed
+/ Target,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"0.255165, 0.541384, 0.632677, 0.752998, 0.799802",Could not classify - manual review needed
+1st Downs,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,int64,0.00%,meta_misc,unknown,"37, 40, 41, 42, 45",Could not classify - manual review needed
+3rd Down,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"0.235294, 0.293333, 0.296875, 0.323944, 0.344262",Could not classify - manual review needed
+ANY/A,current_season/nfelo_qb_rankings_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"7.0934, 7.4539, 8.2027, 8.3515, 8.5373",Could not classify - manual review needed
+ATS %,reference/nfl_head_coaches.csv,float64,0.00%,meta_misc,unknown,"0.523077, 0.527157, 0.531773, 0.540948, 0.541806",Could not classify - manual review needed
+Actual,current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv,int64,0.00%,meta_misc,unknown,"4, 5, 6, 7, 8",Could not classify - manual review needed
+Adj. Total,current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv,float64,0.00%,pre_game_market,low,"10.4376, 10.644, 11.4177, 11.5624, 12.356",Market line/odds - available pre-game
+Against,current_season/power_ratings_nfelo_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"17.0, 17.6667, 19.1111, 21.3333, 22.2222",Could not classify - manual review needed
+Air Yards,current_season/nfelo_qb_rankings_2025_week_11.csv,float64,0.00%,in_game_stats,medium,"-0.0058, -0.0598, 0.018, 0.0972, 0.147",In-game stat - verify timing before use
+All,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"0.217523, 0.292593, 0.311787, 0.335423, 0.388128",Could not classify - manual review needed
+Atts,current_season/nfelo_qb_rankings_2025_week_11.csv,int64,0.00%,meta_misc,unknown,"147, 262, 273, 308, 315",Could not classify - manual review needed
+Avg Margin,reference/nfl_head_coaches.csv,float64,0.00%,target_outcome,high,"2.86875, 2.91144, 4.37954, 4.76371, 5.21683",Game outcome/result - prediction target
+Avg PA,reference/nfl_head_coaches.csv,float64,0.00%,meta_misc,unknown,"19.3592, 20.0, 20.0406, 20.583, 22.4488",Could not classify - manual review needed
+Avg PF,reference/nfl_head_coaches.csv,float64,0.00%,meta_misc,unknown,"22.9094, 23.4945, 24.5761, 24.7637, 26.8284",Could not classify - manual review needed
+Avg Spread,reference/nfl_head_coaches.csv,float64,0.00%,pre_game_market,low,"-1.66974, -2.27656, -2.70297, -2.77508, -3.0538",Market line/odds - available pre-game
+Avg. Opp. Rating,current_season/strength_of_schedule_nfelo_2025_week_11.csv,float64,0.00%,pre_game_team_strength,low,"1.58147, 1.6965, 1.73482, 1.7733, 2.05598",Team/player strength metric - pre-game rating
+Avg. Opp. Rating.1,current_season/strength_of_schedule_nfelo_2025_week_11.csv,float64,0.00%,pre_game_team_strength,low,"-0.56, -0.788889, -1.02667, 0.413, 0.823333",Team/player strength metric - pre-game rating
+Avg. Opp. Rating.2,current_season/strength_of_schedule_nfelo_2025_week_11.csv,float64,100.00%,pre_game_team_strength,low,,Team/player strength metric - pre-game rating
+Away,reference/nfl_head_coaches.csv,float64,0.00%,pre_game_structure,low,"0.496815, 0.503817, 0.560811, 0.578947, 0.585903",Structural/environmental factor - known pre-game
+CB,current_season/nfelo_qb_rankings_2025_week_11.csv,int64,0.00%,meta_misc,unknown,"0, 1, 2, 3, 4",Could not classify - manual review needed
+CB Opps,current_season/nfelo_qb_rankings_2025_week_11.csv,int64,0.00%,meta_misc,unknown,"0, 1, 2, 3, 4",Could not classify - manual review needed
+CB%,current_season/nfelo_qb_rankings_2025_week_11.csv,float64,17.39%,meta_misc,unknown,"0.0, 0.25, 0.3333, 0.5, 0.6667",Could not classify - manual review needed
+CPOE,current_season/nfelo_qb_rankings_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"2.1546, 4.3838, 4.6111, 6.1128, 8.5224",Could not classify - manual review needed
+CROE,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"10.0144, 10.5609, 14.0937, 16.1439, 4.43578",Could not classify - manual review needed
+Carries,current_season/nfelo_qb_rankings_2025_week_11.csv,int64,0.00%,meta_misc,unknown,"32, 39, 48, 5, 6",Could not classify - manual review needed
+Catch Rate,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"0.680556, 0.71028, 0.741176, 0.780488, 0.835443",Could not classify - manual review needed
+Change (Week),current_season/nfelo_qb_rankings_2025_week_11.csv,float64,0.00%,id_key,low,"-0.0977423, -0.317225, -0.915236, 0.312829, 0.608895",Identified as key/identifier column
+Change (Year),current_season/nfelo_qb_rankings_2025_week_11.csv,float64,0.00%,id_key,low,"-0.229515, -0.619263, 0.517004, 0.684689, 1.97054",Identified as key/identifier column
+Coach,current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv; reference/nfl_head_coaches.csv,object,0.00%,meta_misc,unknown,"Andy Reid, John Harbaugh, Matt LaFleur, Mike Tomlin, Nick Sirianni",Could not classify - manual review needed
+Comp,current_season/nfelo_qb_rankings_2025_week_11.csv,int64,0.00%,meta_misc,unknown,"103, 185, 202, 204, 208",Could not classify - manual review needed
+Comp%,current_season/nfelo_qb_rankings_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"0.6476, 0.6753, 0.7007, 0.7061, 0.7399",Could not classify - manual review needed
+Conf Champ,reference/nfl_head_coaches.csv,int64,0.00%,meta_misc,unknown,"0, 1, 2, 6",Could not classify - manual review needed
+Current Rating,current_season/strength_of_schedule_nfelo_2025_week_11.csv,float64,0.00%,pre_game_team_strength,low,"-0.55, -3.43, -5.61, 3.29, 6.34",Team/player strength metric - pre-game rating
+Date,current_season/substack_weekly_proj_elo_2025_week_11.csv; current_season/weekly_projections_ppg_substack_2025_week_11.csv,object,0.00%,id_key,low,"2025-11-13, 2025-11-16, 2025-11-17",Identified as key/identifier column
+Dif,current_season/power_ratings_nfelo_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"10.8889, 11.4444, 2.8889, 8.4444, 9.2222",Could not classify - manual review needed
+Division,reference/nfl_head_coaches.csv,float64,0.00%,pre_game_structure,low,"0.484211, 0.509804, 0.537736, 0.560976, 0.580357",Structural/environmental factor - known pre-game
+Dog,reference/nfl_head_coaches.csv,float64,0.00%,meta_misc,unknown,"0.575758, 0.581818, 0.585106, 0.61194, 0.62037",Could not classify - manual review needed
+EPA/Play,current_season/epa_tiers_nfelo_2025_week_11.csv,float64,0.00%,in_game_stats,medium,"0.146, 0.1594, 0.1597, 0.1693, 0.2114",In-game stat - verify timing before use
+EPA/Play Against,current_season/epa_tiers_nfelo_2025_week_11.csv,float64,0.00%,in_game_stats,medium,"-0.0097, -0.0328, 0.026, 0.0634, 0.1803",In-game stat - verify timing before use
+Elo,current_season/power_ratings_nfelo_2025_week_11.csv,float64,0.00%,pre_game_team_strength,low,"5.79446, 5.92483, 6.19859, 6.237, 6.84385",Team/player strength metric - pre-game rating
+Favorite,current_season/substack_weekly_proj_elo_2025_week_11.csv; current_season/weekly_projections_ppg_substack_2025_week_11.csv; reference/nfl_head_coaches.csv,"float64, object",0.00%,meta_misc,unknown,"0.478049, 0.48, 0.507317, 0.513678, 0.525",Could not classify - manual review needed
+Film,current_season/power_ratings_nfelo_2025_week_11.csv,int64,0.00%,meta_misc,unknown,"4, 5, 6, 7, 9",Could not classify - manual review needed
+For,current_season/power_ratings_nfelo_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"24.2222, 26.1111, 27.8889, 30.5556, 31.4444",Could not classify - manual review needed
+GP,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,int64,0.00%,meta_misc,unknown,"10, 5, 7, 8, 9",Could not classify - manual review needed
+Games,reference/nfl_head_coaches.csv,int64,0.00%,meta_misc,unknown,"303, 309, 320, 322, 474",Could not classify - manual review needed
+Hold,current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv,float64,0.00%,meta_misc,unknown,"0.0414079, 0.0433604, 0.0444444, 0.0463822, 0.0484496",Could not classify - manual review needed
+Home,reference/nfl_head_coaches.csv,float64,0.00%,pre_game_structure,low,"0.482993, 0.49789, 0.523179, 0.542636, 0.557692",Structural/environmental factor - known pre-game
+INT%,current_season/nfelo_qb_rankings_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"0.0065, 0.0068, 0.011, 0.0159, 0.0191",Could not classify - manual review needed
+INTs,current_season/nfelo_qb_rankings_2025_week_11.csv,int64,0.00%,meta_misc,unknown,"1, 2, 3, 5, 6",Could not classify - manual review needed
+INTs.1,current_season/nfelo_qb_rankings_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"-0.0006, 0.025, 0.038, 0.0487, 0.05",Could not classify - manual review needed
+Inc,current_season/nfelo_qb_rankings_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"-0.0115, 0.0065, 0.0218, 0.0267, 0.039",Could not classify - manual review needed
+L,current_season/nfelo_qb_rankings_2025_week_11.csv,int64,0.00%,meta_misc,unknown,"0, 2, 3, 4, 5",Could not classify - manual review needed
+Losses,reference/nfl_head_coaches.csv,int64,0.00%,meta_misc,unknown,"116, 120, 122, 138, 167",Could not classify - manual review needed
+Matchup,current_season/substack_weekly_proj_elo_2025_week_11.csv; current_season/weekly_projections_ppg_substack_2025_week_11.csv,object,0.00%,meta_misc,unknown,"Baltimore Ravens at Cleveland Browns, Carolina Panthers at Atlanta Falcons, Chicago Bears at Minnesota Vikings, Cincinnati Bengals at Pittsburgh Steelers, New York Jets at New England Patriots",Could not classify - manual review needed
+Non Division,reference/nfl_head_coaches.csv,float64,0.00%,pre_game_structure,low,"0.497512, 0.53, 0.543147, 0.544041, 0.545455",Structural/environmental factor - known pre-game
+Off a Bye,reference/nfl_head_coaches.csv,float64,6.25%,pre_game_structure,low,"0.473684, 0.541667, 0.571429, 0.590909, 0.595238",Structural/environmental factor - known pre-game
+Opponent,current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv,float64,0.00%,meta_misc,unknown,"-0.462154, 1.14725, 1.32143, 1.39165, 1.73482",Could not classify - manual review needed
+Original Rating,current_season/strength_of_schedule_nfelo_2025_week_11.csv,float64,0.00%,pre_game_team_strength,low,"-3.38349, -5.55016, 3.12496, 3.91255, 5.46796",Team/player strength metric - pre-game rating
+Over,current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv,int64,0.00%,meta_misc,unknown,"-125, -150, 105, 110, 125",Could not classify - manual review needed
+Over.1,current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv,float64,0.00%,meta_misc,unknown,"0.425532, 0.457256, 0.467532, 0.532468, 0.574468",Could not classify - manual review needed
+Pass,current_season/power_ratings_nfelo_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"0.1164, 0.2212, 0.2673, 0.277, 0.2823",Could not classify - manual review needed
+Pass.1,current_season/power_ratings_nfelo_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"-0.0344, -0.0621, -0.0678, -0.0828, 0.0004",Could not classify - manual review needed
+Passer Rtg,current_season/nfelo_qb_rankings_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"106.075, 115.544, 117.697, 127.055, 98.4987",Could not classify - manual review needed
+Penalties,current_season/nfelo_qb_rankings_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"-0.0101, -0.0166, 0.0011, 0.0026, 0.0214",Could not classify - manual review needed
+Play,current_season/power_ratings_nfelo_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"0.0505, 0.096, 0.1188, 0.146, 0.1693",Could not classify - manual review needed
+Play.1,current_season/power_ratings_nfelo_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"-0.0014, -0.0328, -0.0782, -0.1205, 0.026",Could not classify - manual review needed
+Play.2,current_season/power_ratings_nfelo_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"0.0519, 0.1432, 0.1788, 0.1969, 0.2165",Could not classify - manual review needed
+Player,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,object,0.00%,meta_misc,unknown,"00-0036900, 00-0036963, 00-0037247, 00-0038543, 00-0039075",Could not classify - manual review needed
+Playoff Berths,reference/nfl_head_coaches.csv,int64,0.00%,pre_game_structure,low,"10, 12, 20, 6, 7",Structural/environmental factor - known pre-game
+Playoffs,reference/nfl_head_coaches.csv,float64,34.38%,pre_game_structure,low,"0.388889, 0.411765, 0.473684, 0.577778, 0.625",Structural/environmental factor - known pre-game
+Points,current_season/nfelo_qb_rankings_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"1.77355, 2.01285, 2.72162, 2.96073, 3.23086",Could not classify - manual review needed
+Pythag,current_season/power_ratings_nfelo_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"5.1722, 6.2533, 6.4462, 6.7728, 6.8735",Could not classify - manual review needed
+QB,current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv; current_season/nfelo_qb_rankings_2025_week_11.csv,object,0.00%,meta_misc,unknown,"Jalen Hurts, Jared Goff, Jordan Love, Josh Allen, Lamar Jackson",Could not classify - manual review needed
+QB Adj,current_season/power_ratings_nfelo_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"1.8485, 11.7198, 12.3302, 27.4697, 9.1518",Could not classify - manual review needed
+QB Elo,current_season/nfelo_qb_rankings_2025_week_11.csv,float64,0.00%,pre_game_team_strength,low,"232.751, 233.853, 253.077, 257.207, 259.38",Team/player strength metric - pre-game rating
+QBR,current_season/nfelo_qb_rankings_2025_week_11.csv,float64,15.22%,pre_game_team_strength,low,"61.6, 68.1, 69.2, 73.2, 74.5",Team/player strength metric - pre-game rating
+Rank,current_season/strength_of_schedule_nfelo_2025_week_11.csv,int64,0.00%,pre_game_team_strength,low,"1, 2, 3, 4, 5",Team/player strength metric - pre-game rating
+Rank.1,current_season/strength_of_schedule_nfelo_2025_week_11.csv,int64,0.00%,pre_game_team_strength,low,"11, 19, 21, 22, 7",Team/player strength metric - pre-game rating
+Rank.2,current_season/strength_of_schedule_nfelo_2025_week_11.csv,float64,100.00%,pre_game_team_strength,low,,Team/player strength metric - pre-game rating
+Recs,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,int64,0.00%,meta_misc,unknown,"49, 63, 64, 66, 76",Could not classify - manual review needed
+Red Zone,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"0.153846, 0.156863, 0.211538, 0.318182, 0.404762",Could not classify - manual review needed
+Result,current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv,object,0.00%,target_outcome,high,"Active, Over",Game outcome/result - prediction target
+Return (%),reference/nfl_head_coaches.csv,float64,0.00%,meta_misc,unknown,"-0.00134183, 0.00625, 0.0147102, 0.0320292, 0.0339034",Could not classify - manual review needed
+Return (units),reference/nfl_head_coaches.csv,float64,0.00%,meta_misc,unknown,"-0.4, 11.3, 16.7, 2.2, 5.0",Could not classify - manual review needed
+Rush,current_season/power_ratings_nfelo_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"-0.0039526, -0.0134967, -0.0903789, -0.121129, 0.0793364",Could not classify - manual review needed
+Rush.1,current_season/power_ratings_nfelo_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"-0.00806835, -0.0748147, -0.107043, -0.157773, 0.0202468",Could not classify - manual review needed
+Rushing,current_season/nfelo_qb_rankings_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"-0.0265, -0.0472, 0.0164, 0.0436, 0.0514",Could not classify - manual review needed
+Sacks,current_season/nfelo_qb_rankings_2025_week_11.csv,int64,0.00%,in_game_stats,medium,"14, 15, 17, 18, 20",In-game stat - verify timing before use
+Sacks.1,current_season/nfelo_qb_rankings_2025_week_11.csv,float64,0.00%,in_game_stats,medium,"-0.0203, -0.0462, 0.0182, 0.0355, 0.0538",In-game stat - verify timing before use
+Season,current_season/epa_tiers_nfelo_2025_week_11.csv; current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv; current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv; current_season/nfelo_qb_rankings_2025_week_11.csv; current_season/power_ratings_nfelo_2025_week_11.csv; current_season/strength_of_schedule_nfelo_2025_week_11.csv,int64,0.00%,id_key,low,2025,Identified as key/identifier column
+Seasons,reference/nfl_head_coaches.csv,int64,0.00%,id_key,low,"18, 19, 27, 7, 9",Identified as key/identifier column
+Starts,current_season/nfelo_qb_rankings_2025_week_11.csv,int64,0.00%,meta_misc,unknown,"10, 2, 5, 6, 9",Could not classify - manual review needed
+Status,reference/nfl_head_coaches.csv,bool,0.00%,meta_misc,unknown,True,Could not classify - manual review needed
+Success,current_season/nfelo_qb_rankings_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"0.5243, 0.5301, 0.5345, 0.539, 0.5429",Could not classify - manual review needed
+Super Bowls,reference/nfl_head_coaches.csv,int64,0.00%,meta_misc,unknown,"0, 1, 3",Could not classify - manual review needed
+T,current_season/nfelo_qb_rankings_2025_week_11.csv,int64,0.00%,meta_misc,unknown,"0, 1",Could not classify - manual review needed
+TD%,current_season/nfelo_qb_rankings_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"0.054, 0.0573, 0.0733, 0.0812, 0.102",Could not classify - manual review needed
+TD%-INT%,current_season/nfelo_qb_rankings_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"0.0381, 0.0382, 0.0623, 0.0747, 0.0952",Could not classify - manual review needed
+TDs,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv; current_season/nfelo_qb_rankings_2025_week_11.csv,int64,0.00%,meta_misc,unknown,"15, 16, 17, 2, 20",Could not classify - manual review needed
+TDs.1,current_season/nfelo_qb_rankings_2025_week_11.csv,int64,0.00%,meta_misc,unknown,"0, 1, 4, 5, 7",Could not classify - manual review needed
+Target Rate,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,float64,100.00%,meta_misc,unknown,,Could not classify - manual review needed
+Targets,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,int64,0.00%,meta_misc,unknown,"107, 72, 79, 82, 85",Could not classify - manual review needed
+Team,current_season/epa_tiers_nfelo_2025_week_11.csv; current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv; current_season/power_ratings_nfelo_2025_week_11.csv; current_season/strength_of_schedule_nfelo_2025_week_11.csv,object,0.00%,id_key,low,"BAL, BUF, CLE, DAL, DET",Identified as key/identifier column
+Team.1,current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv,float64,0.00%,id_key,low,"4.71442, 5.46796, 6.58069, 6.70286, 6.80145",Identified as key/identifier column
+Ties,reference/nfl_head_coaches.csv,int64,0.00%,meta_misc,unknown,"0, 1, 2",Could not classify - manual review needed
+Time (ET),current_season/substack_weekly_proj_elo_2025_week_11.csv; current_season/weekly_projections_ppg_substack_2025_week_11.csv,object,0.00%,meta_misc,unknown,"1:00PM, 4:05PM, 4:25PM, 8:15PM, 9:30AM",Could not classify - manual review needed
+Total,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv; current_season/nfelo_qb_rankings_2025_week_11.csv,float64,0.00%,pre_game_market,low,"27.3027, 44.3935, 51.2881, 53.7776, 57.5857",Market line/odds - available pre-game
+Total Result,current_season/strength_of_schedule_nfelo_2025_week_11.csv,object,0.00%,target_outcome,high,"Active, Over",Game outcome/result - prediction target
+Total WPA,current_season/nfelo_qb_rankings_2025_week_11.csv,float64,0.00%,pre_game_market,low,"1.2273, 1.4856, 1.8535, 1.8928, 2.964",Market line/odds - available pre-game
+Under,current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv,int64,0.00%,meta_misc,unknown,"-125, -130, -150, 105, 125",Could not classify - manual review needed
+Under.1,current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv,float64,0.00%,meta_misc,unknown,"0.425532, 0.467532, 0.532468, 0.542744, 0.574468",Could not classify - manual review needed
+Value,current_season/power_ratings_nfelo_2025_week_11.csv,float64,0.00%,pre_game_team_strength,low,"5.01215, 5.01655, 6.19366, 7.31377, 7.33124",Team/player strength metric - pre-game rating
+Vegas Total,current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv,float64,0.00%,pre_game_market,low,"10.5, 11.5, 12.5, 8.5, 9.5",Market line/odds - available pre-game
+W,current_season/nfelo_qb_rankings_2025_week_11.csv,int64,0.00%,meta_misc,unknown,"2, 3, 5, 6, 7",Could not classify - manual review needed
+WPA / DB,current_season/nfelo_qb_rankings_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"0.0048, 0.0053, 0.006, 0.0085, 0.0096",Could not classify - manual review needed
+Win %,reference/nfl_head_coaches.csv,float64,0.00%,meta_misc,unknown,"0.568323, 0.61165, 0.6125, 0.617162, 0.64557",Could not classify - manual review needed
+Win Prob.,current_season/substack_weekly_proj_elo_2025_week_11.csv; current_season/weekly_projections_ppg_substack_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"50.6694069, 54.16367499, 62.06944233, 64.12499984, 65.56820387",Could not classify - manual review needed
+Win Total,current_season/strength_of_schedule_nfelo_2025_week_11.csv,float64,0.00%,pre_game_market,low,"10.5, 4.5, 5.5, 7.5, 9.5",Market line/odds - available pre-game
+Wins,current_season/power_ratings_nfelo_2025_week_11.csv; reference/nfl_head_coaches.csv,int64,0.00%,meta_misc,unknown,"183, 187, 189, 196, 306",Could not classify - manual review needed
+WoW,current_season/power_ratings_nfelo_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"0.525772, 0.696909, 0.700825, 1.67778, 2.46035",Could not classify - manual review needed
+X.1,current_season/power_ratings_substack_2025_week_11.csv,object,0.00%,meta_misc,unknown,"Chiefs, Lions, Rams, Seahawks, Team",Could not classify - manual review needed
+X.2,current_season/power_ratings_substack_2025_week_11.csv; current_season/qb_epa_substack_2025_week_11.csv,object,0.00%,meta_misc,unknown,"AFCS, AFCW, Div., Jared Goff, Josh Allen",Could not classify - manual review needed
+X.20,current_season/qb_epa_substack_2025_week_11.csv,object,0.00%,meta_misc,unknown,"320.330558, 353.880884, 366.381982, 396.270789, Plays",Could not classify - manual review needed
+X.23,current_season/qb_epa_substack_2025_week_11.csv,object,0.00%,meta_misc,unknown,"0.038498874, 0.049051094, 0.053486068, 3.55E-02, Val/Pl",Could not classify - manual review needed
+X.25,current_season/qb_epa_substack_2025_week_11.csv,object,0.00%,meta_misc,unknown,"26.56866663, 26.64333247, 29.67928801, 35.75231654, vs Avg",Could not classify - manual review needed
+X.26,current_season/qb_epa_substack_2025_week_11.csv,object,0.00%,meta_misc,unknown,"52.98107611, 53.29503677, 55.39457077, 61.49465415, vs Rep",Could not classify - manual review needed
+X.3,current_season/power_ratings_substack_2025_week_11.csv,object,0.00%,meta_misc,unknown,"0.558504783, 2.260843771, 4.804841963, 4.835937439, Def.",Could not classify - manual review needed
+X.4,current_season/power_ratings_substack_2025_week_11.csv; current_season/qb_epa_substack_2025_week_11.csv,object,0.00%,meta_misc,unknown,"29, 30, 31, 37, 6.326224547",Could not classify - manual review needed
+X.5,current_season/power_ratings_substack_2025_week_11.csv,object,0.00%,meta_misc,unknown,"70.2, 88.3, 95.1, 96.3, PO%",Could not classify - manual review needed
+X.6,current_season/power_ratings_substack_2025_week_11.csv; current_season/qb_epa_substack_2025_week_11.csv,object,0.00%,meta_misc,unknown,"25.8, 35.9, 56.7, 64.1, Div%",Could not classify - manual review needed
+X.7,current_season/power_ratings_substack_2025_week_11.csv,object,0.00%,meta_misc,unknown,"14.3, 16.4, 18.1, 25.9, Cnf%",Could not classify - manual review needed
+X.8,current_season/power_ratings_substack_2025_week_11.csv,object,0.00%,meta_misc,unknown,"10.1, 16.8, 7.9, 8.8, SB%",Could not classify - manual review needed
+X.9,current_season/qb_epa_substack_2025_week_11.csv,object,0.00%,meta_misc,unknown,"10, 6, 7, 9, Prim.",Could not classify - manual review needed
+YAC,current_season/nfelo_qb_rankings_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"0.0023, 0.0037, 0.0716, 0.0788, 0.1885",Could not classify - manual review needed
+YPA,current_season/nfelo_qb_rankings_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"7.4571, 7.8799, 8.1641, 8.1868, 8.4966",Could not classify - manual review needed
+YPC,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv; current_season/nfelo_qb_rankings_2025_week_11.csv,float64,1.09%,meta_misc,unknown,"10.8281, 10.9342, 11.7424, 15.5918, 16.5238",Could not classify - manual review needed
+YPG,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"115.667, 77.0, 84.8889, 92.3333, 96.875",Could not classify - manual review needed
+YTD,current_season/power_ratings_nfelo_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"0.204673, 2.64027, 2.85775, 5.08876, 6.2258",Could not classify - manual review needed
+Yards,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv; current_season/nfelo_qb_rankings_2025_week_11.csv,int64,0.00%,in_game_stats,medium,"1041, 1249, 2139, 2235, 2349",In-game stat - verify timing before use
+Yards.1,current_season/nfelo_qb_rankings_2025_week_11.csv,int64,0.00%,in_game_stats,medium,"11, 219, 27, 292, 321",In-game stat - verify timing before use
+aDOT,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv; current_season/nfelo_qb_rankings_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"11.8333, 12.8353, 6.381, 7.65854, 7.7939",Could not classify - manual review needed
+away_coach,cache/schedules_2025.csv,object,0.00%,pre_game_structure,low,"Andy Reid, Brian Schottenheimer, Mike McDaniel, Todd Bowles, Zac Taylor",Structural/environmental factor - known pre-game
+away_moneyline,cache/schedules_2025.csv,float64,34.56%,pre_game_market,low,"-108.0, -115.0, -175.0, -238.0, 330.0",Market line/odds - available pre-game
+away_qb_id,cache/schedules_2025.csv,object,34.56%,id_key,low,"00-0033077, 00-0033873, 00-0034855, 00-0036212, 00-0036442",Identified as key/identifier column
+away_qb_name,cache/schedules_2025.csv,object,34.56%,pre_game_structure,low,"Baker Mayfield, Dak Prescott, Joe Burrow, Patrick Mahomes, Tua Tagovailoa",Structural/environmental factor - known pre-game
+away_rest,cache/schedules_2025.csv,int64,0.00%,pre_game_structure,low,"10, 4, 6, 7, 8",Structural/environmental factor - known pre-game
+away_score,cache/schedules_2025.csv,float64,44.85%,pre_game_structure,low,"17.0, 20.0, 21.0, 23.0, 8.0",Structural/environmental factor - known pre-game
+away_spread_odds,cache/schedules_2025.csv,float64,34.56%,pre_game_market,low,"-102.0, -105.0, -110.0, -118.0, -120.0",Market line/odds - available pre-game
+away_team,cache/schedules_2025.csv,object,0.00%,id_key,low,"CIN, DAL, KC, MIA, TB",Identified as key/identifier column
+def_epa_per_play,team_week_epa_2013_2024.csv,float64,0.00%,in_game_stats,medium,"-0.0372428899743741, -0.1105833259480397, 0.0525101733745657, 0.054587564024363, 0.3374302911166417",In-game stat - verify timing before use
+def_epa_total,team_week_epa_2013_2024.csv,float64,0.00%,pre_game_market,low,"-2.3463020683855733, -9.841916009375538, 22.945259795931637, 3.38442896951051, 3.4656714427213378",Market line/odds - available pre-game
+def_plays,team_week_epa_2013_2024.csv,int64,0.00%,in_game_stats,medium,"62, 63, 66, 68, 89",In-game stat - verify timing before use
+def_success_rate,team_week_epa_2013_2024.csv,float64,0.00%,in_game_stats,medium,"0.3939393939393939, 0.4269662921348314, 0.4444444444444444, 0.4705882352941176, 0.5",In-game stat - verify timing before use
+div_game,cache/schedules_2025.csv,int64,0.00%,meta_misc,unknown,"0, 1",Could not classify - manual review needed
+espn,cache/schedules_2025.csv,int64,0.00%,meta_misc,unknown,"401772510, 401772714, 401772719, 401772829, 401772830",Could not classify - manual review needed
+ftn,cache/schedules_2025.csv,float64,0.00%,meta_misc,unknown,"6734.0, 6735.0, 6736.0, 6737.0, 6738.0",Could not classify - manual review needed
+game_id,cache/schedules_2025.csv,object,0.00%,id_key,low,"2025_01_CIN_CLE, 2025_01_DAL_PHI, 2025_01_KC_LAC, 2025_01_MIA_IND, 2025_01_TB_ATL",Identified as key/identifier column
+game_type,cache/schedules_2025.csv,object,0.00%,meta_misc,unknown,REG,Could not classify - manual review needed
+gameday,cache/schedules_2025.csv,object,0.00%,meta_misc,unknown,"2025-09-04, 2025-09-05, 2025-09-07, 2025-09-08, 2025-09-11",Could not classify - manual review needed
+gametime,cache/schedules_2025.csv,object,0.00%,meta_misc,unknown,"13:00, 16:05, 16:25, 20:00, 20:20",Could not classify - manual review needed
+gsis,cache/schedules_2025.csv,float64,39.71%,meta_misc,unknown,"59843.0, 59844.0, 59845.0, 59846.0, 59847.0",Could not classify - manual review needed
+home_coach,cache/schedules_2025.csv,object,0.00%,pre_game_structure,low,"Jim Harbaugh, Kevin Stefanski, Nick Sirianni, Raheem Morris, Shane Steichen",Structural/environmental factor - known pre-game
+home_moneyline,cache/schedules_2025.csv,float64,34.56%,pre_game_market,low,"-105.0, -112.0, -425.0, 145.0, 195.0",Market line/odds - available pre-game
+home_qb_id,cache/schedules_2025.csv,object,34.56%,id_key,low,"00-0026158, 00-0035710, 00-0036355, 00-0036389, 00-0039917",Identified as key/identifier column
+home_qb_name,cache/schedules_2025.csv,object,34.56%,pre_game_structure,low,"Daniel Jones, Jalen Hurts, Joe Flacco, Justin Herbert, Michael Penix",Structural/environmental factor - known pre-game
+home_rest,cache/schedules_2025.csv,int64,0.00%,pre_game_structure,low,"10, 4, 6, 7, 9",Structural/environmental factor - known pre-game
+home_score,cache/schedules_2025.csv,float64,44.85%,pre_game_structure,low,"16.0, 20.0, 24.0, 27.0, 33.0",Structural/environmental factor - known pre-game
+home_spread_odds,cache/schedules_2025.csv,float64,34.56%,pre_game_market,low,"-102.0, -110.0, -115.0, -118.0, 100.0",Market line/odds - available pre-game
+home_team,cache/schedules_2025.csv,object,0.00%,id_key,low,"ATL, CLE, IND, LAC, PHI",Identified as key/identifier column
+location,cache/schedules_2025.csv,object,0.00%,pre_game_structure,low,"Home, Neutral",Structural/environmental factor - known pre-game
+nfelo,current_season/power_ratings_nfelo_2025_week_11.csv,float64,0.00%,pre_game_team_strength,low,"1616.8, 1616.91, 1646.34, 1674.34, 1674.78",Team/player strength metric - pre-game rating
+nfl_detail_id,cache/schedules_2025.csv,float64,100.00%,id_key,low,,Identified as key/identifier column
+off_epa_per_play,team_week_epa_2013_2024.csv,float64,0.00%,in_game_stats,medium,"-0.0311398336216041, -0.0348673292437412, -0.0996387004470605, 0.0270978178258519, 0.0525185895016713",In-game stat - verify timing before use
+off_epa_total,team_week_epa_2013_2024.csv,float64,0.00%,pre_game_market,low,"-1.7126908491882258, -3.033457644205489, -6.077960727270693, 1.354890891292598, 3.676301265116993",Market line/odds - available pre-game
+off_pass_plays,team_week_epa_2013_2024.csv,int64,0.00%,in_game_stats,medium,"24, 27, 41, 44, 66",In-game stat - verify timing before use
+off_plays,team_week_epa_2013_2024.csv,int64,0.00%,in_game_stats,medium,"50, 55, 61, 70, 87",In-game stat - verify timing before use
+off_rush_plays,team_week_epa_2013_2024.csv,int64,0.00%,in_game_stats,medium,"14, 21, 26, 28, 34",In-game stat - verify timing before use
+off_success_rate,team_week_epa_2013_2024.csv,float64,0.00%,in_game_stats,medium,"0.3448275862068966, 0.4, 0.4262295081967213, 0.4857142857142857, 0.5",In-game stat - verify timing before use
+old_game_id,cache/schedules_2025.csv,int64,0.00%,id_key,low,"2025090400, 2025090500, 2025090700, 2025090701, 2025090702",Identified as key/identifier column
+over_odds,cache/schedules_2025.csv,float64,34.56%,pre_game_market,low,"-110.0, -112.0, -115.0, -120.0, 100.0",Market line/odds - available pre-game
+overtime,cache/schedules_2025.csv,float64,44.85%,meta_misc,unknown,"0.0, 1.0",Could not classify - manual review needed
+pff,cache/schedules_2025.csv,float64,0.00%,meta_misc,unknown,"28418.0, 28419.0, 28420.0, 28421.0, 28422.0",Could not classify - manual review needed
+pfr,cache/schedules_2025.csv,object,0.00%,meta_misc,unknown,"202509040phi, 202509050sdg, 202509070atl, 202509070cle, 202509070clt",Could not classify - manual review needed
+referee,cache/schedules_2025.csv,object,44.85%,meta_misc,unknown,"Adrian Hill, Brad Allen, Carl Cheffers, Land Clark, Shawn Smith",Could not classify - manual review needed
+result,cache/schedules_2025.csv,float64,44.85%,target_outcome,high,"-1.0, -3.0, 25.0, 4.0, 6.0",Game outcome/result - prediction target
+roof,cache/schedules_2025.csv,object,0.00%,pre_game_structure,low,"closed, dome, outdoors",Structural/environmental factor - known pre-game
+season,cache/schedules_2025.csv; team_week_epa_2013_2024.csv,int64,0.00%,id_key,low,"2013, 2014, 2015, 2016, 2017",Identified as key/identifier column
+spread_line,cache/schedules_2025.csv,float64,34.56%,pre_game_market,low,"-1.5, -3.0, -5.5, 1.5, 8.5",Market line/odds - available pre-game
+stadium,cache/schedules_2025.csv,object,0.00%,pre_game_structure,low,"FirstEnergy Stadium, Lincoln Financial Field, Lucas Oil Stadium, Mercedes-Benz Stadium, SoFi Stadium",Structural/environmental factor - known pre-game
+stadium_id,cache/schedules_2025.csv,object,0.00%,id_key,low,"ATL97, CLE00, IND00, LAX01, PHI00",Identified as key/identifier column
+surface,cache/schedules_2025.csv,object,0.37%,pre_game_structure,low,"a_turf, fieldturf, grass, matrixturf, sportturf",Structural/environmental factor - known pre-game
+team,team_week_epa_2013_2024.csv,object,0.00%,id_key,low,"ARI, ATL, BAL, BUF, CAR",Identified as key/identifier column
+temp,cache/schedules_2025.csv,float64,62.87%,meta_misc,unknown,"62.0, 63.0, 67.0, 75.0, 85.0",Could not classify - manual review needed
+total,cache/schedules_2025.csv,float64,44.85%,pre_game_market,low,"33.0, 41.0, 43.0, 44.0, 48.0",Market line/odds - available pre-game
+total_line,cache/schedules_2025.csv,float64,34.56%,pre_game_market,low,"37.5, 42.5, 44.5, 45.5, 47.5",Market line/odds - available pre-game
+under_odds,cache/schedules_2025.csv,float64,34.56%,pre_game_market,low,"-105.0, -108.0, -110.0, -120.0, 100.0",Market line/odds - available pre-game
+vs Sticks,current_season/nfelo_qb_rankings_2025_week_11.csv,float64,0.00%,meta_misc,unknown,"-0.0413, -0.6718, -1.0476, -1.8718, 0.974",Could not classify - manual review needed
+week,cache/schedules_2025.csv; team_week_epa_2013_2024.csv,int64,0.00%,id_key,low,"1, 2, 3, 4, 5",Identified as key/identifier column
+weekday,cache/schedules_2025.csv,object,0.00%,id_key,low,"Friday, Monday, Sunday, Thursday",Identified as key/identifier column
+wind,cache/schedules_2025.csv,float64,62.87%,pre_game_structure,low,"10.0, 11.0, 3.0, 4.0, 5.0",Structural/environmental factor - known pre-game
+~~~2025 Forecast~~~,current_season/power_ratings_substack_2025_week_11.csv,object,0.00%,meta_misc,unknown,"10.408, 11.239, 12.092, 12.525, Avg. Wins",Could not classify - manual review needed
+~~~Per 17 Gms~~~,current_season/qb_epa_substack_2025_week_11.csv,object,0.00%,meta_misc,unknown,"103.6807881, 104.6155951, 92.01385717, 97.93925609, EPA",Could not classify - manual review needed
+~~~Ratings~~~,current_season/power_ratings_substack_2025_week_11.csv,object,0.00%,pre_game_team_strength,low,"1.98075851, 3.932112924, 4.624892072, 5.767719765, Off.",Team/player strength metric - pre-game rating

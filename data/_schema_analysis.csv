@@ -1,0 +1,208 @@
+column_name,detected_in_files,file_count,inferred_dtype,dtype_conflicts,missing_rate_avg,missing_rate_min,missing_rate_max,recommended_dtype,notes,value_range_min,value_range_max
+/ Catch,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-1.89,1.952
+/ DB,current_season/nfelo_qb_rankings_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-0.454,0.33
+/ Game,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-3.024,7.436
+/ Route,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,1,float,,1.0,1.0,1.0,float,High missing rate: 100.0%; Only appears in one file,,
+/ Target,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-0.945,1.627
+1st Downs,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,0.0,45.0
+3rd Down,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,0.0,0.378
+ANY/A,current_season/nfelo_qb_rankings_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,2.019,9.578
+ATS %,reference/nfl_head_coaches.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,0.2,0.684
+Actual,current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,1.0,8.0
+Adj. Total,current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,4.59,12.356
+Against,current_season/power_ratings_nfelo_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,16.667,33.333
+Air Yards,current_season/nfelo_qb_rankings_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-0.223,0.282
+All,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,0.041,0.388
+Atts,current_season/nfelo_qb_rankings_2025_week_11.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,36.0,358.0
+Avg Margin,reference/nfl_head_coaches.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-10.615,5.395
+Avg PA,reference/nfl_head_coaches.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,18.44,30.778
+Avg PF,reference/nfl_head_coaches.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,15.5,29.222
+Avg Spread,reference/nfl_head_coaches.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-3.849,6.25
+Avg. Opp. Rating,current_season/strength_of_schedule_nfelo_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-1.393,2.056
+Avg. Opp. Rating.1,current_season/strength_of_schedule_nfelo_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-3.779,2.971
+Avg. Opp. Rating.2,current_season/strength_of_schedule_nfelo_2025_week_11.csv,1,float,,1.0,1.0,1.0,float,High missing rate: 100.0%; Only appears in one file,,
+Away,reference/nfl_head_coaches.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,0.25,0.7
+CB,current_season/nfelo_qb_rankings_2025_week_11.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,0.0,4.0
+CB Opps,current_season/nfelo_qb_rankings_2025_week_11.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,0.0,6.0
+CB%,current_season/nfelo_qb_rankings_2025_week_11.csv,1,float,,0.174,0.174,0.174,float,Only appears in one file,0.0,1.0
+CPOE,current_season/nfelo_qb_rankings_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-8.142,11.274
+CROE,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-21.974,28.235
+Carries,current_season/nfelo_qb_rankings_2025_week_11.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,0.0,55.0
+Catch Rate,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,0.367,1.0
+Change (Week),current_season/nfelo_qb_rankings_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-0.915,0.884
+Change (Year),current_season/nfelo_qb_rankings_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-2.745,2.267
+Coach,current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv; reference/nfl_head_coaches.csv,2,string,,0.0,0.0,0.0,string,,,
+Comp,current_season/nfelo_qb_rankings_2025_week_11.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,21.0,240.0
+Comp%,current_season/nfelo_qb_rankings_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,0.537,0.75
+Conf Champ,reference/nfl_head_coaches.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,0.0,6.0
+Current Rating,current_season/strength_of_schedule_nfelo_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-7.81,7.94
+Date,current_season/substack_weekly_proj_elo_2025_week_11.csv; current_season/weekly_projections_ppg_substack_2025_week_11.csv,2,string,,0.0,0.0,0.0,string,,,
+Dif,current_season/power_ratings_nfelo_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-14.111,11.5
+Division,reference/nfl_head_coaches.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,0.0,0.714
+Dog,reference/nfl_head_coaches.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,0.222,0.75
+EPA/Play,current_season/epa_tiers_nfelo_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-0.192,0.211
+EPA/Play Against,current_season/epa_tiers_nfelo_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-0.176,0.203
+Elo,current_season/power_ratings_nfelo_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,2.65,7.099
+Favorite,current_season/substack_weekly_proj_elo_2025_week_11.csv; current_season/weekly_projections_ppg_substack_2025_week_11.csv; reference/nfl_head_coaches.csv,3,string,float; string,0.0,0.0,0.0,string,"Type conflict detected: {'float', 'string'}",0.0,1.0
+Film,current_season/power_ratings_nfelo_2025_week_11.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,1.0,9.0
+For,current_season/power_ratings_nfelo_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,14.444,32.1
+GP,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,3.0,10.0
+Games,reference/nfl_head_coaches.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,9.0,474.0
+Hold,current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,0.041,0.051
+Home,reference/nfl_head_coaches.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,0.091,0.667
+INT%,current_season/nfelo_qb_rankings_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,0.0,0.077
+INTs,current_season/nfelo_qb_rankings_2025_week_11.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,0.0,13.0
+INTs.1,current_season/nfelo_qb_rankings_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-0.233,0.07
+Inc,current_season/nfelo_qb_rankings_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-0.16,0.066
+L,current_season/nfelo_qb_rankings_2025_week_11.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,0.0,8.0
+Losses,reference/nfl_head_coaches.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,3.0,167.0
+Matchup,current_season/substack_weekly_proj_elo_2025_week_11.csv; current_season/weekly_projections_ppg_substack_2025_week_11.csv,2,string,,0.0,0.0,0.0,string,,,
+Non Division,reference/nfl_head_coaches.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,0.25,0.714
+Off a Bye,reference/nfl_head_coaches.csv,1,float,,0.062,0.062,0.062,float,Only appears in one file,0.0,1.0
+Opponent,current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-1.393,2.056
+Original Rating,current_season/strength_of_schedule_nfelo_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-8.076,6.801
+Over,current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,-150.0,125.0
+Over.1,current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,0.426,0.574
+Pass,current_season/power_ratings_nfelo_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-0.291,0.282
+Pass.1,current_season/power_ratings_nfelo_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-0.218,0.294
+Passer Rtg,current_season/nfelo_qb_rankings_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,48.798,127.055
+Penalties,current_season/nfelo_qb_rankings_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-0.04,0.058
+Play,current_season/power_ratings_nfelo_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-0.192,0.211
+Play.1,current_season/power_ratings_nfelo_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-0.176,0.203
+Play.2,current_season/power_ratings_nfelo_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-0.281,0.221
+Player,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+Playoff Berths,reference/nfl_head_coaches.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,0.0,20.0
+Playoffs,reference/nfl_head_coaches.csv,1,float,,0.344,0.344,0.344,float,Only appears in one file,0.0,0.75
+Points,current_season/nfelo_qb_rankings_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-4.227,3.231
+Pythag,current_season/power_ratings_nfelo_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,1.493,7.41
+QB,current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv; current_season/nfelo_qb_rankings_2025_week_11.csv,2,string,,0.0,0.0,0.0,string,,,
+QB Adj,current_season/power_ratings_nfelo_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-56.577,27.47
+QB Elo,current_season/nfelo_qb_rankings_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-93.421,259.38
+QBR,current_season/nfelo_qb_rankings_2025_week_11.csv,1,float,,0.152,0.152,0.152,float,Only appears in one file,24.2,83.5
+Rank,current_season/strength_of_schedule_nfelo_2025_week_11.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,1.0,32.0
+Rank.1,current_season/strength_of_schedule_nfelo_2025_week_11.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,1.0,32.0
+Rank.2,current_season/strength_of_schedule_nfelo_2025_week_11.csv,1,float,,1.0,1.0,1.0,float,High missing rate: 100.0%; Only appears in one file,,
+Recs,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,8.0,76.0
+Red Zone,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,0.0,0.433
+Result,current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+Return (%),reference/nfl_head_coaches.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-0.594,0.297
+Return (units),reference/nfl_head_coaches.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-21.5,26.5
+Rush,current_season/power_ratings_nfelo_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-0.245,0.203
+Rush.1,current_season/power_ratings_nfelo_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-0.188,0.159
+Rushing,current_season/nfelo_qb_rankings_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-0.121,0.132
+Sacks,current_season/nfelo_qb_rankings_2025_week_11.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,1.0,38.0
+Sacks.1,current_season/nfelo_qb_rankings_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-0.273,0.068
+Season,current_season/epa_tiers_nfelo_2025_week_11.csv; current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv; current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv; current_season/nfelo_qb_rankings_2025_week_11.csv; current_season/power_ratings_nfelo_2025_week_11.csv; current_season/strength_of_schedule_nfelo_2025_week_11.csv,6,integer,,0.0,0.0,0.0,integer,,2025.0,2025.0
+Seasons,reference/nfl_head_coaches.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,1.0,27.0
+Starts,current_season/nfelo_qb_rankings_2025_week_11.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,1.0,10.0
+Status,reference/nfl_head_coaches.csv,1,boolean,,0.0,0.0,0.0,boolean,Only appears in one file,,
+Success,current_season/nfelo_qb_rankings_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,0.363,0.577
+Super Bowls,reference/nfl_head_coaches.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,0.0,3.0
+T,current_season/nfelo_qb_rankings_2025_week_11.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,0.0,1.0
+TD%,current_season/nfelo_qb_rankings_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,0.0,0.102
+TD%-INT%,current_season/nfelo_qb_rankings_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-0.077,0.095
+TDs,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv; current_season/nfelo_qb_rankings_2025_week_11.csv,2,integer,,0.0,0.0,0.0,integer,,0.0,25.0
+TDs.1,current_season/nfelo_qb_rankings_2025_week_11.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,0.0,7.0
+Target Rate,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,1,float,,1.0,1.0,1.0,float,High missing rate: 100.0%; Only appears in one file,,
+Targets,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,8.0,107.0
+Team,current_season/epa_tiers_nfelo_2025_week_11.csv; current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv; current_season/power_ratings_nfelo_2025_week_11.csv; current_season/strength_of_schedule_nfelo_2025_week_11.csv,4,string,,0.0,0.0,0.0,string,,,
+Team.1,current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-8.076,6.801
+Ties,reference/nfl_head_coaches.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,0.0,2.0
+Time (ET),current_season/substack_weekly_proj_elo_2025_week_11.csv; current_season/weekly_projections_ppg_substack_2025_week_11.csv,2,string,,0.0,0.0,0.0,string,,,
+Total,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv; current_season/nfelo_qb_rankings_2025_week_11.csv,2,float,,0.0,0.0,0.0,float,,-74.722,101.817
+Total Result,current_season/strength_of_schedule_nfelo_2025_week_11.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+Total WPA,current_season/nfelo_qb_rankings_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-1.515,3.738
+Under,current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,-150.0,125.0
+Under.1,current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,0.426,0.574
+Value,current_season/power_ratings_nfelo_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-9.261,7.331
+Vegas Total,current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,4.5,12.5
+W,current_season/nfelo_qb_rankings_2025_week_11.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,0.0,8.0
+WPA / DB,current_season/nfelo_qb_rankings_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-0.008,0.011
+Win %,reference/nfl_head_coaches.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,0.154,0.709
+Win Prob.,current_season/substack_weekly_proj_elo_2025_week_11.csv; current_season/weekly_projections_ppg_substack_2025_week_11.csv,2,float,,0.0,0.0,0.0,float,,50.669,82.221
+Win Total,current_season/strength_of_schedule_nfelo_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,4.5,12.5
+Wins,current_season/power_ratings_nfelo_2025_week_11.csv; reference/nfl_head_coaches.csv,2,integer,,0.0,0.0,0.0,integer,,1.0,306.0
+WoW,current_season/power_ratings_nfelo_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-0.738,2.46
+X.1,current_season/power_ratings_substack_2025_week_11.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+X.2,current_season/power_ratings_substack_2025_week_11.csv; current_season/qb_epa_substack_2025_week_11.csv,2,string,,0.0,0.0,0.0,string,,,
+X.20,current_season/qb_epa_substack_2025_week_11.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+X.23,current_season/qb_epa_substack_2025_week_11.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+X.25,current_season/qb_epa_substack_2025_week_11.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+X.26,current_season/qb_epa_substack_2025_week_11.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+X.3,current_season/power_ratings_substack_2025_week_11.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+X.4,current_season/power_ratings_substack_2025_week_11.csv; current_season/qb_epa_substack_2025_week_11.csv,2,string,,0.0,0.0,0.0,string,,,
+X.5,current_season/power_ratings_substack_2025_week_11.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+X.6,current_season/power_ratings_substack_2025_week_11.csv; current_season/qb_epa_substack_2025_week_11.csv,2,string,,0.0,0.0,0.0,string,,,
+X.7,current_season/power_ratings_substack_2025_week_11.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+X.8,current_season/power_ratings_substack_2025_week_11.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+X.9,current_season/qb_epa_substack_2025_week_11.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+YAC,current_season/nfelo_qb_rankings_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-0.202,0.189
+YPA,current_season/nfelo_qb_rankings_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,5.023,9.965
+YPC,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv; current_season/nfelo_qb_rankings_2025_week_11.csv,2,float,,0.011,0.0,0.022,float,,1.0,23.5
+YPG,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,3.7,115.667
+YTD,current_season/power_ratings_nfelo_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-5.217,6.226
+Yards,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv; current_season/nfelo_qb_rankings_2025_week_11.csv,2,integer,,0.0,0.0,0.0,integer,,30.0,2659.0
+Yards.1,current_season/nfelo_qb_rankings_2025_week_11.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,0.0,333.0
+aDOT,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv; current_season/nfelo_qb_rankings_2025_week_11.csv,2,float,,0.0,0.0,0.0,float,,-3.071,25.917
+away_coach,cache/schedules_2025.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+away_moneyline,cache/schedules_2025.csv,1,float,,0.346,0.346,0.346,float,Only appears in one file,-650.0,950.0
+away_qb_id,cache/schedules_2025.csv,1,string,,0.346,0.346,0.346,string,Only appears in one file,,
+away_qb_name,cache/schedules_2025.csv,1,string,,0.346,0.346,0.346,string,Only appears in one file,,
+away_rest,cache/schedules_2025.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,4.0,15.0
+away_score,cache/schedules_2025.csv,1,float,,0.449,0.449,0.449,float,Only appears in one file,0.0,47.0
+away_spread_odds,cache/schedules_2025.csv,1,float,,0.346,0.346,0.346,float,Only appears in one file,-125.0,100.0
+away_team,cache/schedules_2025.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+def_epa_per_play,team_week_epa_2013_2024.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-0.832,0.618
+def_epa_total,team_week_epa_2013_2024.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-45.388,43.855
+def_plays,team_week_epa_2013_2024.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,33.0,95.0
+def_success_rate,team_week_epa_2013_2024.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,0.121,0.667
+div_game,cache/schedules_2025.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,0.0,1.0
+espn,cache/schedules_2025.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,401772510.0,401772970.0
+ftn,cache/schedules_2025.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,6734.0,7005.0
+game_id,cache/schedules_2025.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+game_type,cache/schedules_2025.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+gameday,cache/schedules_2025.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+gametime,cache/schedules_2025.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+gsis,cache/schedules_2025.csv,1,float,,0.397,0.397,0.397,float,Only appears in one file,59843.0,60006.0
+home_coach,cache/schedules_2025.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+home_moneyline,cache/schedules_2025.csv,1,float,,0.346,0.346,0.346,float,Only appears in one file,-1650.0,470.0
+home_qb_id,cache/schedules_2025.csv,1,string,,0.346,0.346,0.346,string,Only appears in one file,,
+home_qb_name,cache/schedules_2025.csv,1,string,,0.346,0.346,0.346,string,Only appears in one file,,
+home_rest,cache/schedules_2025.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,4.0,15.0
+home_score,cache/schedules_2025.csv,1,float,,0.449,0.449,0.449,float,Only appears in one file,3.0,52.0
+home_spread_odds,cache/schedules_2025.csv,1,float,,0.346,0.346,0.346,float,Only appears in one file,-120.0,105.0
+home_team,cache/schedules_2025.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+location,cache/schedules_2025.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+nfelo,current_season/power_ratings_nfelo_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,1259.98,1674.78
+nfl_detail_id,cache/schedules_2025.csv,1,float,,1.0,1.0,1.0,float,High missing rate: 100.0%; Only appears in one file,,
+off_epa_per_play,team_week_epa_2013_2024.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-0.832,0.618
+off_epa_total,team_week_epa_2013_2024.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-45.388,43.855
+off_pass_plays,team_week_epa_2013_2024.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,3.0,72.0
+off_plays,team_week_epa_2013_2024.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,33.0,95.0
+off_rush_plays,team_week_epa_2013_2024.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,5.0,55.0
+off_success_rate,team_week_epa_2013_2024.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,0.121,0.667
+old_game_id,cache/schedules_2025.csv,1,integer,,0.0,0.0,0.0,integer,Only appears in one file,2025010400.0,2025122900.0
+over_odds,cache/schedules_2025.csv,1,float,,0.346,0.346,0.346,float,Only appears in one file,-120.0,102.0
+overtime,cache/schedules_2025.csv,1,float,,0.449,0.449,0.449,float,Only appears in one file,0.0,1.0
+pff,cache/schedules_2025.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,28418.0,28689.0
+pfr,cache/schedules_2025.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+referee,cache/schedules_2025.csv,1,string,,0.449,0.449,0.449,string,Only appears in one file,,
+result,cache/schedules_2025.csv,1,float,,0.449,0.449,0.449,float,Only appears in one file,-34.0,38.0
+roof,cache/schedules_2025.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+season,cache/schedules_2025.csv; team_week_epa_2013_2024.csv,2,integer,,0.0,0.0,0.0,integer,,2013.0,2025.0
+spread_line,cache/schedules_2025.csv,1,float,,0.346,0.346,0.346,float,Only appears in one file,-12.5,15.5
+stadium,cache/schedules_2025.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+stadium_id,cache/schedules_2025.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+surface,cache/schedules_2025.csv,1,string,,0.004,0.004,0.004,string,Only appears in one file,,
+team,team_week_epa_2013_2024.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+temp,cache/schedules_2025.csv,1,float,,0.629,0.629,0.629,float,High missing rate: 62.9%; Only appears in one file,33.0,89.0
+total,cache/schedules_2025.csv,1,float,,0.449,0.449,0.449,float,Only appears in one file,17.0,89.0
+total_line,cache/schedules_2025.csv,1,float,,0.346,0.346,0.346,float,Only appears in one file,34.5,54.5
+under_odds,cache/schedules_2025.csv,1,float,,0.346,0.346,0.346,float,Only appears in one file,-122.0,100.0
+vs Sticks,current_season/nfelo_qb_rankings_2025_week_11.csv,1,float,,0.0,0.0,0.0,float,Only appears in one file,-3.925,1.54
+week,cache/schedules_2025.csv; team_week_epa_2013_2024.csv,2,integer,,0.0,0.0,0.0,integer,,1.0,18.0
+weekday,cache/schedules_2025.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+wind,cache/schedules_2025.csv,1,float,,0.629,0.629,0.629,float,High missing rate: 62.9%; Only appears in one file,2.0,18.0
+~~~2025 Forecast~~~,current_season/power_ratings_substack_2025_week_11.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+~~~Per 17 Gms~~~,current_season/qb_epa_substack_2025_week_11.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,
+~~~Ratings~~~,current_season/power_ratings_substack_2025_week_11.csv,1,string,,0.0,0.0,0.0,string,Only appears in one file,,

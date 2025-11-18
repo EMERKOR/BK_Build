@@ -1,0 +1,15 @@
+old_filename,old_path,inferred_category,inferred_stat_type,inferred_provider,inferred_season,inferred_week,proposed_new_filename,confidence_score,notes
+_file_mapping_preview.csv,_file_mapping_preview.csv,unknown,general,,,,unknown_SEASON_week_XX.csv,0.29999999999999993,Could not confidently determine category; No provider identified in filename; No season/year found; No week number found - may be season-level data
+schedules_2025.csv,cache/schedules_2025.csv,schedule,schedule,,2025,,schedule_2025.csv,0.9,No provider identified in filename
+epa_tiers_nfelo_2025_week_11.csv,current_season/epa_tiers_nfelo_2025_week_11.csv,epa_tiers,epa,nfelo,2025,11,epa_tiers_nfelo_2025_week_11.csv,1.0,Clear naming structure detected
+nfelo_nfl_receiving_leaders_2025_week_11.csv,current_season/nfelo_nfl_receiving_leaders_2025_week_11.csv,receiving,elo,nfelo,2025,11,receiving_elo_nfelo_2025_week_11.csv,1.0,Clear naming structure detected
+nfelo_nfl_win_totals_2025_week_11 (1).csv,current_season/nfelo_nfl_win_totals_2025_week_11 (1).csv,win_totals,elo,nfelo,2025,11,win_totals_elo_nfelo_2025_week_11.csv,1.0,Filename contains copy marker - possible duplicate
+nfelo_qb_rankings_2025_week_11.csv,current_season/nfelo_qb_rankings_2025_week_11.csv,qb_rankings,elo,nfelo,2025,11,qb_rankings_elo_nfelo_2025_week_11.csv,1.0,Clear naming structure detected
+power_ratings_nfelo_2025_week_11.csv,current_season/power_ratings_nfelo_2025_week_11.csv,team_ratings,elo,nfelo,2025,11,team_ratings_elo_nfelo_2025_week_11.csv,1.0,Clear naming structure detected
+power_ratings_substack_2025_week_11.csv,current_season/power_ratings_substack_2025_week_11.csv,team_ratings,power,substack,2025,11,team_ratings_power_substack_2025_week_11.csv,1.0,Clear naming structure detected
+qb_epa_substack_2025_week_11.csv,current_season/qb_epa_substack_2025_week_11.csv,qb,epa,substack,2025,11,qb_epa_substack_2025_week_11.csv,1.0,Clear naming structure detected
+strength_of_schedule_nfelo_2025_week_11.csv,current_season/strength_of_schedule_nfelo_2025_week_11.csv,sos,elo,nfelo,2025,11,sos_elo_nfelo_2025_week_11.csv,1.0,Clear naming structure detected
+substack_weekly_proj_elo_2025_week_11.csv,current_season/substack_weekly_proj_elo_2025_week_11.csv,elo_projections,elo,substack,2025,11,elo_projections_substack_2025_week_11.csv,1.0,Clear naming structure detected
+weekly_projections_ppg_substack_2025_week_11.csv,current_season/weekly_projections_ppg_substack_2025_week_11.csv,ppg_projections,projections,substack,2025,11,ppg_projections_substack_2025_week_11.csv,1.0,Clear naming structure detected
+nfl_head_coaches.csv,reference/nfl_head_coaches.csv,reference_coaches,general,nfl,,,reference_coaches_nfl_SEASON.csv,0.7000000000000001,No season/year found
+team_week_epa_2013_2024.csv,team_week_epa_2013_2024.csv,team_epa,epa,,2013,,team_epa_2013_week_XX.csv,0.8,No provider identified in filename; No week number found - may be season-level data

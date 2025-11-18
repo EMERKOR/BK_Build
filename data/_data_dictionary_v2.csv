@@ -1,0 +1,31 @@
+column_name,source_files,logical_datasets,recommended_dtype,missing_rate_overall,role,leakage_risk,example_values,conflicts,notes
+game_id,team_week_epa_2013_2024.csv,team_ratings,string,0.0,id_key,low,"2024_01_KC_DET, 2024_01_BAL_HOU, 2024_01_BUF_MIA",,Unique identifier safe for all uses
+season,team_week_epa_2013_2024.csv,team_ratings,int,0.0,structure,low,"2024, 2023, 2022, 2021, 2020",,Season year - structural variable
+week,team_week_epa_2013_2024.csv,team_ratings,int,0.0,structure,low,"1, 2, 3, 4, 5",,Week number - structural variable
+home_team,team_week_epa_2013_2024.csv,team_ratings,string,0.0,id_key,low,"KC, BUF, SF, PHI, DAL",,Team identifier - safe for modeling
+away_team,team_week_epa_2013_2024.csv,team_ratings,string,0.0,id_key,low,"DET, MIA, ARI, NYG, WAS",,Team identifier - safe for modeling
+home_score,team_week_epa_2013_2024.csv,team_ratings,float,0.02,outcome,high,"27, 24, 31, 17, 20",Missing for future games,LEAKAGE: Final score only known after game
+away_score,team_week_epa_2013_2024.csv,team_ratings,float,0.02,outcome,high,"24, 20, 28, 14, 17",Missing for future games,LEAKAGE: Final score only known after game
+spread_line,team_week_epa_2013_2024.csv,team_ratings,float,0.15,pre_game_market,low,"-3.5, -7.0, -1.5, 3.0, -10.5",,Vegas spread available before kickoff
+total_line,team_week_epa_2013_2024.csv,team_ratings,float,0.15,pre_game_market,low,"47.5, 52.0, 44.5, 49.0, 41.5",,Vegas total available before kickoff
+home_moneyline,team_week_epa_2013_2024.csv,team_ratings,float,0.18,pre_game_market,low,"-180, -300, -120, 150, -450",,Moneyline odds available before kickoff
+away_moneyline,team_week_epa_2013_2024.csv,team_ratings,float,0.18,pre_game_market,low,"160, 240, 100, -170, 350",,Moneyline odds available before kickoff
+home_epa_offense,team_week_epa_2013_2024.csv,team_ratings,float,0.05,pre_game_team_strength,low,"0.15, -0.08, 0.22, 0.01, -0.12",,Offensive EPA entering the game - safe for pre-game models
+away_epa_offense,team_week_epa_2013_2024.csv,team_ratings,float,0.05,pre_game_team_strength,low,"0.12, -0.05, 0.18, 0.03, -0.09",,Offensive EPA entering the game - safe for pre-game models
+home_epa_defense,team_week_epa_2013_2024.csv,team_ratings,float,0.05,pre_game_team_strength,low,"-0.1, 0.08, -0.15, 0.02, 0.12",,Defensive EPA entering the game - safe for pre-game models
+away_epa_defense,team_week_epa_2013_2024.csv,team_ratings,float,0.05,pre_game_team_strength,low,"-0.08, 0.1, -0.12, 0.05, 0.15",,Defensive EPA entering the game - safe for pre-game models
+home_elo_pre,team_week_epa_2013_2024.csv,team_ratings,float,0.08,pre_game_team_strength,low,"1580, 1450, 1620, 1380, 1500",,Elo rating before game - safe for pre-game models
+away_elo_pre,team_week_epa_2013_2024.csv,team_ratings,float,0.08,pre_game_team_strength,low,"1550, 1480, 1590, 1420, 1510",,Elo rating before game - safe for pre-game models
+home_rest_days,team_week_epa_2013_2024.csv,team_ratings,int,0.1,pre_game_context,low,"7, 6, 10, 14, 3",,Rest days known before game
+away_rest_days,team_week_epa_2013_2024.csv,team_ratings,int,0.1,pre_game_context,low,"7, 6, 10, 14, 3",,Rest days known before game
+stadium,team_week_epa_2013_2024.csv,team_ratings,string,0.25,pre_game_context,low,"Arrowhead Stadium, Highmark Stadium, Levi's Stadium",,Stadium known before game
+roof,team_week_epa_2013_2024.csv,team_ratings,category,0.25,pre_game_context,low,"outdoors, dome, retractable",,Roof type known before game
+surface,team_week_epa_2013_2024.csv,team_ratings,category,0.3,pre_game_context,low,"grass, fieldturf, astroturf",,Surface type known before game
+temp,team_week_epa_2013_2024.csv,team_ratings,float,0.4,pre_game_context,medium,"72, 45, 32, 85, 28",,Weather forecast available but may change - verify timing
+wind,team_week_epa_2013_2024.csv,team_ratings,float,0.42,pre_game_context,medium,"5, 12, 18, 3, 22",,Wind forecast available but may change - verify timing
+total_points,team_week_epa_2013_2024.csv,team_ratings,float,0.02,outcome,high,"51, 44, 59, 31, 37",Derived from home_score + away_score,LEAKAGE: Derived from final scores
+margin,team_week_epa_2013_2024.csv,team_ratings,float,0.02,outcome,high,"3, 4, 3, 3, 3",Derived from home_score - away_score,LEAKAGE: Derived from final scores
+home_win,team_week_epa_2013_2024.csv,team_ratings,bool,0.02,outcome,high,"1, 1, 0, 1, 0",,LEAKAGE: Binary outcome only known after game
+result,team_week_epa_2013_2024.csv,team_ratings,category,0.02,outcome,high,"H, A, H, A, H",,LEAKAGE: Game result only known after game
+div_game,team_week_epa_2013_2024.csv,team_ratings,bool,0.0,structure,low,"1, 0, 0, 1, 0",,Divisional matchup flag - known before game
+gameday,team_week_epa_2013_2024.csv,team_ratings,datetime,0.0,structure,low,"2024-09-08, 2024-09-15, 2024-09-22",,Game date - structural variable

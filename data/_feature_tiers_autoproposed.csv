@@ -1,0 +1,73 @@
+column_name,role,leakage_risk,tier,reason,source_files,missing_rate_overall,dtype_candidates,example_values,notes
+game_id,id_key,low,T0_KEYS_STRUCTURE,Role: id_key – structural/identifier column,schedules,0.0,string,2024_01_ARI_WAS|2024_01_ATL_PIT,Unique identifier for each game
+season,pre_game_structure,low,T0_KEYS_STRUCTURE,Role: pre_game_structure – structural/identifier column,schedules|team_week_epa,0.0,integer,2024|2023|2022,NFL season year
+week,pre_game_structure,low,T0_KEYS_STRUCTURE,Role: pre_game_structure – structural/identifier column,schedules|team_week_epa,0.0,integer,1|2|3|17,Week number (1-18 regular season)
+home_team,pre_game_structure,low,T0_KEYS_STRUCTURE,Role: pre_game_structure – structural/identifier column,schedules,0.0,string,ARI|ATL|BAL|BUF,3-letter team abbreviation for home team
+away_team,pre_game_structure,low,T0_KEYS_STRUCTURE,Role: pre_game_structure – structural/identifier column,schedules,0.0,string,WAS|PIT|CIN|MIA,3-letter team abbreviation for away team
+team,pre_game_structure,low,T0_KEYS_STRUCTURE,Role: pre_game_structure – structural/identifier column,team_week_epa,0.0,string,ARI|ATL|BAL,Team abbreviation
+stadium,pre_game_structure,low,T0_KEYS_STRUCTURE,Role: pre_game_structure – structural/identifier column,schedules,0.12,string,State Farm Stadium|Mercedes-Benz Stadium,Stadium name
+surface,pre_game_structure,low,T0_KEYS_STRUCTURE,Role: pre_game_structure – structural/identifier column,schedules,0.08,string,grass|turf|fieldturf,Playing surface type
+roof,pre_game_structure,low,T0_KEYS_STRUCTURE,Role: pre_game_structure – structural/identifier column,schedules,0.05,string,outdoors|dome|retractable,Roof type
+is_playoff,pre_game_structure,low,T0_KEYS_STRUCTURE,Role: pre_game_structure – structural/identifier column,schedules,0.0,boolean,True|False,Whether game is playoff
+is_neutral,pre_game_structure,low,T0_KEYS_STRUCTURE,Role: pre_game_structure – structural/identifier column,schedules,0.0,boolean,True|False,Whether game is at neutral site
+game_date,pre_game_structure,low,T0_KEYS_STRUCTURE,Role: pre_game_structure – structural/identifier column,schedules,0.0,date,2024-09-08|2024-09-15,Date of game
+day_of_week,pre_game_structure,low,T0_KEYS_STRUCTURE,Role: pre_game_structure – structural/identifier column,schedules,0.0,string,Sunday|Monday|Thursday,Day of week for game
+home_elo_pre,pre_game_team_strength,low,T1_TEAM_STRENGTH,"Pre-game team strength metric (Elo, ratings, etc.)",nfelo_ratings,0.03,float,1520.5|1487.2|1602.8,Pre-game Elo rating for home team
+away_elo_pre,pre_game_team_strength,low,T1_TEAM_STRENGTH,"Pre-game team strength metric (Elo, ratings, etc.)",nfelo_ratings,0.03,float,1498.3|1515.7|1456.1,Pre-game Elo rating for away team
+home_qb_elo,pre_game_team_strength,low,T1_TEAM_STRENGTH,"Pre-game team strength metric (Elo, ratings, etc.)",qb_rankings,0.15,float,88.5|92.1|76.3,QB-adjusted Elo for home team
+away_qb_elo,pre_game_team_strength,low,T1_TEAM_STRENGTH,"Pre-game team strength metric (Elo, ratings, etc.)",qb_rankings,0.15,float,85.2|91.8|79.4,QB-adjusted Elo for away team
+home_power_rating,pre_game_team_strength,low,T1_TEAM_STRENGTH,"Pre-game team strength metric (Elo, ratings, etc.)",power_ratings,0.05,float,25.8|23.1|27.5,Power rating for home team
+away_power_rating,pre_game_team_strength,low,T1_TEAM_STRENGTH,"Pre-game team strength metric (Elo, ratings, etc.)",power_ratings,0.05,float,24.2|26.3|22.1,Power rating for away team
+home_qbr,pre_game_team_strength,low,T1_TEAM_STRENGTH,"Pre-game team strength metric (Elo, ratings, etc.)",qb_epa,0.22,float,65.2|58.3|71.8,QB rating for home team starter
+away_qbr,pre_game_team_strength,low,T1_TEAM_STRENGTH,"Pre-game team strength metric (Elo, ratings, etc.)",qb_epa,0.22,float,62.1|69.5|57.2,QB rating for away team starter
+home_rest_days,pre_game_structure,low,T0_KEYS_STRUCTURE,Role: pre_game_structure – structural/identifier column,schedules,0.01,integer,7|6|10|14,Days of rest for home team
+away_rest_days,pre_game_structure,low,T0_KEYS_STRUCTURE,Role: pre_game_structure – structural/identifier column,schedules,0.01,integer,7|6|9|13,Days of rest for away team
+spread_open,pre_game_market,low,T2_MARKET,"Pre-game market data (spreads, totals, probabilities)",betting_lines,0.08,float,-3.5|-7.0|2.5,Opening point spread (home perspective)
+spread_close,pre_game_market,low,T2_MARKET,"Pre-game market data (spreads, totals, probabilities)",betting_lines,0.02,float,-3.0|-6.5|2.0,Closing point spread (home perspective)
+total_open,pre_game_market,low,T2_MARKET,"Pre-game market data (spreads, totals, probabilities)",betting_lines,0.08,float,47.5|43.0|51.5,Opening total points line
+total_close,pre_game_market,low,T2_MARKET,"Pre-game market data (spreads, totals, probabilities)",betting_lines,0.02,float,48.0|44.0|50.5,Closing total points line
+home_ml_close,pre_game_market,low,T2_MARKET,"Pre-game market data (spreads, totals, probabilities)",betting_lines,0.05,float,-180|-250|+125,Closing moneyline odds for home team
+away_ml_close,pre_game_market,low,T2_MARKET,"Pre-game market data (spreads, totals, probabilities)",betting_lines,0.05,float,+150|+200|-145,Closing moneyline odds for away team
+home_implied_prob,pre_game_market,low,T2_MARKET,"Pre-game market data (spreads, totals, probabilities)",betting_lines,0.05,float,0.643|0.714|0.421,Implied win probability from moneyline (home)
+away_implied_prob,pre_game_market,low,T2_MARKET,"Pre-game market data (spreads, totals, probabilities)",betting_lines,0.05,float,0.400|0.333|0.606,Implied win probability from moneyline (away)
+consensus_spread,pre_game_market,low,T2_MARKET,"Pre-game market data (spreads, totals, probabilities)",betting_consensus,0.12,float,-3.5|-6.5|2.5,Consensus spread across multiple books
+off_epa_total,in_game_stats,high,TX_FORBIDDEN,High leakage risk – never use in pre-game models,team_week_epa,0.0,float,3.68|-1.71|22.95,Total offensive EPA in the game
+off_success_rate,in_game_stats,high,TX_FORBIDDEN,High leakage risk – never use in pre-game models,team_week_epa,0.0,float,0.486|0.400|0.345,Offensive success rate in the game
+off_epa_per_play,in_game_stats,high,TX_FORBIDDEN,High leakage risk – never use in pre-game models,team_week_epa,0.0,float,0.053|-0.031|-0.035,Offensive EPA per play in the game
+def_epa_total,in_game_stats,high,TX_FORBIDDEN,High leakage risk – never use in pre-game models,team_week_epa,0.0,float,-2.35|3.47|-9.84,Total defensive EPA in the game (opponent's offense)
+def_success_rate,in_game_stats,high,TX_FORBIDDEN,High leakage risk – never use in pre-game models,team_week_epa,0.0,float,0.444|0.394|0.427,Defensive success rate in the game
+def_epa_per_play,in_game_stats,high,TX_FORBIDDEN,High leakage risk – never use in pre-game models,team_week_epa,0.0,float,-0.037|0.053|-0.111,Defensive EPA per play in the game
+off_plays,in_game_stats,high,TX_FORBIDDEN,High leakage risk – never use in pre-game models,team_week_epa,0.0,integer,70|55|87,Number of offensive plays in the game
+off_pass_plays,in_game_stats,high,TX_FORBIDDEN,High leakage risk – never use in pre-game models,team_week_epa,0.0,integer,44|41|66,Number of pass plays in the game
+off_rush_plays,in_game_stats,high,TX_FORBIDDEN,High leakage risk – never use in pre-game models,team_week_epa,0.0,integer,26|14|21,Number of rush plays in the game
+home_score,post_game,high,TX_FORBIDDEN,High leakage risk – never use in pre-game models,schedules,0.0,integer,24|31|17|38,Final score for home team
+away_score,post_game,high,TX_FORBIDDEN,High leakage risk – never use in pre-game models,schedules,0.0,integer,20|28|24|35,Final score for away team
+margin,post_game,high,TX_FORBIDDEN,High leakage risk – never use in pre-game models,schedules,0.0,integer,4|3|-7|3,Point margin (home_score - away_score)
+total_points,post_game,high,TX_FORBIDDEN,High leakage risk – never use in pre-game models,schedules,0.0,integer,44|59|41|73,Total points scored in game
+home_won,post_game,high,TX_FORBIDDEN,High leakage risk – never use in pre-game models,schedules,0.0,boolean,True|False,Whether home team won
+away_won,post_game,high,TX_FORBIDDEN,High leakage risk – never use in pre-game models,schedules,0.0,boolean,False|True,Whether away team won
+result,post_game,high,TX_FORBIDDEN,High leakage risk – never use in pre-game models,schedules,0.0,string,H|A,Game result (H=home win
+ats_outcome_home,post_game,high,TX_FORBIDDEN,High leakage risk – never use in pre-game models,betting_results,0.02,string,cover|push|loss,ATS outcome for home team
+ats_outcome_away,post_game,high,TX_FORBIDDEN,High leakage risk – never use in pre-game models,betting_results,0.02,string,loss|push|cover,ATS outcome for away team
+totals_outcome,post_game,high,TX_FORBIDDEN,High leakage risk – never use in pre-game models,betting_results,0.02,string,over|under|push,Outcome of totals bet
+home_covered,post_game,high,TX_FORBIDDEN,High leakage risk – never use in pre-game models,betting_results,0.02,boolean,True|False,Whether home team covered spread
+temperature,pre_game_structure,low,T0_KEYS_STRUCTURE,Role: pre_game_structure – structural/identifier column,weather,0.35,float,72|55|28|85,Temperature at kickoff (Fahrenheit)
+wind_speed,pre_game_structure,low,T0_KEYS_STRUCTURE,Role: pre_game_structure – structural/identifier column,weather,0.35,float,5|12|18|3,Wind speed at kickoff (mph)
+precipitation,pre_game_structure,low,T0_KEYS_STRUCTURE,Role: pre_game_structure – structural/identifier column,weather,0.38,string,none|rain|snow,Precipitation type
+home_strength_of_schedule,pre_game_team_strength,low,T1_TEAM_STRENGTH,"Pre-game team strength metric (Elo, ratings, etc.)",sos_metrics,0.10,float,0.520|0.485|0.545,Strength of schedule for home team
+away_strength_of_schedule,pre_game_team_strength,low,T1_TEAM_STRENGTH,"Pre-game team strength metric (Elo, ratings, etc.)",sos_metrics,0.10,float,0.515|0.492|0.538,Strength of schedule for away team
+home_wins,meta_misc,medium,T3_EXPERIMENTAL,Medium leakage risk – requires manual review,standings,0.0,integer,8|5|12|3,Current wins for home team
+away_wins,meta_misc,medium,T3_EXPERIMENTAL,Medium leakage risk – requires manual review,standings,0.0,integer,7|6|11|4,Current wins for away team
+home_losses,meta_misc,medium,T3_EXPERIMENTAL,Medium leakage risk – requires manual review,standings,0.0,integer,5|8|1|10,Current losses for home team
+away_losses,meta_misc,medium,T3_EXPERIMENTAL,Medium leakage risk – requires manual review,standings,0.0,integer,6|7|2|9,Current losses for away team
+division_game,pre_game_structure,low,T0_KEYS_STRUCTURE,Role: pre_game_structure – structural/identifier column,schedules,0.0,boolean,True|False,Whether teams are in same division
+conference_game,pre_game_structure,low,T0_KEYS_STRUCTURE,Role: pre_game_structure – structural/identifier column,schedules,0.0,boolean,True|False,Whether teams are in same conference
+rivalry_game,meta_misc,unknown,T3_EXPERIMENTAL,Role: meta_misc – needs human judgment,manual_tags,0.25,boolean,True|False,Manual tag for rivalry games
+playoff_implications,unknown,unknown,T3_EXPERIMENTAL,Unknown role – classify manually after review,derived,0.50,string,high|medium|low|none,Estimated playoff impact
+coach_rating_home,pre_game_team_strength,low,T1_TEAM_STRENGTH,"Pre-game team strength metric (Elo, ratings, etc.)",coaches,0.18,float,7.5|6.2|8.1,Coach quality rating for home team
+coach_rating_away,pre_game_team_strength,low,T1_TEAM_STRENGTH,"Pre-game team strength metric (Elo, ratings, etc.)",coaches,0.18,float,6.8|7.3|5.9,Coach quality rating for away team
+home_epa_lag1,derived,medium,T3_EXPERIMENTAL,Medium leakage risk – requires manual review,derived_features,0.05,float,3.68|-1.71|5.23,Home team EPA from previous game
+away_epa_lag1,derived,medium,T3_EXPERIMENTAL,Medium leakage risk – requires manual review,derived_features,0.05,float,-2.15|4.12|-0.88,Away team EPA from previous game
+home_wins_last3,derived,medium,T3_EXPERIMENTAL,Medium leakage risk – requires manual review,derived_features,0.0,integer,2|1|3|0,Home team wins in last 3 games
+away_wins_last3,derived,medium,T3_EXPERIMENTAL,Medium leakage risk – requires manual review,derived_features,0.0,integer,1|2|3|0,Away team wins in last 3 games
+primetime_game,pre_game_structure,low,T0_KEYS_STRUCTURE,Role: pre_game_structure – structural/identifier column,schedules,0.0,boolean,True|False,Whether game is primetime (SNF/MNF/TNF)
