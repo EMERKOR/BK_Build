@@ -1,17 +1,23 @@
 """
 Data Loading Module
 
-DEPRECATED: New code should use `from ball_knower.io import loaders` instead.
+⚠️  DEPRECATED ⚠️
 
-This module provides compatibility with legacy code and historical data loading.
-Current-week data loaders now forward to the unified ball_knower.io.loaders API
-when available.
+This module is DEPRECATED and kept only for backwards compatibility with legacy scripts.
 
-Handles loading and initial cleaning of all data sources:
-- nfl_data_py historical data (still handled here)
-- nfelo ratings and stats (forwarded to unified loader)
-- Substack ratings and projections (forwarded to unified loader)
-- Reference data (coaches, AV)
+ALL NEW CODE MUST USE: from ball_knower.io import loaders
+
+Migration guide:
+    OLD: from src import data_loader
+         df = data_loader.load_nfelo_power_ratings()
+
+    NEW: from ball_knower.io import loaders
+         df = loaders.load_power_ratings("nfelo", season=2025, week=11)
+
+This module provides:
+- nfl_data_py historical data loaders (load_historical_schedules, load_historical_team_stats)
+- Forwarding shims to ball_knower.io.loaders for current-week data
+- Legacy compatibility for old scripts
 
 All data is normalized to use standard team abbreviations.
 """
@@ -20,6 +26,14 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 import warnings
+
+# Emit deprecation warning on import
+warnings.warn(
+    "src.data_loader is DEPRECATED. New code must use 'from ball_knower.io import loaders'. "
+    "See module docstring for migration guide.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 from .team_mapping import normalize_team_name, normalize_team_column
 from .config import (

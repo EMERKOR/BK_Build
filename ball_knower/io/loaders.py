@@ -376,6 +376,10 @@ def merge_team_ratings(
             warnings.warn(f"DataFrame '{key}' missing 'team' column. Skipping merge.", UserWarning)
             continue
 
+        # Track teams before merge for audit
+        right_teams = set(df['team'].dropna().unique())
+        base_teams_before = set(base['team'].dropna().unique())
+
         # Left merge on team
         base = base.merge(
             df,
@@ -383,6 +387,17 @@ def merge_team_ratings(
             how="left",
             suffixes=("", suffix)
         )
+
+        # Merge audit: Identify teams from right frame that didn't match
+        # These are teams in the right frame that weren't in the base (left) frame
+        unmatched_teams = right_teams - base_teams_before
+        if unmatched_teams:
+            warnings.warn(
+                f"Merge audit for '{key}': {len(unmatched_teams)} team(s) from provider "
+                f"did not match base frame after normalization: {sorted(unmatched_teams)}. "
+                f"These teams were not included in the merged output.",
+                UserWarning
+            )
 
     return base
 

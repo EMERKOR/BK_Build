@@ -12,12 +12,91 @@ Negative = home favored, Positive = home underdog
 
 import pandas as pd
 import numpy as np
+import json
+from pathlib import Path
 from sklearn.linear_model import Ridge, Lasso
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
-from .config import HOME_FIELD_ADVANTAGE
+from .config import HOME_FIELD_ADVANTAGE, OUTPUT_DIR
+
+
+# ============================================================================
+# DYNAMIC WEIGHT LOADING
+# ============================================================================
+
+def load_calibrated_weights(weights_file: Path = None) -> dict:
+    """
+    Load calibrated model weights from JSON file with fallback to defaults.
+
+    This allows recalibration without editing Python code - just regenerate
+    the weights file and the model will automatically use updated values.
+
+    Args:
+        weights_file: Path to calibrated weights JSON file
+                     (default: output/calibrated_weights_v1.json)
+
+    Returns:
+        dict: Calibrated weights and HFA, or defaults if file not found
+
+    Format of weights file:
+        {
+            "hfa": 2.5,
+            "weights": {
+                "epa_margin": 35.0,
+                "nfelo_diff": 0.02,
+                "substack_ovr_diff": 0.5,
+                "rest_advantage": 0.3,
+                "win_rate_L5": 5.0,
+                "qb_adj_diff": 0.1
+            },
+            "metadata": {
+                "calibrated_on": "2015-2024",
+                "mae_vs_vegas": 10.5,
+                "n_games": 2500
+            }
+        }
+    """
+    if weights_file is None:
+        weights_file = OUTPUT_DIR / "calibrated_weights_v1.json"
+
+    # Try to load calibrated weights
+    if weights_file.exists():
+        try:
+            with open(weights_file, 'r') as f:
+                calibration = json.load(f)
+
+            hfa = calibration.get("hfa", HOME_FIELD_ADVANTAGE)
+            weights = calibration.get("weights", {})
+
+            # Log that we're using calibrated weights
+            metadata = calibration.get("metadata", {})
+            if metadata:
+                print(f"✓ Loaded calibrated weights from {weights_file.name}")
+                if "mae_vs_vegas" in metadata:
+                    print(f"  MAE vs Vegas: {metadata['mae_vs_vegas']:.2f} pts")
+            else:
+                print(f"✓ Using calibrated weights from {weights_file.name}")
+
+            return {"hfa": hfa, "weights": weights}
+
+        except (json.JSONDecodeError, IOError) as e:
+            print(f"⚠ Warning: Could not load calibrated weights from {weights_file}: {e}")
+            print(f"  Falling back to hard-coded defaults")
+
+    # Fallback to defaults (no file or error reading)
+    return {
+        "hfa": HOME_FIELD_ADVANTAGE,
+        "weights": {
+            'epa_margin': 35,
+            'nfelo_diff': 0.02,
+            'substack_ovr_diff': 0.5,
+            'rest_advantage': 0.3,
+            'win_rate_L5': 5.0,
+            'qb_adj_diff': 0.1,
+        }
+    }
 
 
 # ============================================================================
@@ -34,17 +113,29 @@ class DeterministicSpreadModel:
     No ML, just weighted combination of known good predictors.
     """
 
-    def __init__(self, hfa=HOME_FIELD_ADVANTAGE):
+    def __init__(self, hfa=None, weights_file=None, use_calibrated=True):
         """
         Args:
-            hfa (float): Home field advantage in points (default: 2.5)
+            hfa (float): Home field advantage in points (default: load from calibration or 2.5)
+            weights_file (Path): Path to calibrated weights JSON (default: output/calibrated_weights_v1.json)
+            use_calibrated (bool): If True, attempt to load calibrated weights (default: True)
         """
-        self.hfa = hfa
-        self.weights = {
-            'epa_margin': 35,       # EPA differential * 35 ≈ point spread (calibrated default)
-            'nfelo_diff': 0.02,     # nfelo difference * 0.02 ≈ point spread
-            'substack_ovr_diff': 0.5  # Substack overall rating diff
-        }
+        # Load calibrated weights if requested
+        if use_calibrated:
+            calibration = load_calibrated_weights(weights_file)
+            self.hfa = hfa if hfa is not None else calibration["hfa"]
+            # Only use base model weights (v1.0 weights)
+            base_weights = {k: v for k, v in calibration["weights"].items()
+                          if k in ['epa_margin', 'nfelo_diff', 'substack_ovr_diff']}
+            self.weights = base_weights
+        else:
+            # Use hard-coded defaults
+            self.hfa = hfa if hfa is not None else HOME_FIELD_ADVANTAGE
+            self.weights = {
+                'epa_margin': 35,       # EPA differential * 35 ≈ point spread (calibrated default)
+                'nfelo_diff': 0.02,     # nfelo difference * 0.02 ≈ point spread
+                'substack_ovr_diff': 0.5  # Substack overall rating diff
+            }
 
     def predict(self, home_features, away_features):
         """
@@ -110,15 +201,29 @@ class EnhancedSpreadModel(DeterministicSpreadModel):
     - QB adjustments
     """
 
-    def __init__(self, hfa=HOME_FIELD_ADVANTAGE):
-        super().__init__(hfa)
+    def __init__(self, hfa=None, weights_file=None, use_calibrated=True):
+        super().__init__(hfa, weights_file, use_calibrated)
 
-        # Additional weights for structural features
-        self.weights.update({
-            'rest_advantage': 0.3,      # Points per day of rest advantage
-            'win_rate_L5': 5.0,         # Recent win rate impact
-            'qb_adj_diff': 0.1,         # QB adjustment differential
-        })
+        if use_calibrated:
+            # Load full calibration including enhanced features
+            calibration = load_calibrated_weights(weights_file)
+            enhanced_weights = {k: v for k, v in calibration["weights"].items()
+                              if k in ['rest_advantage', 'win_rate_L5', 'qb_adj_diff']}
+            # If calibration doesn't have these weights, use defaults
+            if not enhanced_weights:
+                enhanced_weights = {
+                    'rest_advantage': 0.3,
+                    'win_rate_L5': 5.0,
+                    'qb_adj_diff': 0.1,
+                }
+            self.weights.update(enhanced_weights)
+        else:
+            # Use hard-coded defaults for additional weights
+            self.weights.update({
+                'rest_advantage': 0.3,      # Points per day of rest advantage
+                'win_rate_L5': 5.0,         # Recent win rate impact
+                'qb_adj_diff': 0.1,         # QB adjustment differential
+            })
 
     def predict(self, home_features, away_features):
         """Predict with structural features."""

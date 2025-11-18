@@ -82,8 +82,10 @@ def calculate_rolling_epa(schedules, weekly_stats, windows=[3, 5, 10]):
         how='left'
     )
 
-    # Sort by team and date to prepare for rolling calculations
-    team_games_df = team_games_df.sort_values(['team', 'season', 'week'])
+    # CRITICAL: Sort by team and chronological keys (season, week, gameday) to ensure
+    # rolling windows only include strictly past games, preventing data leakage.
+    # This sort order guarantees that .shift(1) will exclude the current game.
+    team_games_df = team_games_df.sort_values(['team', 'season', 'week', 'gameday'])
 
     # Calculate rolling features (LEAK-FREE: shift by 1 to exclude current game)
     for window in windows:
@@ -241,6 +243,8 @@ def calculate_recent_form(schedules, windows=[3, 5]):
             'point_diff': game['away_score'] - game['home_score']
         })
 
+    # CRITICAL: Sort by team and chronological keys to ensure rolling windows
+    # only include strictly past games, preventing data leakage.
     team_games_df = pd.DataFrame(team_games).sort_values(['team', 'season', 'week'])
 
     # Calculate rolling form (LEAK-FREE: shift by 1)
