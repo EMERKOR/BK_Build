@@ -1,0 +1,73 @@
+column_name,source_files,role,leakage_risk,dtype_candidates,missing_rate_overall,example_values,notes
+game_id,schedules,id_key,low,string,0.0,"2024_01_ARI_WAS|2024_01_ATL_PIT",Unique identifier for each game
+season,schedules|team_week_epa,pre_game_structure,low,integer,0.0,"2024|2023|2022",NFL season year
+week,schedules|team_week_epa,pre_game_structure,low,integer,0.0,"1|2|3|17",Week number (1-18 regular season)
+home_team,schedules,pre_game_structure,low,string,0.0,"ARI|ATL|BAL|BUF",3-letter team abbreviation for home team
+away_team,schedules,pre_game_structure,low,string,0.0,"WAS|PIT|CIN|MIA",3-letter team abbreviation for away team
+team,team_week_epa,pre_game_structure,low,string,0.0,"ARI|ATL|BAL",Team abbreviation
+stadium,schedules,pre_game_structure,low,string,0.12,"State Farm Stadium|Mercedes-Benz Stadium",Stadium name
+surface,schedules,pre_game_structure,low,string,0.08,"grass|turf|fieldturf",Playing surface type
+roof,schedules,pre_game_structure,low,string,0.05,"outdoors|dome|retractable",Roof type
+is_playoff,schedules,pre_game_structure,low,boolean,0.0,"True|False",Whether game is playoff
+is_neutral,schedules,pre_game_structure,low,boolean,0.0,"True|False",Whether game is at neutral site
+game_date,schedules,pre_game_structure,low,date,0.0,"2024-09-08|2024-09-15",Date of game
+day_of_week,schedules,pre_game_structure,low,string,0.0,"Sunday|Monday|Thursday",Day of week for game
+home_elo_pre,nfelo_ratings,pre_game_team_strength,low,float,0.03,"1520.5|1487.2|1602.8",Pre-game Elo rating for home team
+away_elo_pre,nfelo_ratings,pre_game_team_strength,low,float,0.03,"1498.3|1515.7|1456.1",Pre-game Elo rating for away team
+home_qb_elo,qb_rankings,pre_game_team_strength,low,float,0.15,"88.5|92.1|76.3",QB-adjusted Elo for home team
+away_qb_elo,qb_rankings,pre_game_team_strength,low,float,0.15,"85.2|91.8|79.4",QB-adjusted Elo for away team
+home_power_rating,power_ratings,pre_game_team_strength,low,float,0.05,"25.8|23.1|27.5",Power rating for home team
+away_power_rating,power_ratings,pre_game_team_strength,low,float,0.05,"24.2|26.3|22.1",Power rating for away team
+home_qbr,qb_epa,pre_game_team_strength,low,float,0.22,"65.2|58.3|71.8",QB rating for home team starter
+away_qbr,qb_epa,pre_game_team_strength,low,float,0.22,"62.1|69.5|57.2",QB rating for away team starter
+home_rest_days,schedules,pre_game_structure,low,integer,0.01,"7|6|10|14",Days of rest for home team
+away_rest_days,schedules,pre_game_structure,low,integer,0.01,"7|6|9|13",Days of rest for away team
+spread_open,betting_lines,pre_game_market,low,float,0.08,"-3.5|-7.0|2.5",Opening point spread (home perspective)
+spread_close,betting_lines,pre_game_market,low,float,0.02,"-3.0|-6.5|2.0",Closing point spread (home perspective)
+total_open,betting_lines,pre_game_market,low,float,0.08,"47.5|43.0|51.5",Opening total points line
+total_close,betting_lines,pre_game_market,low,float,0.02,"48.0|44.0|50.5",Closing total points line
+home_ml_close,betting_lines,pre_game_market,low,float,0.05,"-180|-250|+125",Closing moneyline odds for home team
+away_ml_close,betting_lines,pre_game_market,low,float,0.05,"+150|+200|-145",Closing moneyline odds for away team
+home_implied_prob,betting_lines,pre_game_market,low,float,0.05,"0.643|0.714|0.421",Implied win probability from moneyline (home)
+away_implied_prob,betting_lines,pre_game_market,low,float,0.05,"0.400|0.333|0.606",Implied win probability from moneyline (away)
+consensus_spread,betting_consensus,pre_game_market,low,float,0.12,"-3.5|-6.5|2.5",Consensus spread across multiple books
+off_epa_total,team_week_epa,in_game_stats,high,float,0.0,"3.68|-1.71|22.95",Total offensive EPA in the game
+off_success_rate,team_week_epa,in_game_stats,high,float,0.0,"0.486|0.400|0.345",Offensive success rate in the game
+off_epa_per_play,team_week_epa,in_game_stats,high,float,0.0,"0.053|-0.031|-0.035",Offensive EPA per play in the game
+def_epa_total,team_week_epa,in_game_stats,high,float,0.0,"-2.35|3.47|-9.84",Total defensive EPA in the game (opponent's offense)
+def_success_rate,team_week_epa,in_game_stats,high,float,0.0,"0.444|0.394|0.427",Defensive success rate in the game
+def_epa_per_play,team_week_epa,in_game_stats,high,float,0.0,"-0.037|0.053|-0.111",Defensive EPA per play in the game
+off_plays,team_week_epa,in_game_stats,high,integer,0.0,"70|55|87",Number of offensive plays in the game
+off_pass_plays,team_week_epa,in_game_stats,high,integer,0.0,"44|41|66",Number of pass plays in the game
+off_rush_plays,team_week_epa,in_game_stats,high,integer,0.0,"26|14|21",Number of rush plays in the game
+home_score,schedules,post_game,high,integer,0.0,"24|31|17|38",Final score for home team
+away_score,schedules,post_game,high,integer,0.0,"20|28|24|35",Final score for away team
+margin,schedules,post_game,high,integer,0.0,"4|3|-7|3",Point margin (home_score - away_score)
+total_points,schedules,post_game,high,integer,0.0,"44|59|41|73",Total points scored in game
+home_won,schedules,post_game,high,boolean,0.0,"True|False",Whether home team won
+away_won,schedules,post_game,high,boolean,0.0,"False|True",Whether away team won
+result,schedules,post_game,high,string,0.0,"H|A",Game result (H=home win, A=away win)
+ats_outcome_home,betting_results,post_game,high,string,0.02,"cover|push|loss",ATS outcome for home team
+ats_outcome_away,betting_results,post_game,high,string,0.02,"loss|push|cover",ATS outcome for away team
+totals_outcome,betting_results,post_game,high,string,0.02,"over|under|push",Outcome of totals bet
+home_covered,betting_results,post_game,high,boolean,0.02,"True|False",Whether home team covered spread
+temperature,weather,pre_game_structure,low,float,0.35,"72|55|28|85",Temperature at kickoff (Fahrenheit)
+wind_speed,weather,pre_game_structure,low,float,0.35,"5|12|18|3",Wind speed at kickoff (mph)
+precipitation,weather,pre_game_structure,low,string,0.38,"none|rain|snow",Precipitation type
+home_strength_of_schedule,sos_metrics,pre_game_team_strength,low,float,0.10,"0.520|0.485|0.545",Strength of schedule for home team
+away_strength_of_schedule,sos_metrics,pre_game_team_strength,low,float,0.10,"0.515|0.492|0.538",Strength of schedule for away team
+home_wins,standings,meta_misc,medium,integer,0.0,"8|5|12|3",Current wins for home team
+away_wins,standings,meta_misc,medium,integer,0.0,"7|6|11|4",Current wins for away team
+home_losses,standings,meta_misc,medium,integer,0.0,"5|8|1|10",Current losses for home team
+away_losses,standings,meta_misc,medium,integer,0.0,"6|7|2|9",Current losses for away team
+division_game,schedules,pre_game_structure,low,boolean,0.0,"True|False",Whether teams are in same division
+conference_game,schedules,pre_game_structure,low,boolean,0.0,"True|False",Whether teams are in same conference
+rivalry_game,manual_tags,meta_misc,unknown,boolean,0.25,"True|False",Manual tag for rivalry games
+playoff_implications,derived,unknown,unknown,string,0.50,"high|medium|low|none",Estimated playoff impact
+coach_rating_home,coaches,pre_game_team_strength,low,float,0.18,"7.5|6.2|8.1",Coach quality rating for home team
+coach_rating_away,coaches,pre_game_team_strength,low,float,0.18,"6.8|7.3|5.9",Coach quality rating for away team
+home_epa_lag1,derived_features,derived,medium,float,0.05,"3.68|-1.71|5.23",Home team EPA from previous game
+away_epa_lag1,derived_features,derived,medium,float,0.05,"-2.15|4.12|-0.88",Away team EPA from previous game
+home_wins_last3,derived_features,derived,medium,integer,0.0,"2|1|3|0",Home team wins in last 3 games
+away_wins_last3,derived_features,derived,medium,integer,0.0,"1|2|3|0",Away team wins in last 3 games
+primetime_game,schedules,pre_game_structure,low,boolean,0.0,"True|False",Whether game is primetime (SNF/MNF/TNF)
