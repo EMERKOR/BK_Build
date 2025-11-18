@@ -44,10 +44,14 @@ The demo notebook will:
 ### Run Tests
 
 ```bash
+# Test unified data loaders
 python test_data_loading.py
+
+# Run end-to-end integration tests
+pytest tests/test_end_to_end.py
 ```
 
-This validates that all data files load correctly with proper team name normalization.
+These tests validate that all data files load correctly with proper team name normalization and that the main prediction scripts execute without errors.
 
 ## Project Structure
 
@@ -71,6 +75,23 @@ BK_Build/
 ```
 
 ## Data Sources
+
+### Unified Data Loading System
+
+Ball Knower now uses a unified loader system with category-first naming conventions. All new code should use `ball_knower.io.loaders` for data access:
+
+```python
+from ball_knower.io import loaders
+from src import config
+
+# Load all data sources at once
+all_data = loaders.load_all_sources(
+    season=config.CURRENT_SEASON,
+    week=config.CURRENT_WEEK
+)
+```
+
+**Migrating from old code?** See [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) for step-by-step instructions on updating scripts to use the unified loader and category-first file naming.
 
 ### Current Week Data (Week 11, 2025)
 

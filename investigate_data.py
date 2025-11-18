@@ -1,5 +1,11 @@
 """
-Investigate why calibration isn't working
+LEGACY SCRIPT
+
+This script predates the unified loader and category-first naming system.
+It may still run, but is not guaranteed to follow the current BALL_KNOWER_SPEC.
+Prefer using run_demo.py, predict_current_week.py, and ball_knower.io.loaders.
+
+Original purpose: Investigate why calibration isn't working
 """
 
 import sys
