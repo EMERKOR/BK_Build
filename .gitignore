@@ -36,6 +36,9 @@ env/
 data/cache/
 *.csv.cache
 
+# Benchmark outputs (regenerated on demand)
+data/benchmarks/*.csv
+
 # OS
 .DS_Store
 Thumbs.db
