@@ -160,11 +160,50 @@ python run_weekly_predictions.py --season 2025 --week 11 --model v1.0
 
 ### Run Tests
 
+Ball Knower includes a comprehensive test suite that acts as guardrails for key components:
+
 ```bash
-python test_data_loading.py
+# Install development dependencies (includes pytest)
+pip install -r requirements-dev.txt
+
+# Run all tests
+pytest
+
+# Run specific test files
+pytest tests/test_loaders.py
+pytest tests/test_datasets.py
+pytest tests/test_models.py
+pytest tests/test_weekly_cli.py
+pytest tests/test_backtest_cli.py
+
+# Run with verbose output
+pytest -v
+
+# Run with coverage report
+pytest --cov=ball_knower --cov=src
 ```
 
-This validates that all data files load correctly with proper team name normalization.
+**What the tests cover:**
+
+- **test_loaders.py**: Unified data loading from ball_knower.io.loaders, merge behavior, file resolution
+- **test_datasets.py**: v1.0 and v1.2 dataset builders return stable shapes and expected columns
+- **test_models.py**: Model instantiation, calibrated weight loading, predictions from dummy features
+- **test_weekly_cli.py**: Smoke tests for run_weekly_predictions.py CLI
+- **test_backtest_cli.py**: Smoke tests for unified backtest driver (src/run_backtests.py)
+
+**Note on data-dependent tests:**
+
+Some tests require local data files to be present:
+- If `data/current_season/` files are missing, loader and CLI tests will **skip** (not fail)
+- Dataset tests download nfelo data from the internet (may take a few seconds)
+- To run all tests, ensure you have the Week 11 2025 data files in `data/current_season/`
+
+**Legacy test scripts:**
+
+The following scripts are also available in `tests/`:
+- `test_data_loading.py` - Legacy data loading validation
+- `test_data_access_methods.py` - Legacy data access tests
+- `test_calibrated_weights.py` - Legacy calibrated weights test (now part of test_models.py)
 
 ## Project Structure
 
@@ -180,19 +219,30 @@ BK_Build/
 │   ├── data_loader.py          # Load nfelo, Substack, nfl_data_py
 │   ├── features.py             # Leak-free rolling EPA features
 │   ├── models.py               # v1.0, v1.1, v1.2 spread models + backtest
-│   └── betting_utils.py        # EV, Kelly, probability utilities
+│   ├── betting_utils.py        # EV, Kelly, probability utilities
+│   └── run_backtests.py        # Unified backtest driver CLI
 ├── ball_knower/                 # Unified data loading package
-│   └── io/
-│       └── loaders.py          # Unified loaders for all data sources
+│   ├── io/
+│   │   └── loaders.py          # Unified loaders for all data sources
+│   └── datasets/               # Dataset builders for training models
+│       ├── v1_0.py             # v1.0 baseline dataset (actual margin)
+│       └── v1_2.py             # v1.2 enhanced dataset (Vegas spread)
+├── tests/                       # Test suite
+│   ├── test_loaders.py         # Test unified data loaders
+│   ├── test_datasets.py        # Test v1.0/v1.2 dataset builders
+│   ├── test_models.py          # Test model instantiation and predictions
+│   ├── test_weekly_cli.py      # Test weekly predictions CLI
+│   └── test_backtest_cli.py    # Test unified backtest driver
 ├── notebooks/                   # Jupyter notebooks
 │   └── ball_knower_demo.ipynb  # Quick start demo
 ├── output/                      # Model predictions and backtest results
 │   └── calibrated_weights_v1.json  # Calibrated model weights
 ├── run_weekly_predictions.py   # CLI for weekly predictions
 ├── run_demo.py                 # Quick demo script
-├── backtest_v1_2.py            # Professional backtest with EV analysis
+├── backtest_v1_0.py            # v1.0 backtest (standalone)
+├── backtest_v1_2.py            # v1.2 professional backtest (standalone)
 ├── calibrate_v1_json.py        # Generate calibrated weights JSON
-├── test_data_loading.py        # Data loading validation tests
+├── requirements-dev.txt        # Development dependencies (pytest, etc.)
 └── README.md                    # This file
 ```
 
