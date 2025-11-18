@@ -1,0 +1,10 @@
+filename,logical_dataset,provider,category,description
+team_week_epa_2013_2024.csv,team_ratings,nflverse,team_strength,Team EPA ratings and game outcomes by week
+schedules.csv,schedules,nflverse,structure,NFL game schedules with matchups and dates
+vegas_lines.csv,betting_lines,various,market,Historical Vegas lines and odds
+rosters.csv,rosters,nflverse,context,Player roster information by team and week
+injuries.csv,injuries,nflverse,context,Player injury reports by week
+pbp.csv,play_by_play,nflverse,in_game,Play-by-play data for detailed game analysis
+team_stats.csv,team_stats,nflverse,team_strength,Aggregated team statistics by season
+player_stats.csv,player_stats,nflverse,player_performance,Individual player statistics
+weather.csv,weather,external,context,Historical weather data for outdoor games

@@ -1,0 +1,244 @@
+{
+  "columns": {
+    "game_id": {
+      "inferred_dtype": "object",
+      "recommended_dtype": "string",
+      "missing_rate_overall": 0.0,
+      "example_values": ["2024_01_KC_DET", "2024_01_BAL_HOU", "2024_01_BUF_MIA"],
+      "conflicts": "",
+      "notes": "Unique identifier for each game"
+    },
+    "season": {
+      "inferred_dtype": "int64",
+      "recommended_dtype": "int",
+      "missing_rate_overall": 0.0,
+      "example_values": [2024, 2023, 2022, 2021, 2020],
+      "conflicts": "",
+      "notes": "NFL season year"
+    },
+    "week": {
+      "inferred_dtype": "int64",
+      "recommended_dtype": "int",
+      "missing_rate_overall": 0.0,
+      "example_values": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "conflicts": "",
+      "notes": "Week number of season"
+    },
+    "home_team": {
+      "inferred_dtype": "object",
+      "recommended_dtype": "string",
+      "missing_rate_overall": 0.0,
+      "example_values": ["KC", "BUF", "SF", "PHI", "DAL"],
+      "conflicts": "",
+      "notes": "Home team abbreviation"
+    },
+    "away_team": {
+      "inferred_dtype": "object",
+      "recommended_dtype": "string",
+      "missing_rate_overall": 0.0,
+      "example_values": ["DET", "MIA", "ARI", "NYG", "WAS"],
+      "conflicts": "",
+      "notes": "Away team abbreviation"
+    },
+    "home_score": {
+      "inferred_dtype": "float64",
+      "recommended_dtype": "float",
+      "missing_rate_overall": 0.02,
+      "example_values": [27, 24, 31, 17, 20],
+      "conflicts": "Missing for future games",
+      "notes": "Final home team score"
+    },
+    "away_score": {
+      "inferred_dtype": "float64",
+      "recommended_dtype": "float",
+      "missing_rate_overall": 0.02,
+      "example_values": [24, 20, 28, 14, 17],
+      "conflicts": "Missing for future games",
+      "notes": "Final away team score"
+    },
+    "spread_line": {
+      "inferred_dtype": "float64",
+      "recommended_dtype": "float",
+      "missing_rate_overall": 0.15,
+      "example_values": [-3.5, -7.0, -1.5, 3.0, -10.5],
+      "conflicts": "",
+      "notes": "Vegas spread from home team perspective"
+    },
+    "total_line": {
+      "inferred_dtype": "float64",
+      "recommended_dtype": "float",
+      "missing_rate_overall": 0.15,
+      "example_values": [47.5, 52.0, 44.5, 49.0, 41.5],
+      "conflicts": "",
+      "notes": "Vegas over/under total"
+    },
+    "home_moneyline": {
+      "inferred_dtype": "float64",
+      "recommended_dtype": "float",
+      "missing_rate_overall": 0.18,
+      "example_values": [-180, -300, -120, 150, -450],
+      "conflicts": "",
+      "notes": "Home team moneyline odds"
+    },
+    "away_moneyline": {
+      "inferred_dtype": "float64",
+      "recommended_dtype": "float",
+      "missing_rate_overall": 0.18,
+      "example_values": [160, 240, 100, -170, 350],
+      "conflicts": "",
+      "notes": "Away team moneyline odds"
+    },
+    "home_epa_offense": {
+      "inferred_dtype": "float64",
+      "recommended_dtype": "float",
+      "missing_rate_overall": 0.05,
+      "example_values": [0.15, -0.08, 0.22, 0.01, -0.12],
+      "conflicts": "",
+      "notes": "Home team offensive EPA per play entering game"
+    },
+    "away_epa_offense": {
+      "inferred_dtype": "float64",
+      "recommended_dtype": "float",
+      "missing_rate_overall": 0.05,
+      "example_values": [0.12, -0.05, 0.18, 0.03, -0.09],
+      "conflicts": "",
+      "notes": "Away team offensive EPA per play entering game"
+    },
+    "home_epa_defense": {
+      "inferred_dtype": "float64",
+      "recommended_dtype": "float",
+      "missing_rate_overall": 0.05,
+      "example_values": [-0.10, 0.08, -0.15, 0.02, 0.12],
+      "conflicts": "",
+      "notes": "Home team defensive EPA per play entering game"
+    },
+    "away_epa_defense": {
+      "inferred_dtype": "float64",
+      "recommended_dtype": "float",
+      "missing_rate_overall": 0.05,
+      "example_values": [-0.08, 0.10, -0.12, 0.05, 0.15],
+      "conflicts": "",
+      "notes": "Away team defensive EPA per play entering game"
+    },
+    "home_elo_pre": {
+      "inferred_dtype": "float64",
+      "recommended_dtype": "float",
+      "missing_rate_overall": 0.08,
+      "example_values": [1580, 1450, 1620, 1380, 1500],
+      "conflicts": "",
+      "notes": "Home team Elo rating before game"
+    },
+    "away_elo_pre": {
+      "inferred_dtype": "float64",
+      "recommended_dtype": "float",
+      "missing_rate_overall": 0.08,
+      "example_values": [1550, 1480, 1590, 1420, 1510],
+      "conflicts": "",
+      "notes": "Away team Elo rating before game"
+    },
+    "home_rest_days": {
+      "inferred_dtype": "int64",
+      "recommended_dtype": "int",
+      "missing_rate_overall": 0.10,
+      "example_values": [7, 6, 10, 14, 3],
+      "conflicts": "",
+      "notes": "Days since home team's last game"
+    },
+    "away_rest_days": {
+      "inferred_dtype": "int64",
+      "recommended_dtype": "int",
+      "missing_rate_overall": 0.10,
+      "example_values": [7, 6, 10, 14, 3],
+      "conflicts": "",
+      "notes": "Days since away team's last game"
+    },
+    "stadium": {
+      "inferred_dtype": "object",
+      "recommended_dtype": "string",
+      "missing_rate_overall": 0.25,
+      "example_values": ["Arrowhead Stadium", "Highmark Stadium", "Levi's Stadium"],
+      "conflicts": "",
+      "notes": "Stadium name"
+    },
+    "roof": {
+      "inferred_dtype": "object",
+      "recommended_dtype": "category",
+      "missing_rate_overall": 0.25,
+      "example_values": ["outdoors", "dome", "retractable"],
+      "conflicts": "",
+      "notes": "Stadium roof type"
+    },
+    "surface": {
+      "inferred_dtype": "object",
+      "recommended_dtype": "category",
+      "missing_rate_overall": 0.30,
+      "example_values": ["grass", "fieldturf", "astroturf"],
+      "conflicts": "",
+      "notes": "Playing surface type"
+    },
+    "temp": {
+      "inferred_dtype": "float64",
+      "recommended_dtype": "float",
+      "missing_rate_overall": 0.40,
+      "example_values": [72, 45, 32, 85, 28],
+      "conflicts": "",
+      "notes": "Temperature in Fahrenheit"
+    },
+    "wind": {
+      "inferred_dtype": "float64",
+      "recommended_dtype": "float",
+      "missing_rate_overall": 0.42,
+      "example_values": [5, 12, 18, 3, 22],
+      "conflicts": "",
+      "notes": "Wind speed in mph"
+    },
+    "total_points": {
+      "inferred_dtype": "float64",
+      "recommended_dtype": "float",
+      "missing_rate_overall": 0.02,
+      "example_values": [51, 44, 59, 31, 37],
+      "conflicts": "Derived from home_score + away_score",
+      "notes": "Total points scored in game"
+    },
+    "margin": {
+      "inferred_dtype": "float64",
+      "recommended_dtype": "float",
+      "missing_rate_overall": 0.02,
+      "example_values": [3, 4, 3, 3, 3],
+      "conflicts": "Derived from home_score - away_score",
+      "notes": "Final margin from home team perspective"
+    },
+    "home_win": {
+      "inferred_dtype": "float64",
+      "recommended_dtype": "bool",
+      "missing_rate_overall": 0.02,
+      "example_values": [1, 1, 0, 1, 0],
+      "conflicts": "",
+      "notes": "1 if home team won, 0 otherwise"
+    },
+    "result": {
+      "inferred_dtype": "object",
+      "recommended_dtype": "category",
+      "missing_rate_overall": 0.02,
+      "example_values": ["H", "A", "H", "A", "H"],
+      "conflicts": "",
+      "notes": "Game result: H=home win, A=away win"
+    },
+    "div_game": {
+      "inferred_dtype": "int64",
+      "recommended_dtype": "bool",
+      "missing_rate_overall": 0.0,
+      "example_values": [1, 0, 0, 1, 0],
+      "conflicts": "",
+      "notes": "1 if divisional game, 0 otherwise"
+    },
+    "gameday": {
+      "inferred_dtype": "object",
+      "recommended_dtype": "datetime",
+      "missing_rate_overall": 0.0,
+      "example_values": ["2024-09-08", "2024-09-15", "2024-09-22"],
+      "conflicts": "",
+      "notes": "Game date"
+    }
+  }
+}

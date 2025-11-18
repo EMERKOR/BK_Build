@@ -1,0 +1,31 @@
+column_name,source_files,role,leakage_risk,notes
+game_id,team_week_epa_2013_2024.csv,id_key,low,Unique identifier safe for all uses
+season,team_week_epa_2013_2024.csv,structure,low,Season year - structural variable
+week,team_week_epa_2013_2024.csv,structure,low,Week number - structural variable
+home_team,team_week_epa_2013_2024.csv,id_key,low,Team identifier - safe for modeling
+away_team,team_week_epa_2013_2024.csv,id_key,low,Team identifier - safe for modeling
+home_score,team_week_epa_2013_2024.csv,outcome,high,LEAKAGE: Final score only known after game
+away_score,team_week_epa_2013_2024.csv,outcome,high,LEAKAGE: Final score only known after game
+spread_line,team_week_epa_2013_2024.csv,pre_game_market,low,Vegas spread available before kickoff
+total_line,team_week_epa_2013_2024.csv,pre_game_market,low,Vegas total available before kickoff
+home_moneyline,team_week_epa_2013_2024.csv,pre_game_market,low,Moneyline odds available before kickoff
+away_moneyline,team_week_epa_2013_2024.csv,pre_game_market,low,Moneyline odds available before kickoff
+home_epa_offense,team_week_epa_2013_2024.csv,pre_game_team_strength,low,Offensive EPA entering the game - safe for pre-game models
+away_epa_offense,team_week_epa_2013_2024.csv,pre_game_team_strength,low,Offensive EPA entering the game - safe for pre-game models
+home_epa_defense,team_week_epa_2013_2024.csv,pre_game_team_strength,low,Defensive EPA entering the game - safe for pre-game models
+away_epa_defense,team_week_epa_2013_2024.csv,pre_game_team_strength,low,Defensive EPA entering the game - safe for pre-game models
+home_elo_pre,team_week_epa_2013_2024.csv,pre_game_team_strength,low,Elo rating before game - safe for pre-game models
+away_elo_pre,team_week_epa_2013_2024.csv,pre_game_team_strength,low,Elo rating before game - safe for pre-game models
+home_rest_days,team_week_epa_2013_2024.csv,pre_game_context,low,Rest days known before game
+away_rest_days,team_week_epa_2013_2024.csv,pre_game_context,low,Rest days known before game
+stadium,team_week_epa_2013_2024.csv,pre_game_context,low,Stadium known before game
+roof,team_week_epa_2013_2024.csv,pre_game_context,low,Roof type known before game
+surface,team_week_epa_2013_2024.csv,pre_game_context,low,Surface type known before game
+temp,team_week_epa_2013_2024.csv,pre_game_context,medium,Weather forecast available but may change - verify timing
+wind,team_week_epa_2013_2024.csv,pre_game_context,medium,Wind forecast available but may change - verify timing
+total_points,team_week_epa_2013_2024.csv,outcome,high,LEAKAGE: Derived from final scores
+margin,team_week_epa_2013_2024.csv,outcome,high,LEAKAGE: Derived from final scores
+home_win,team_week_epa_2013_2024.csv,outcome,high,LEAKAGE: Binary outcome only known after game
+result,team_week_epa_2013_2024.csv,outcome,high,LEAKAGE: Game result only known after game
+div_game,team_week_epa_2013_2024.csv,structure,low,Divisional matchup flag - known before game
+gameday,team_week_epa_2013_2024.csv,structure,low,Game date - structural variable
