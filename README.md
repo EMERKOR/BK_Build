@@ -67,8 +67,22 @@ BK_Build/
 │   └── ball_knower_demo.ipynb  # Quick start demo
 ├── output/                      # Model predictions and backtest results
 ├── test_data_loading.py        # Data loading validation tests
+├── docs/                        # Modeling documentation
+│   ├── MODEL_OVERVIEW.md       # Audit of all existing models
+│   └── BALL_KNOWER_MODELING_PLAN.md  # Forward-looking design
 └── README.md                    # This file
 ```
+
+## Modeling Documentation
+
+**Important:** Before making changes to modeling or training code, review these documents:
+
+- **[MODEL_OVERVIEW.md](docs/MODEL_OVERVIEW.md)** - Comprehensive audit of all existing model scripts, including what they predict, how they're evaluated, and where Vegas lines enter the system. Identifies objective misalignment issues in current v1.2.
+
+- **[BALL_KNOWER_MODELING_PLAN.md](docs/BALL_KNOWER_MODELING_PLAN.md)** - Forward-looking design document that defines modeling objectives, versioned roadmap (v1.0 through v2.0), principles/guardrails, and success metrics. This is the design contract for future modeling work.
+
+**Key Insight from Audit:**
+Current v1.2 trains to predict Vegas closing lines rather than actual game outcomes. This makes "edges" a measure of disagreement with Vegas (often model error) rather than genuine football insight. Future modeling phases should target actual game margins or cover outcomes, using Vegas as context rather than the training target.
 
 ## Data Sources
 
