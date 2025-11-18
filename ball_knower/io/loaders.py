@@ -17,11 +17,25 @@ Supported categories:
     - epa_tiers
     - strength_of_schedule
     - qb_epa
+    - qb_rankings
     - weekly_projections_ppg
+    - weekly_projections_elo
+    - nfl_receiving_leaders
+    - nfl_win_totals
 
 Supported providers:
-    - nfelo
-    - substack
+    - nfelo (nfeloapp.com)
+    - 538 (FiveThirtyEight)
+    - espn (ESPN Analytics)
+    - pff (Pro Football Focus)
+    - gsis (NFL Game Statistics & Info System)
+    - user (custom user uploads)
+    - manual (hand-curated datasets)
+    - substack (legacy - being migrated to specific providers above)
+
+Note: 'substack' is being phased out as a provider name in favor of specific
+provider identification (nfelo, 538, etc.). Files with 'substack' in the name
+are supported for backward compatibility.
 """
 
 from pathlib import Path
@@ -148,7 +162,7 @@ def load_power_ratings(
     Load power ratings for a given provider, season, and week.
 
     Args:
-        provider: Data provider ("nfelo" or "substack")
+        provider: Data provider (e.g., "nfelo", "538", "espn", "pff", "substack")
         season: NFL season year
         week: NFL week number
         data_dir: Optional data directory
@@ -190,7 +204,7 @@ def load_epa_tiers(
     Load EPA tiers (offensive/defensive EPA per play).
 
     Args:
-        provider: Data provider ("nfelo" or "substack")
+        provider: Data provider (e.g., "nfelo", "gsis")
         season: NFL season year
         week: NFL week number
         data_dir: Optional data directory
@@ -221,7 +235,7 @@ def load_strength_of_schedule(
     Load strength of schedule metrics.
 
     Args:
-        provider: Data provider ("nfelo" or "substack")
+        provider: Data provider (e.g., "nfelo", "538")
         season: NFL season year
         week: NFL week number
         data_dir: Optional data directory
@@ -252,7 +266,7 @@ def load_qb_epa(
     Load quarterback EPA metrics.
 
     Args:
-        provider: Data provider ("nfelo" or "substack")
+        provider: Data provider (e.g., "nfelo", "pff", "gsis", "substack")
         season: NFL season year
         week: NFL week number
         data_dir: Optional data directory
@@ -297,7 +311,7 @@ def load_weekly_projections_ppg(
     Load weekly projections (points per game, spreads, etc.).
 
     Args:
-        provider: Data provider ("nfelo" or "substack")
+        provider: Data provider (e.g., "nfelo", "538", "substack")
         season: NFL season year
         week: NFL week number
         data_dir: Optional data directory
@@ -329,6 +343,244 @@ def load_weekly_projections_ppg(
         # Add a dummy 'team' column to avoid errors
         df['team'] = None
         return df
+
+
+def load_weekly_projections_elo(
+    provider: str,
+    season: int,
+    week: int,
+    data_dir: Optional[Union[str, Path]] = None
+) -> pd.DataFrame:
+    """
+    Load weekly ELO-based projections.
+
+    Args:
+        provider: Data provider (e.g., "nfelo", "538")
+        season: NFL season year
+        week: NFL week number
+        data_dir: Optional data directory
+
+    Returns:
+        DataFrame with ELO projections and win probabilities
+    """
+    path = _resolve_file("weekly_projections_elo", provider, season, week, data_dir)
+    df = pd.read_csv(path)
+
+    # Handle potential multi-row headers
+    if (df.iloc[0].isna().all() or
+        df.iloc[0, 0] == df.columns[0] or
+        any(col.startswith('X.') for col in df.columns[:3])):
+        df = pd.read_csv(path, skiprows=1)
+
+    # Remove weird header artifacts
+    df = df.loc[:, ~df.columns.str.startswith('X.')]
+
+    return df
+
+
+def load_qb_rankings(
+    provider: str,
+    season: int,
+    week: int,
+    data_dir: Optional[Union[str, Path]] = None
+) -> pd.DataFrame:
+    """
+    Load QB rankings and statistics.
+
+    Args:
+        provider: Data provider (e.g., "nfelo", "pff")
+        season: NFL season year
+        week: NFL week number
+        data_dir: Optional data directory
+
+    Returns:
+        DataFrame with QB rankings and stats
+    """
+    path = _resolve_file("qb_rankings", provider, season, week, data_dir)
+    df = pd.read_csv(path)
+
+    # Handle potential multi-row headers
+    if (df.iloc[0].isna().all() or
+        df.iloc[0, 0] == df.columns[0] or
+        any(col.startswith('X.') for col in df.columns[:3])):
+        df = pd.read_csv(path, skiprows=1)
+
+    # Remove weird header artifacts
+    df = df.loc[:, ~df.columns.str.startswith('X.')]
+
+    # Rename 'Team' to 'team' if it exists
+    if 'Team' in df.columns:
+        df = df.rename(columns={'Team': 'team'})
+
+    # QB rankings may have a team column - normalize if present
+    if 'team' in df.columns:
+        return _normalize_team_column(df, team_col="team")
+
+    return df
+
+
+def load_nfl_receiving_leaders(
+    provider: str,
+    season: int,
+    week: int,
+    data_dir: Optional[Union[str, Path]] = None
+) -> pd.DataFrame:
+    """
+    Load NFL receiving leaders statistics.
+
+    Args:
+        provider: Data provider (e.g., "nfelo", "gsis")
+        season: NFL season year
+        week: NFL week number
+        data_dir: Optional data directory
+
+    Returns:
+        DataFrame with receiving statistics
+    """
+    path = _resolve_file("nfl_receiving_leaders", provider, season, week, data_dir)
+    df = pd.read_csv(path)
+
+    # Handle potential multi-row headers
+    if (df.iloc[0].isna().all() or
+        df.iloc[0, 0] == df.columns[0] or
+        any(col.startswith('X.') for col in df.columns[:3])):
+        df = pd.read_csv(path, skiprows=1)
+
+    # Remove weird header artifacts
+    df = df.loc[:, ~df.columns.str.startswith('X.')]
+
+    # Rename 'Team' to 'team' if it exists
+    if 'Team' in df.columns:
+        df = df.rename(columns={'Team': 'team'})
+
+    # Normalize team column if present
+    if 'team' in df.columns:
+        return _normalize_team_column(df, team_col="team")
+
+    return df
+
+
+def load_nfl_win_totals(
+    provider: str,
+    season: int,
+    week: int,
+    data_dir: Optional[Union[str, Path]] = None
+) -> pd.DataFrame:
+    """
+    Load NFL season win total projections.
+
+    Args:
+        provider: Data provider (e.g., "nfelo", "538")
+        season: NFL season year
+        week: NFL week number
+        data_dir: Optional data directory
+
+    Returns:
+        DataFrame with season win projections
+    """
+    path = _resolve_file("nfl_win_totals", provider, season, week, data_dir)
+    df = pd.read_csv(path)
+
+    # Handle potential multi-row headers
+    if (df.iloc[0].isna().all() or
+        df.iloc[0, 0] == df.columns[0] or
+        any(col.startswith('X.') for col in df.columns[:3])):
+        df = pd.read_csv(path, skiprows=1)
+
+    # Remove weird header artifacts
+    df = df.loc[:, ~df.columns.str.startswith('X.')]
+
+    # Rename 'Team' to 'team' if it exists
+    if 'Team' in df.columns:
+        df = df.rename(columns={'Team': 'team'})
+
+    return _normalize_team_column(df, team_col="team")
+
+
+def discover_available_sources(
+    season: int,
+    week: int,
+    data_dir: Optional[Union[str, Path]] = None
+) -> Dict[str, list]:
+    """
+    Auto-detect available data sources in the data directory.
+
+    Scans the data directory for files matching the naming convention and
+    returns a dictionary of available categories and their providers.
+
+    Args:
+        season: NFL season year
+        week: NFL week number
+        data_dir: Optional data directory (defaults to repo/data/current_season)
+
+    Returns:
+        Dictionary mapping category → list of available providers
+
+    Example:
+        >>> sources = discover_available_sources(2025, 11)
+        >>> print(sources)
+        {
+            'power_ratings': ['nfelo', 'substack'],
+            'epa_tiers': ['nfelo'],
+            'qb_epa': ['nfelo', 'substack'],
+            ...
+        }
+    """
+    import re
+
+    base_dir = Path(data_dir) if data_dir is not None else DEFAULT_DATA_DIR
+
+    # Categories we're looking for
+    categories = [
+        "power_ratings",
+        "epa_tiers",
+        "strength_of_schedule",
+        "qb_epa",
+        "qb_rankings",
+        "weekly_projections_ppg",
+        "weekly_projections_elo",
+        "nfl_receiving_leaders",
+        "nfl_win_totals",
+    ]
+
+    # Providers we might find
+    providers = ["nfelo", "538", "espn", "pff", "gsis", "user", "manual", "substack"]
+
+    available = {}
+
+    # Scan for category-first files
+    for csv_file in base_dir.glob(f"*_{season}_week_{week}.csv"):
+        filename = csv_file.stem  # Remove .csv extension
+
+        # Try to parse category-first: {category}_{provider}_{season}_week_{week}
+        pattern = rf"^(.+?)_({'|'.join(providers)})_{season}_week_{week}$"
+        match = re.match(pattern, filename)
+
+        if match:
+            category, provider = match.groups()
+            if category in categories:
+                if category not in available:
+                    available[category] = []
+                if provider not in available[category]:
+                    available[category].append(provider)
+                continue
+
+        # Try to parse provider-first: {provider}_{category}_{season}_week_{week}
+        pattern = rf"^({'|'.join(providers)})_(.+?)_{season}_week_{week}$"
+        match = re.match(pattern, filename)
+
+        if match:
+            provider, category = match.groups()
+            # Normalize category (e.g., "weekly_proj_elo" → "weekly_projections_elo")
+            for canonical_category in categories:
+                if category in canonical_category or canonical_category in category:
+                    if canonical_category not in available:
+                        available[canonical_category] = []
+                    if provider not in available[canonical_category]:
+                        available[canonical_category].append(provider)
+                    break
+
+    return available
 
 
 def merge_team_ratings(
