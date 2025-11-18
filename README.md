@@ -70,6 +70,29 @@ BK_Build/
 └── README.md                    # This file
 ```
 
+## Architecture & Documentation
+
+For detailed system documentation, see:
+- **[DATA_SETUP_GUIDE.md](DATA_SETUP_GUIDE.md)** - How to add new data sources and update weekly files
+- **[STEP_2_ASSESSMENT.md](STEP_2_ASSESSMENT.md)** - Feature engineering and model architecture details
+
+### Data File Naming Convention
+
+All current-season files in `data/current_season/` use **category-first naming**:
+
+```
+{category}_{provider}_{season}_week_{week}.csv
+```
+
+**Examples:**
+- `power_ratings_nfelo_2025_week_11.csv`
+- `qb_rankings_nfelo_2025_week_11.csv`
+- `weekly_projections_elo_substack_2025_week_11.csv`
+
+**Supported providers:** nfelo, substack, 538, espn, pff, gsis, user, manual
+
+**Note:** Provider-first filenames (e.g., `nfelo_power_ratings_...`) still exist temporarily for backward compatibility but will be phased out. The unified loader in `ball_knower/io/loaders.py` automatically handles both naming conventions.
+
 ## Data Sources
 
 ### Current Week Data (Week 11, 2025)
@@ -78,12 +101,15 @@ BK_Build/
 - `power_ratings_nfelo_2025_week_11.csv` - ELO ratings, QB adjustments
 - `epa_tiers_nfelo_2025_week_11.csv` - EPA per play (offense/defense)
 - `strength_of_schedule_nfelo_2025_week_11.csv` - SOS metrics
-- `nfelo_qb_rankings_2025_week_11.csv` - QB performance rankings (reference)
+- `qb_rankings_nfelo_2025_week_11.csv` - QB performance rankings (reference)
+- `nfl_receiving_leaders_nfelo_2025_week_11.csv` - Receiving stats (reference)
+- `nfl_win_totals_nfelo_2025_week_11.csv` - Season win projections (reference)
 
 **Substack files** (`data/current_season/`):
 - `power_ratings_substack_2025_week_11.csv` - Offensive/Defensive/Overall ratings
 - `qb_epa_substack_2025_week_11.csv` - QB-level EPA data
 - `weekly_projections_ppg_substack_2025_week_11.csv` - Game projections & spreads
+- `weekly_projections_elo_substack_2025_week_11.csv` - Elo-based projections (reference)
 
 **Reference data** (`data/reference/`):
 - `nfl_head_coaches.csv` - Coach stats and tenure
@@ -210,10 +236,10 @@ All map to nfl_data_py standard: `LAR`, `KC`, `BUF`
 
 ### Data Quirks
 
-- Substack files have 2-row headers (handled)
+- Substack files have 2-row headers (handled by loaders)
 - Some matchups use "at", some use "vs" (handled)
 - QBs with multiple teams like "cle, cin" (take first team)
-- File naming: `nfelo_nfl_win_totals_2025_week_11 (1).csv` (duplicate upload?)
+- Legacy provider-first filenames still exist for backward compatibility
 
 ## Key Design Decisions
 

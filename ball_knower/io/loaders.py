@@ -463,3 +463,193 @@ def load_all_sources(
         warnings.warn("Cannot create merged_ratings without nfelo power ratings as base", UserWarning)
 
     return result
+
+
+def load_weekly_projections_elo(
+    provider: str,
+    season: int,
+    week: int,
+    data_dir: Optional[Union[str, Path]] = None
+) -> pd.DataFrame:
+    """
+    Load weekly Elo-based projections.
+
+    Args:
+        provider: Data provider (e.g., "nfelo", "substack")
+        season: NFL season year
+        week: NFL week number
+        data_dir: Optional data directory
+
+    Returns:
+        DataFrame with Elo projections
+    """
+    path = _resolve_file("weekly_projections_elo", provider, season, week, data_dir)
+    df = pd.read_csv(path)
+
+    if df.iloc[0].isna().all() or df.iloc[0, 0] == df.columns[0]:
+        df = pd.read_csv(path, skiprows=1)
+
+    df = df.loc[:, ~df.columns.str.startswith('X.')]
+
+    if 'Team' in df.columns:
+        df = df.rename(columns={'Team': 'team'})
+
+    return df
+
+
+def load_qb_rankings(
+    provider: str,
+    season: int,
+    week: int,
+    data_dir: Optional[Union[str, Path]] = None
+) -> pd.DataFrame:
+    """
+    Load QB rankings data.
+
+    Args:
+        provider: Data provider (e.g., "nfelo")
+        season: NFL season year
+        week: NFL week number
+        data_dir: Optional data directory
+
+    Returns:
+        DataFrame with QB rankings
+    """
+    path = _resolve_file("qb_rankings", provider, season, week, data_dir)
+    df = pd.read_csv(path)
+
+    if df.iloc[0].isna().all() or df.iloc[0, 0] == df.columns[0]:
+        df = pd.read_csv(path, skiprows=1)
+
+    df = df.loc[:, ~df.columns.str.startswith('X.')]
+
+    return df
+
+
+def load_nfl_receiving_leaders(
+    provider: str,
+    season: int,
+    week: int,
+    data_dir: Optional[Union[str, Path]] = None
+) -> pd.DataFrame:
+    """
+    Load NFL receiving leaders data.
+
+    Args:
+        provider: Data provider (e.g., "nfelo")
+        season: NFL season year
+        week: NFL week number
+        data_dir: Optional data directory
+
+    Returns:
+        DataFrame with receiving leader stats
+    """
+    path = _resolve_file("nfl_receiving_leaders", provider, season, week, data_dir)
+    df = pd.read_csv(path)
+
+    if df.iloc[0].isna().all() or df.iloc[0, 0] == df.columns[0]:
+        df = pd.read_csv(path, skiprows=1)
+
+    df = df.loc[:, ~df.columns.str.startswith('X.')]
+
+    return df
+
+
+def load_nfl_win_totals(
+    provider: str,
+    season: int,
+    week: int,
+    data_dir: Optional[Union[str, Path]] = None
+) -> pd.DataFrame:
+    """
+    Load NFL win totals/projections data.
+
+    Args:
+        provider: Data provider (e.g., "nfelo")
+        season: NFL season year
+        week: NFL week number
+        data_dir: Optional data directory
+
+    Returns:
+        DataFrame with win total projections
+    """
+    path = _resolve_file("nfl_win_totals", provider, season, week, data_dir)
+    df = pd.read_csv(path)
+
+    if df.iloc[0].isna().all() or df.iloc[0, 0] == df.columns[0]:
+        df = pd.read_csv(path, skiprows=1)
+
+    df = df.loc[:, ~df.columns.str.startswith('X.')]
+
+    if 'Team' in df.columns:
+        df = df.rename(columns={'Team': 'team'})
+        return _normalize_team_column(df, team_col="team")
+
+    return df
+
+
+def discover_available_sources(
+    season: int,
+    week: int,
+    data_dir: Optional[Union[str, Path]] = None,
+) -> Dict[str, list]:
+    """
+    Discover all available data sources for a given season and week.
+
+    Scans the data directory for files matching the naming conventions:
+        - Category-first: {category}_{provider}_{season}_week_{week}.csv
+        - Provider-first: {provider}_{category}_{season}_week_{week}.csv
+
+    Args:
+        season: NFL season year
+        week: NFL week number
+        data_dir: Optional data directory (defaults to repo/data/current_season)
+
+    Returns:
+        Dictionary mapping categories to lists of available providers
+        Example: {
+            'power_ratings': ['nfelo', 'substack'],
+            'epa_tiers': ['nfelo'],
+            'qb_rankings': ['nfelo']
+        }
+    """
+    base_dir = Path(data_dir) if data_dir is not None else DEFAULT_DATA_DIR
+
+    # Define known categories
+    categories = [
+        'power_ratings',
+        'epa_tiers',
+        'strength_of_schedule',
+        'qb_epa',
+        'weekly_projections_ppg',
+        'weekly_projections_elo',
+        'qb_rankings',
+        'nfl_receiving_leaders',
+        'nfl_win_totals',
+    ]
+
+    # Define known providers
+    providers = ['nfelo', 'substack', '538', 'espn', 'pff', 'gsis', 'user', 'manual']
+
+    sources = {}
+
+    for category in categories:
+        available_providers = []
+        for provider in providers:
+            # Check for category-first naming
+            primary = base_dir / f"{category}_{provider}_{season}_week_{week}.csv"
+
+            # Check for provider-first naming (legacy)
+            legacy = base_dir / f"{provider}_{category}_{season}_week_{week}.csv"
+
+            # Check for common abbreviations
+            category_short = category.replace("_projections_", "_proj_")
+            legacy_short = base_dir / f"{provider}_{category_short}_{season}_week_{week}.csv"
+
+            if primary.exists() or legacy.exists() or legacy_short.exists():
+                available_providers.append(provider)
+
+        if available_providers:
+            sources[category] = available_providers
+
+    return sources

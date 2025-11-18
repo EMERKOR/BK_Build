@@ -27,18 +27,18 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 # DATA FILES
 # ============================================================================
 
-# nfelo data files (Week 11, 2025) - UPDATED TO CATEGORY-FIRST NAMING
+# nfelo data files (Week 11, 2025) - CATEGORY-FIRST NAMING
 NFELO_POWER_RATINGS = CURRENT_SEASON_DIR / 'power_ratings_nfelo_2025_week_11.csv'
 NFELO_SOS = CURRENT_SEASON_DIR / 'strength_of_schedule_nfelo_2025_week_11.csv'
 NFELO_EPA_TIERS = CURRENT_SEASON_DIR / 'epa_tiers_nfelo_2025_week_11.csv'
-NFELO_WIN_TOTALS = CURRENT_SEASON_DIR / 'nfelo_nfl_win_totals_2025_week_11 (1).csv'  # Reference file
-NFELO_RECEIVING = CURRENT_SEASON_DIR / 'nfelo_nfl_receiving_leaders_2025_week_11.csv'  # Reference file
-NFELO_QB_RANKINGS = CURRENT_SEASON_DIR / 'nfelo_qb_rankings_2025_week_11.csv'  # Reference file
+NFELO_WIN_TOTALS = CURRENT_SEASON_DIR / 'nfl_win_totals_nfelo_2025_week_11.csv'  # Reference file
+NFELO_RECEIVING = CURRENT_SEASON_DIR / 'nfl_receiving_leaders_nfelo_2025_week_11.csv'  # Reference file
+NFELO_QB_RANKINGS = CURRENT_SEASON_DIR / 'qb_rankings_nfelo_2025_week_11.csv'  # Reference file
 
-# Substack data files (Week 11, 2025) - UPDATED TO CATEGORY-FIRST NAMING
+# Substack data files (Week 11, 2025) - CATEGORY-FIRST NAMING
 SUBSTACK_POWER_RATINGS = CURRENT_SEASON_DIR / 'power_ratings_substack_2025_week_11.csv'
 SUBSTACK_QB_EPA = CURRENT_SEASON_DIR / 'qb_epa_substack_2025_week_11.csv'
-SUBSTACK_WEEKLY_PROJ_ELO = CURRENT_SEASON_DIR / 'substack_weekly_proj_elo_2025_week_11.csv'  # Reference file
+SUBSTACK_WEEKLY_PROJ_ELO = CURRENT_SEASON_DIR / 'weekly_projections_elo_substack_2025_week_11.csv'  # Reference file
 SUBSTACK_WEEKLY_PROJ_PPG = CURRENT_SEASON_DIR / 'weekly_projections_ppg_substack_2025_week_11.csv'
 
 # Reference files
@@ -142,6 +142,14 @@ def setup_colab_paths():
 
 def get_config_summary():
     """Print configuration summary for verification."""
+    # Count category-first files (canonical naming)
+    category_first_nfelo = len([f for f in Path(CURRENT_SEASON_DIR).glob('*_nfelo_*.csv')])
+    category_first_substack = len([f for f in Path(CURRENT_SEASON_DIR).glob('*_substack_*.csv')])
+
+    # Count legacy provider-first files (for backward compatibility)
+    legacy_nfelo = len([f for f in Path(CURRENT_SEASON_DIR).glob('nfelo_*.csv')])
+    legacy_substack = len([f for f in Path(CURRENT_SEASON_DIR).glob('substack_*.csv')])
+
     summary = f"""
     ═══════════════════════════════════════════════════════════
     BALL KNOWER - CONFIGURATION SUMMARY
@@ -154,8 +162,13 @@ def get_config_summary():
     TRAINING PERIOD:  {TRAINING_START_YEAR}-{TRAINING_END_YEAR}
     CURRENT SEASON:   {CURRENT_SEASON} (Week {CURRENT_WEEK})
 
-    nfelo FILES:      {len([f for f in Path(CURRENT_SEASON_DIR).glob('nfelo_*.csv')])} found
-    Substack FILES:   {len([f for f in Path(CURRENT_SEASON_DIR).glob('substack_*.csv')])} found
+    DATA FILES (category-first naming):
+        nfelo:        {category_first_nfelo} files
+        Substack:     {category_first_substack} files
+
+    LEGACY FILES (provider-first, for compatibility):
+        nfelo:        {legacy_nfelo} files
+        Substack:     {legacy_substack} files
 
     HOME FIELD ADV:   {HOME_FIELD_ADVANTAGE} points
     MIN BET EDGE:     {MIN_BET_EDGE} points
