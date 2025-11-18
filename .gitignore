@@ -59,3 +59,7 @@ data/temp_pbp/
 
 # Keep aggregated data
 !data/team_week_epa_*.csv
+
+# Benchmark outputs and external test data
+data/benchmarks/*.csv
+data/external/*.csv
