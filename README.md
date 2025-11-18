@@ -23,6 +23,85 @@ Build a reliable NFL spread prediction system that:
 - Backtest and ROI analysis functions
 - Demo notebook with Week 11, 2025 predictions
 
+## Architecture at a Glance
+
+Ball Knower is organized into three main components:
+
+### 1. Unified Data Loaders
+
+**Module**: `ball_knower.io.loaders`
+
+**Purpose**: Load current-week data from multiple providers with automatic team name normalization.
+
+**Example**:
+```python
+from ball_knower.io import loaders
+
+# Load all current-week sources
+data = loaders.load_all_sources(season=2025, week=11)
+power_ratings = data['power_ratings']  # Combined nfelo + Substack
+qb_metrics = data['qb_metrics']        # QB EPA and performance
+```
+
+**File Convention**: Category-first naming (e.g., `power_ratings_nfelo_2025_week_11.csv`)
+
+### 2. Historical Dataset Builders
+
+Ball Knower has two dataset builders for different prediction tasks:
+
+#### v1.0 - Actual Margin Prediction (Baseline Football Brain)
+
+**Target**: Predicts actual game margin (`home_score - away_score`)
+
+**Purpose**: Establishes the "football truth" - what should happen based purely on team strength
+
+**Example**:
+```python
+from ball_knower.datasets import v1_0
+
+# Build training dataset (2009-2024)
+df_v1_0 = v1_0.build_training_frame()
+
+# Features: nfelo ratings, EPA, power ratings, structural context
+# Target: actual_margin
+# Model: Linear regression baseline
+```
+
+**Use Case**: Foundation model that ignores betting markets
+
+#### v1.2 - Vegas Spread Prediction (Market-Aware Model)
+
+**Target**: Predicts Vegas closing spread (or learns spread corrections)
+
+**Purpose**: Align with market consensus to identify genuine edges
+
+**Example**:
+```python
+from ball_knower.datasets import v1_2
+
+# Build training dataset with QB metrics and structural features
+df_v1_2 = v1_2.build_training_frame()
+
+# Features: All v1.0 features + QB metrics + seasonal context
+# Target: vegas_spread_close
+# Model: Ridge regression with regularization
+```
+
+**Use Case**: Compare model predictions to Vegas lines to find betting value
+
+### 3. Model Progression
+
+- **v1.0**: Pure football model (no market awareness)
+- **v1.2**: Market-calibrated model (learns Vegas patterns)
+- **Edge Detection**: `edge = v1_2_prediction - vegas_line`
+
+### Core Principles
+
+1. **Leak-Free Guarantee**: All features use `.shift(1)` on rolling stats
+2. **Time-Based Splits**: Train on 2009-2024, test on 2025
+3. **Interpretable**: Linear models with clear feature importance
+4. **Modular**: Each version is self-contained and testable
+
 ## Quick Start
 
 ### Run the Demo Notebook
