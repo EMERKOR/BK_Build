@@ -1,0 +1,141 @@
+================================================================================
+BALL KNOWER v2.0 - FEATURE SET VERIFICATION REPORT
+================================================================================
+
+SUMMARY STATISTICS
+--------------------------------------------------------------------------------
+  T0_STRUCTURAL       :   13 features - Structural keys and identifiers
+  T1_CORE             :   28 features - Safe core team strength features
+  T2_MARKET           :   17 features - Market and situational features
+  T3_EXPERIMENTAL     :   19 features - Experimental derived features
+  TX_FORBIDDEN        :   17 features - Forbidden features (leakage risks)
+  TOTAL_SAFE          :   58 features - Total safe features (T0+T1+T2)
+
+DATA SOURCE COVERAGE
+--------------------------------------------------------------------------------
+  team_week_epa_2013_2024                 :  13 columns
+  power_ratings_nfelo                     :  21 columns
+  power_ratings_substack                  :  10 columns
+  epa_tiers_nfelo                         :   4 columns
+  strength_of_schedule_nfelo              :  12 columns
+  weekly_projections_substack             :   5 columns
+  qb_epa_substack                         :   9 columns
+  TOTAL UNIQUE COLUMNS                    :  69
+
+TIER CONSISTENCY CHECK
+--------------------------------------------------------------------------------
+  ✓ PASS: No features appear in multiple tiers
+
+MISSING FEATURES (in data but not in config)
+--------------------------------------------------------------------------------
+  ⚠ WARNING: 33 features found in data but not categorized:
+    - 2025-11-13                               (from: weekly_projections_substack)
+    - 82.06656451                              (from: weekly_projections_substack)
+    - 8:15PM                                   (from: weekly_projections_substack)
+    - Age                                      (from: qb_epa_substack)
+    - Avg. Opp. Rating                         (from: strength_of_schedule_nfelo)
+    - Avg. Opp. Rating.1                       (from: strength_of_schedule_nfelo)
+    - Avg. Opp. Rating.2                       (from: strength_of_schedule_nfelo)
+    - Current Rating                           (from: strength_of_schedule_nfelo)
+    - Div.                                     (from: power_ratings_substack)
+    - EPA                                      (from: qb_epa_substack)
+    - EPA/Play                                 (from: epa_tiers_nfelo)
+    - EPA/Play Against                         (from: epa_tiers_nfelo)
+    - NE -10.5                                 (from: weekly_projections_substack)
+    - New York Jets at New England Patriots    (from: weekly_projections_substack)
+    - Original Rating                          (from: strength_of_schedule_nfelo)
+    - Pass.1                                   (from: power_ratings_nfelo)
+    - Play.1                                   (from: power_ratings_nfelo)
+    - Play.2                                   (from: power_ratings_nfelo)
+    - Player                                   (from: qb_epa_substack)
+    - Plays                                    (from: qb_epa_substack)
+    - Prim.                                    (from: qb_epa_substack)
+    - Rank                                     (from: strength_of_schedule_nfelo)
+    - Rank.1                                   (from: strength_of_schedule_nfelo)
+    - Rank.2                                   (from: strength_of_schedule_nfelo)
+    - Rush.1                                   (from: power_ratings_nfelo)
+    - Season                                   (from: power_ratings_nfelo, epa_tiers_nfelo, strength_of_schedule_nfelo)
+    - Team                                     (from: power_ratings_nfelo, power_ratings_substack, epa_tiers_nfelo, strength_of_schedule_nfelo)
+    - Tms                                      (from: qb_epa_substack)
+    - Total Result                             (from: strength_of_schedule_nfelo)
+    - Val/Pl                                   (from: qb_epa_substack)
+    - Win Total                                (from: strength_of_schedule_nfelo)
+    - vs Avg                                   (from: qb_epa_substack)
+    - vs Rep                                   (from: qb_epa_substack)
+
+EXTRA FEATURES (in config but not in data)
+--------------------------------------------------------------------------------
+  ⚠ INFO: 58 features defined but not found in current data:
+    - actual_spread                            (tier: TX)
+    - ats_cover                                (tier: TX)
+    - ats_margin                               (tier: TX)
+    - ats_rate_L3                              (tier: T3)
+    - ats_rate_L5                              (tier: T3)
+    - away_off_vs_home_def                     (tier: T3)
+    - away_rest_days                           (tier: T2)
+    - away_score                               (tier: TX)
+    - away_team                                (tier: T0)
+    - away_win                                 (tier: TX)
+    - closing_spread                           (tier: TX)
+    - coach_tenure                             (tier: T2)
+    - div_game                                 (tier: T2)
+    - epa_def_L10                              (tier: T3)
+    - epa_def_L3                               (tier: T3)
+    - epa_def_L5                               (tier: T3)
+    - epa_margin_L10                           (tier: T3)
+    - epa_margin_L3                            (tier: T3)
+    - epa_margin_L5                            (tier: T3)
+    - epa_off_L10                              (tier: T3)
+    - epa_off_L3                               (tier: T3)
+    - epa_off_L5                               (tier: T3)
+    - game_date                                (tier: T0)
+    - game_id                                  (tier: T0)
+    - gameday                                  (tier: T0)
+    - home_off_vs_away_def                     (tier: T3)
+    - home_rest_days                           (tier: T2)
+    - home_score                               (tier: TX)
+    - home_team                                (tier: T0)
+    - home_win                                 (tier: TX)
+    - is_playoff                               (tier: T2)
+    - location                                 (tier: T0)
+    - matchup                                  (tier: T0)
+    - moneyline_away                           (tier: TX)
+    - moneyline_home                           (tier: TX)
+    - opening_spread                           (tier: TX)
+    - opponent                                 (tier: T0)
+    - over_under_result                        (tier: TX)
+    - point_diff_L3                            (tier: T3)
+    - point_diff_L5                            (tier: T3)
+    - qb_adj_x_def_epa                         (tier: T3)
+    - qb_change                                (tier: T2)
+    - qb_name                                  (tier: T2)
+    - rest_advantage                           (tier: T2)
+    - rest_days                                (tier: T2)
+    - rest_x_elo_diff                          (tier: T3)
+    - result                                   (tier: TX)
+    - roof                                     (tier: T2)
+    - spread_line                              (tier: TX)
+    - team_away                                (tier: T0)
+    - team_home                                (tier: T0)
+    - temperature                              (tier: T2)
+    - total_line                               (tier: TX)
+    - total_score                              (tier: TX)
+    - win_rate_L3                              (tier: T3)
+    - win_rate_L5                              (tier: T3)
+    - wind                                     (tier: T2)
+    - winner                                   (tier: TX)
+  NOTE: This is expected for derived/engineered features and forbidden features.
+
+FORBIDDEN FEATURES CHECK
+--------------------------------------------------------------------------------
+  ✓ PASS: No forbidden features found in current data sources
+
+SAFE FEATURES SUMMARY (T0 + T1 + T2)
+--------------------------------------------------------------------------------
+  Total safe features defined:     58
+  Safe features available in data: 36
+  Coverage:                        62.1%
+
+================================================================================
+END OF REPORT
+================================================================================
