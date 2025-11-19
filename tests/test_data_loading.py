@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from ball_knower.io import loaders
 
 # Import config and team_mapping directly (avoid importing models via src/__init__.py)
-_project_root = Path(__file__).parent
+_project_root = Path(__file__).resolve().parents[1]
 
 _config_spec = importlib.util.spec_from_file_location("config", _project_root / "src" / "config.py")
 config = importlib.util.module_from_spec(_config_spec)
