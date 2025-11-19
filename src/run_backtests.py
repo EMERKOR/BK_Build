@@ -22,7 +22,10 @@ project_root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(project_root))
 
 from src import config
+from src import betting_utils
 from ball_knower.features import engineering as features
+from ball_knower.datasets import v1_3
+from sklearn.linear_model import Ridge
 
 
 # ============================================================================
@@ -213,6 +216,122 @@ def run_backtest_v1_2(
     return pd.DataFrame(results)
 
 
+def run_backtest_v1_3(
+    start_season: int,
+    end_season: int,
+    edge_threshold: float = 0.0
+) -> pd.DataFrame:
+    """
+    Run backtest for v1.3 model across specified seasons.
+
+    v1.3 enhancements:
+    - 18 features (up from 6 in v1.2)
+    - Rolling performance metrics (win rate, point diff, ATS rate)
+    - Rolling ELO changes
+    - Game context features
+    - Professional PnL metrics (units won, ROI, ATS win rate)
+
+    Args:
+        start_season: Start season year
+        end_season: End season year
+        edge_threshold: Minimum edge threshold for "betting"
+
+    Returns:
+        DataFrame with one row per season containing metrics including:
+            - Standard metrics: MAE, RMSE, mean edge
+            - PnL metrics: units_won, roi_pct, ats_win_rate
+    """
+    # Build v1.3 dataset
+    print(f"  Building v1.3 dataset ({start_season}-{end_season})...")
+    df = v1_3.build_training_frame(start_year=start_season, end_year=end_season)
+
+    # Define feature columns (all v1.3 features)
+    feature_cols = [
+        # v1.2 baseline (6)
+        'nfelo_diff', 'rest_advantage', 'div_game',
+        'surface_mod', 'time_advantage', 'qb_diff',
+        # Rolling form - home (3)
+        'win_rate_L5_home', 'point_diff_L5_home', 'ats_rate_L5_home',
+        # Rolling form - away (3)
+        'win_rate_L5_away', 'point_diff_L5_away', 'ats_rate_L5_away',
+        # Rolling ELO - home (2)
+        'nfelo_change_L3_home', 'nfelo_change_L5_home',
+        # Rolling ELO - away (2)
+        'nfelo_change_L3_away', 'nfelo_change_L5_away',
+        # Game context (2)
+        'is_playoff_week', 'is_primetime'
+    ]
+
+    # Target
+    target_col = 'vegas_closing_spread'
+
+    # Train Ridge model (one model for all seasons)
+    print(f"  Training v1.3 Ridge model...")
+    X = df[feature_cols].values
+    y = df[target_col].values
+
+    model = Ridge(alpha=10.0)
+    model.fit(X, y)
+
+    # Generate predictions
+    df['bk_v1_3_spread'] = model.predict(X)
+
+    # Calculate edge
+    df['vegas_line'] = df['vegas_closing_spread']
+    df['edge'] = df['bk_v1_3_spread'] - df['vegas_line']
+    df['abs_edge'] = df['edge'].abs()
+
+    # Group by season and calculate metrics
+    results = []
+    for season in range(start_season, end_season + 1):
+        season_df = df[df['season'] == season].copy()
+
+        if len(season_df) == 0:
+            continue
+
+        # Bets are games with edge >= threshold
+        bets_df = season_df[season_df['abs_edge'] >= edge_threshold]
+
+        # Standard metrics
+        mae_vs_vegas = season_df['abs_edge'].mean()
+        rmse_vs_vegas = np.sqrt((season_df['edge'] ** 2).mean())
+        mean_edge = season_df['edge'].mean()
+
+        # PnL metrics (for all bets)
+        if len(bets_df) > 0:
+            # Calculate ATS outcomes
+            ats_outcomes = pd.Series([
+                betting_utils.calculate_ats_outcome(row['actual_margin'], row['vegas_line'])
+                for _, row in bets_df.iterrows()
+            ])
+
+            units_won = betting_utils.calculate_units_won(ats_outcomes, stakes=1.0, juice=-110)
+            units_risked = len(bets_df) * 1.0
+            roi_pct = betting_utils.calculate_roi(units_won, units_risked)
+            ats_win_rate = betting_utils.calculate_ats_win_rate(ats_outcomes)
+        else:
+            units_won = 0.0
+            roi_pct = 0.0
+            ats_win_rate = 0.0
+
+        results.append({
+            'season': season,
+            'model': 'v1.3',
+            'edge_threshold': edge_threshold,
+            'n_games': len(season_df),
+            'n_bets': len(bets_df),
+            'mae_vs_vegas': mae_vs_vegas,
+            'rmse_vs_vegas': rmse_vs_vegas,
+            'mean_edge': mean_edge,
+            # New PnL metrics
+            'units_won': units_won,
+            'roi_pct': roi_pct,
+            'ats_win_rate': ats_win_rate,
+        })
+
+    return pd.DataFrame(results)
+
+
 # ============================================================================
 # CLI
 # ============================================================================
@@ -239,7 +358,7 @@ def main():
     parser.add_argument(
         '--model',
         type=str,
-        choices=['v1.0', 'v1.2'],
+        choices=['v1.0', 'v1.2', 'v1.3'],
         required=True,
         help='Model version to backtest'
     )
@@ -277,8 +396,14 @@ def main():
             args.end_season,
             args.edge_threshold
         )
-    else:  # v1.2
+    elif args.model == 'v1.2':
         results = run_backtest_v1_2(
+            args.start_season,
+            args.end_season,
+            args.edge_threshold
+        )
+    else:  # v1.3
+        results = run_backtest_v1_3(
             args.start_season,
             args.end_season,
             args.edge_threshold

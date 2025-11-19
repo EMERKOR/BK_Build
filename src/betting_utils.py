@@ -338,6 +338,176 @@ def spread_to_win_probability(spread_prediction: float, residual_std: float = 2.
 
 
 # ============================================================================
+# AGAINST THE SPREAD (ATS) BETTING METRICS
+# ============================================================================
+
+def calculate_ats_outcome(actual_margin: float, spread_line: float) -> bool:
+    """
+    Calculate whether a bet against the spread won.
+
+    ATS betting rules (home team perspective):
+    - Home team covers if: actual_margin + spread_line > 0
+    - If spread is -3.5, home team must win by 4+ to cover
+    - If spread is +3.5, home team can lose by up to 3 and still cover
+
+    Args:
+        actual_margin: Actual game margin (home_score - away_score)
+        spread_line: Spread line from home team perspective (negative = home favored)
+
+    Returns:
+        True if home team covered the spread, False otherwise
+
+    Example:
+        >>> calculate_ats_outcome(7, -3.5)  # Home won by 7, was -3.5 favorite
+        True  # Covered (won by more than 3.5)
+        >>> calculate_ats_outcome(3, -3.5)  # Home won by 3, was -3.5 favorite
+        False  # Did not cover (won by less than 3.5)
+        >>> calculate_ats_outcome(-2, +3.5)  # Home lost by 2, was +3.5 underdog
+        True  # Covered (lost by less than 3.5)
+    """
+    return (actual_margin + spread_line) > 0
+
+
+def calculate_units_won(
+    ats_outcomes: pd.Series,
+    stakes: float = 1.0,
+    juice: int = -110
+) -> float:
+    """
+    Calculate total units won/lost given ATS outcomes.
+
+    Standard juice is -110 (risk $110 to win $100).
+
+    Args:
+        ats_outcomes: Boolean series of whether each bet covered
+        stakes: Units risked per bet (default 1.0)
+        juice: American odds for bets (default -110)
+
+    Returns:
+        Total units won (negative = loss)
+
+    Example:
+        >>> outcomes = pd.Series([True, True, False, True])  # 3-1 record
+        >>> calculate_units_won(outcomes, stakes=1.0, juice=-110)
+        1.73  # Won 3 * 0.909 = 2.73, lost 1 * 1.0 = 1.0, net = 1.73
+    """
+    wins = ats_outcomes.sum()
+    losses = (~ats_outcomes).sum()
+
+    # Calculate payout per unit won at given juice
+    if juice < 0:
+        payout_per_unit = 100 / (-juice)
+    else:
+        payout_per_unit = juice / 100
+
+    units_won = (wins * payout_per_unit * stakes) - (losses * stakes)
+
+    return units_won
+
+
+def calculate_roi(units_won: float, units_risked: float) -> float:
+    """
+    Calculate Return on Investment as a percentage.
+
+    ROI = (units_won / units_risked) * 100
+
+    Args:
+        units_won: Total units won/lost (from calculate_units_won)
+        units_risked: Total units risked across all bets
+
+    Returns:
+        ROI as percentage (e.g., 5.0 = 5% ROI)
+
+    Example:
+        >>> calculate_roi(1.73, 4.0)  # Won 1.73 units on 4 bets
+        43.25  # 43.25% ROI
+    """
+    if units_risked == 0:
+        return 0.0
+
+    return (units_won / units_risked) * 100
+
+
+def calculate_ats_win_rate(ats_outcomes: pd.Series) -> float:
+    """
+    Calculate against-the-spread win rate.
+
+    Args:
+        ats_outcomes: Boolean series of whether each bet covered
+
+    Returns:
+        Win rate as decimal (e.g., 0.55 = 55%)
+
+    Example:
+        >>> outcomes = pd.Series([True, True, False, True])
+        >>> calculate_ats_win_rate(outcomes)
+        0.75  # 3 wins out of 4 bets
+    """
+    return ats_outcomes.mean()
+
+
+def ats_summary_stats(
+    actual_margins: pd.Series,
+    spread_lines: pd.Series,
+    stakes: float = 1.0,
+    juice: int = -110
+) -> dict:
+    """
+    Calculate comprehensive ATS betting statistics.
+
+    Args:
+        actual_margins: Series of actual game margins (home perspective)
+        spread_lines: Series of spread lines (home perspective)
+        stakes: Units risked per bet
+        juice: American odds
+
+    Returns:
+        Dictionary with:
+            - n_bets: Number of bets
+            - wins: Number of covers
+            - losses: Number of non-covers
+            - ats_win_rate: Win rate as decimal
+            - units_won: Total units won
+            - units_risked: Total units risked
+            - roi_pct: ROI as percentage
+            - break_even_rate: Required win rate to break even
+
+    Example:
+        >>> margins = pd.Series([7, 3, -2, 10])
+        >>> spreads = pd.Series([-3.5, -3.5, +3.5, -7.5])
+        >>> stats = ats_summary_stats(margins, spreads)
+        >>> stats['ats_win_rate']
+        0.75
+    """
+    # Calculate outcomes
+    ats_outcomes = pd.Series([
+        calculate_ats_outcome(margin, spread)
+        for margin, spread in zip(actual_margins, spread_lines)
+    ])
+
+    n_bets = len(ats_outcomes)
+    wins = ats_outcomes.sum()
+    losses = n_bets - wins
+
+    ats_win_rate = calculate_ats_win_rate(ats_outcomes)
+    units_won = calculate_units_won(ats_outcomes, stakes, juice)
+    units_risked = n_bets * stakes
+    roi_pct = calculate_roi(units_won, units_risked)
+    break_even = break_even_win_rate(juice)
+
+    return {
+        'n_bets': n_bets,
+        'wins': wins,
+        'losses': losses,
+        'ats_win_rate': ats_win_rate,
+        'units_won': units_won,
+        'units_risked': units_risked,
+        'roi_pct': roi_pct,
+        'break_even_rate': break_even,
+    }
+
+
+# ============================================================================
 # UTILITY FUNCTIONS
 # ============================================================================
 

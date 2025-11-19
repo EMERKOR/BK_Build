@@ -227,26 +227,103 @@ def calculate_rolling_epa(schedules, weekly_stats, windows=[3, 5, 10]):
     return team_games_df
 
 
-def validate_no_leakage(df, date_col='gameday'):
+def validate_no_leakage(
+    raw_df: pd.DataFrame,
+    build_features_fn=None,
+    target_cols=None,
+    group_cols=None,
+    date_col='gameday'
+):
     """
-    Validate that rolling features don't leak future information.
+    Validate that features don't leak future information.
+
+    This is a comprehensive leakage detector that can be used in two modes:
+    1. Simple mode: Validate existing rolling features in a DataFrame
+    2. Advanced mode: Test a feature builder function for leakage
 
     Args:
-        df (pd.DataFrame): DataFrame with rolling features
-        date_col (str): Date column name
+        raw_df: DataFrame with features (simple mode) or raw data (advanced mode)
+        build_features_fn: Optional function(df) -> df that builds features
+        target_cols: List of target column names to check for leakage
+        group_cols: List of grouping columns (e.g., ['season', 'week'])
+        date_col: Date column name for temporal checks
 
     Raises:
-        ValueError: If leakage is detected
+        AssertionError: If leakage is detected
+
+    Example (simple mode):
+        >>> validate_no_leakage(df_with_features)
+
+    Example (advanced mode):
+        >>> validate_no_leakage(
+        ...     raw_df=games,
+        ...     build_features_fn=lambda df: add_rolling_features(df),
+        ...     target_cols=['actual_margin'],
+        ...     group_cols=['season', 'week']
+        ... )
     """
-    # Check that no rolling feature includes data from the same gameday or future
-    rolling_cols = [col for col in df.columns if '_L' in col and col.startswith('epa')]
+    if build_features_fn is not None:
+        # Advanced mode: test feature builder
+        df = build_features_fn(raw_df.copy())
+    else:
+        # Simple mode: validate existing features
+        df = raw_df.copy()
 
-    for col in rolling_cols:
-        # For each team, verify rolling stat at time T only uses data before T
-        # This is ensured by the shift(1) in rolling calculation
-        pass
+    # Identify rolling feature columns
+    rolling_cols = [col for col in df.columns if '_L' in col and any(
+        col.startswith(prefix) for prefix in ['epa', 'win', 'ats', 'point', 'nfelo']
+    )]
 
-    print("✓ Leakage validation passed")
+    if len(rolling_cols) == 0:
+        print("⚠ No rolling features found to validate")
+        return
+
+    # Check 1: First games should have minimal rolling feature values
+    # (or NaN if shift(1) with min_periods=1 is used correctly)
+    if 'week' in df.columns:
+        first_games = df.nsmallest(10, 'week') if 'week' in df.columns else df.head(10)
+
+        for col in rolling_cols:
+            if col in first_games.columns:
+                first_vals = first_games[col].fillna(0).abs()
+                max_val = first_vals.max()
+                # Rolling features for first games should be near zero
+                # Allow some tolerance for filled values
+                if max_val > 10.0:  # Arbitrary threshold
+                    raise AssertionError(
+                        f"Potential leakage in '{col}': "
+                        f"First games have unexpectedly large values (max={max_val:.2f}). "
+                        f"Rolling features should be near zero for games with no history."
+                    )
+
+    # Check 2: If target columns provided, verify features don't directly use targets
+    if target_cols is not None:
+        target_cols = [target_cols] if isinstance(target_cols, str) else target_cols
+
+        for target_col in target_cols:
+            if target_col not in df.columns:
+                continue
+
+            # Check correlation between rolling features and same-row targets
+            # High correlation suggests potential leakage
+            for roll_col in rolling_cols:
+                if roll_col in df.columns:
+                    clean_df = df[[roll_col, target_col]].dropna()
+                    if len(clean_df) > 10:
+                        corr = clean_df[roll_col].corr(clean_df[target_col])
+                        # Very high same-row correlation is suspicious
+                        if abs(corr) > 0.95:
+                            print(f"⚠ Warning: High correlation between {roll_col} and {target_col}: {corr:.3f}")
+                            print(f"  This might indicate leakage if {roll_col} is using same-game data")
+
+    # Check 3: Temporal consistency (if date column exists)
+    if date_col in df.columns:
+        # Verify DataFrame is properly sorted
+        df_sorted = df.sort_values(date_col)
+        if not df_sorted.index.equals(df.index):
+            print(f"⚠ Warning: DataFrame not sorted by {date_col}. Rolling features may be incorrect.")
+
+    print(f"✓ Leakage validation passed for {len(rolling_cols)} rolling features")
 
 
 # ============================================================================

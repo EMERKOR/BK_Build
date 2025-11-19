@@ -182,6 +182,100 @@ def test_backtest_cli_v1_2_smoke_test():
 
 
 # ============================================================================
+# TEST BACKTEST CLI - v1.3
+# ============================================================================
+
+def test_backtest_cli_v1_3_smoke_test():
+    """
+    Smoke test for run_backtests.py with v1.3 model.
+
+    v1.3 trains its model on-the-fly, so no pre-existing model file is needed.
+    """
+    project_root = Path(__file__).resolve().parents[1]
+    output_dir = project_root / "output"
+    output_dir.mkdir(exist_ok=True)
+    output_path = output_dir / "test_backtest_v1_3_2019.csv"
+
+    # Remove output file if it exists from previous test
+    if output_path.exists():
+        output_path.unlink()
+
+    # Run backtest CLI
+    cli_script = project_root / "src" / "run_backtests.py"
+    result = subprocess.run(
+        [
+            "python",
+            str(cli_script),
+            "--start-season", "2019",
+            "--end-season", "2019",
+            "--model", "v1.3",
+            "--edge-threshold", "0.5",
+            "--output", str(output_path)
+        ],
+        capture_output=True,
+        text=True,
+        timeout=120  # v1.3 builds dataset with rolling features, may take longer
+    )
+
+    # Assert CLI succeeded
+    assert result.returncode == 0, \
+        f"CLI failed with return code {result.returncode}.\n" \
+        f"STDOUT:\n{result.stdout}\n" \
+        f"STDERR:\n{result.stderr}"
+
+    # Assert output file was created
+    assert output_path.exists(), \
+        f"Output file not created at {output_path}"
+
+    # Read output CSV
+    df = pd.read_csv(output_path)
+
+    # Assert it has exactly 1 row
+    assert len(df) == 1, \
+        f"Output should have 1 row for single season, got {len(df)}"
+
+    # Assert required columns exist (including new PnL metrics)
+    required_cols = [
+        "season",
+        "model",
+        "edge_threshold",
+        "n_games",
+        "n_bets",
+        "mae_vs_vegas",
+        "rmse_vs_vegas",
+        "mean_edge",
+        # v1.3 new PnL metrics
+        "units_won",
+        "roi_pct",
+        "ats_win_rate",
+    ]
+
+    for col in required_cols:
+        assert col in df.columns, \
+            f"Output CSV missing required column: {col}"
+
+    # Assert values are reasonable
+    assert df['season'].iloc[0] == 2019, "Season should be 2019"
+    assert df['model'].iloc[0] == 'v1.3', "Model should be v1.3"
+    assert df['edge_threshold'].iloc[0] == 0.5, "Edge threshold should be 0.5"
+    assert df['n_games'].iloc[0] > 0, "Should have games"
+
+    # PnL metrics should be present (may be zero if no bets)
+    assert 'units_won' in df.columns
+    assert 'roi_pct' in df.columns
+    assert 'ats_win_rate' in df.columns
+
+    # If there are bets, ATS win rate should be between 0 and 1
+    if df['n_bets'].iloc[0] > 0:
+        assert 0 <= df['ats_win_rate'].iloc[0] <= 1, \
+            "ATS win rate should be between 0 and 1"
+
+    # Clean up test output file
+    if output_path.exists():
+        output_path.unlink()
+
+
+# ============================================================================
 # TEST CLI HELP
 # ============================================================================
 
