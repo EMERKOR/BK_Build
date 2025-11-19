@@ -53,17 +53,10 @@ def test_load_all_sources():
     """
     Test that load_all_sources returns expected structure when data exists.
 
-    If data files are missing, skip the test.
+    Uses fixture data from tests/fixtures/current_season/.
     """
     season = 2025
-    week = 11
-
-    if not check_current_season_data_exists(season, week):
-        pytest.skip(
-            f"Current-season data files for {season} Week {week} not found. "
-            "Skipping load_all_sources test. "
-            "To run this test, add the required CSV files to data/current_season/."
-        )
+    week = 1
 
     # Load all sources
     data = loaders.load_all_sources(season=season, week=week)
@@ -99,16 +92,10 @@ def test_load_all_sources_merged_ratings():
     """
     Test that merged_ratings key contains properly merged data.
 
-    If data files are missing, skip the test.
+    Uses fixture data from tests/fixtures/current_season/.
     """
     season = 2025
-    week = 11
-
-    if not check_current_season_data_exists(season, week):
-        pytest.skip(
-            f"Current-season data files for {season} Week {week} not found. "
-            "Skipping merged_ratings test."
-        )
+    week = 1
 
     # Load all sources
     data = loaders.load_all_sources(season=season, week=week)

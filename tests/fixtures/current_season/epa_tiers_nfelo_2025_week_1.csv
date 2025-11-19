@@ -1,0 +1,4 @@
+team,offense_tier,defense_tier,off_epa_per_play,def_epa_per_play,epa_margin
+BUF,1,2,0.15,-0.05,0.20
+KC,1,2,0.17,-0.03,0.20
+SF,1,1,0.18,-0.06,0.24

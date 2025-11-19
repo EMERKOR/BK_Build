@@ -52,17 +52,11 @@ def test_weekly_predictions_cli_smoke_test():
     - CLI runs without errors
     - Output file is created
     - Output CSV has expected columns
+
+    Uses fixture data from tests/fixtures/current_season/.
     """
     season = 2025
-    week = 11
-
-    # Skip if data files don't exist
-    if not check_current_season_data_exists(season, week):
-        pytest.skip(
-            f"Current-season data files for {season} Week {week} not found. "
-            "Skipping weekly predictions CLI test. "
-            "To run this test, add the required CSV files to data/current_season/."
-        )
+    week = 1
 
     # Define output path
     project_root = Path(__file__).resolve().parents[1]
@@ -125,16 +119,11 @@ def test_weekly_predictions_cli_smoke_test():
 def test_weekly_predictions_cli_with_default_output():
     """
     Test that CLI works with default output path.
+
+    Uses fixture data from tests/fixtures/current_season/.
     """
     season = 2025
-    week = 11
-
-    # Skip if data files don't exist
-    if not check_current_season_data_exists(season, week):
-        pytest.skip(
-            f"Current-season data files for {season} Week {week} not found. "
-            "Skipping weekly predictions CLI test."
-        )
+    week = 1
 
     project_root = Path(__file__).resolve().parents[1]
     cli_script = project_root / "src" / "run_weekly_predictions.py"
