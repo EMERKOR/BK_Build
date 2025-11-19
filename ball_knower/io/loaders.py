@@ -24,6 +24,7 @@ Supported providers:
     - substack
 """
 
+import os
 from pathlib import Path
 import warnings
 import pandas as pd
@@ -44,7 +45,16 @@ _spec.loader.exec_module(_team_mapping)
 normalize_team = _team_mapping.normalize_team_name
 
 # Default data directory: repo_root/data/current_season
-DEFAULT_DATA_DIR = Path(__file__).resolve().parents[2] / "data" / "current_season"
+# Can be overridden via BALL_KNOWER_DATA_DIR environment variable for testing
+DATA_DIR_ENV = "BALL_KNOWER_DATA_DIR"
+_DEFAULT_ROOT = Path(__file__).resolve().parents[2]
+
+DEFAULT_DATA_DIR = Path(
+    os.environ.get(
+        DATA_DIR_ENV,
+        str(_DEFAULT_ROOT / "data" / "current_season"),
+    )
+)
 
 
 def _normalize_team_column(df: pd.DataFrame, team_col: str = "team") -> pd.DataFrame:
