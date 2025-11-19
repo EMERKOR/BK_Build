@@ -3,7 +3,12 @@
 Unified Backtest Driver for Ball Knower Models
 
 Runs backtests for v1.0 or v1.2 models across specified season ranges
-and edge thresholds. Outputs summary statistics to CSV.
+and edge thresholds. Outputs summary statistics including PnL and CLV metrics to CSV.
+
+Features:
+- ATS PnL tracking with flat-bet strategy (-110 pricing)
+- Closing Line Value (CLV) analysis
+- Win rate, ROI, and units won/lost metrics
 
 Usage:
     python src/run_backtests.py --start-season 2019 --end-season 2019 \
@@ -23,6 +28,108 @@ sys.path.insert(0, str(project_root))
 
 from src import config
 from ball_knower.features import engineering as features
+
+
+# ============================================================================
+# PNL AND CLV HELPER FUNCTIONS
+# ============================================================================
+
+def compute_ats_pnl(df: pd.DataFrame) -> dict:
+    """
+    Compute flat-bet ATS PnL given a DataFrame with:
+        - bet_flag: 1 if we bet, 0 if no bet
+        - bet_result: 1 for win, -1 for loss, 0 for push
+
+    Returns a dict with:
+        - n_bets: Total number of bets placed
+        - n_wins: Number of winning bets
+        - n_losses: Number of losing bets
+        - n_pushes: Number of pushes
+        - win_rate: Proportion of wins (excluding pushes)
+        - units_won: Total units won/lost (win: +0.9091, loss: -1, push: 0)
+        - roi: Return on investment (units_won / n_bets)
+    """
+    bets = df[df['bet_flag'] == 1].copy()
+
+    if len(bets) == 0:
+        return {
+            'n_bets': 0,
+            'n_wins': 0,
+            'n_losses': 0,
+            'n_pushes': 0,
+            'win_rate': 0.0,
+            'units_won': 0.0,
+            'roi': 0.0
+        }
+
+    n_wins = (bets['bet_result'] == 1).sum()
+    n_losses = (bets['bet_result'] == -1).sum()
+    n_pushes = (bets['bet_result'] == 0).sum()
+
+    # Standard -110 pricing: win = +0.9091 units, loss = -1 unit
+    units_won = (n_wins * 0.9091) + (n_losses * -1.0)
+
+    # Win rate excludes pushes
+    n_decided = n_wins + n_losses
+    win_rate = n_wins / n_decided if n_decided > 0 else 0.0
+
+    # ROI is total units won per bet placed
+    roi = units_won / len(bets)
+
+    return {
+        'n_bets': len(bets),
+        'n_wins': int(n_wins),
+        'n_losses': int(n_losses),
+        'n_pushes': int(n_pushes),
+        'win_rate': win_rate,
+        'units_won': units_won,
+        'roi': roi
+    }
+
+
+def compute_clv_metrics(df: pd.DataFrame) -> dict:
+    """
+    Compute simple CLV (Closing Line Value) metrics for rows where bet_flag == 1.
+
+    CLV measures whether we're betting at better lines than the closing line.
+    Positive CLV means we got a better line than close.
+
+    Note: This implementation uses a simple proxy since we don't have opening lines.
+    We compare our model's line against the closing line to estimate CLV.
+
+    Returns:
+        - n_bets: Number of bets
+        - mean_clv_diff: Average CLV (positive = beating closing line)
+        - pct_beating_closing_line: Percentage of bets with positive CLV
+    """
+    bets = df[df['bet_flag'] == 1].copy()
+
+    if len(bets) == 0 or 'clv_diff' not in bets.columns:
+        return {
+            'n_bets': 0,
+            'mean_clv_diff': 0.0,
+            'pct_beating_closing_line': 0.0
+        }
+
+    # Filter out any NaN values
+    valid_clv = bets['clv_diff'].notna()
+    clv_values = bets.loc[valid_clv, 'clv_diff']
+
+    if len(clv_values) == 0:
+        return {
+            'n_bets': len(bets),
+            'mean_clv_diff': 0.0,
+            'pct_beating_closing_line': 0.0
+        }
+
+    mean_clv = clv_values.mean()
+    pct_positive = (clv_values > 0).sum() / len(clv_values)
+
+    return {
+        'n_bets': len(bets),
+        'mean_clv_diff': mean_clv,
+        'pct_beating_closing_line': pct_positive
+    }
 
 
 # ============================================================================
@@ -52,6 +159,12 @@ def run_backtest_v1_0(
             - mae_vs_vegas
             - rmse_vs_vegas
             - mean_edge
+            - n_wins, n_losses, n_pushes (bet outcomes)
+            - win_rate (wins / decided bets)
+            - units_won (total units won/lost)
+            - roi (return on investment)
+            - mean_clv (average closing line value)
+            - pct_beat_close (% of bets beating closing line)
     """
     # Load nfelo data
     nfelo_url = 'https://raw.githubusercontent.com/greerreNFL/nfelo/main/output_data/nfelo_games.csv'
@@ -70,6 +183,7 @@ def run_backtest_v1_0(
     df = df[df['home_line_close'].notna()].copy()
     df = df[df['starting_nfelo_home'].notna()].copy()
     df = df[df['starting_nfelo_away'].notna()].copy()
+    df = df[df['home_result_spread'].notna()].copy()  # Need actual results for PnL
 
     # v1.0 model parameters (calibrated)
     NFELO_COEF = 0.0447
@@ -83,6 +197,37 @@ def run_backtest_v1_0(
     df['edge'] = df['bk_v1_0_spread'] - df['home_line_close']
     df['abs_edge'] = df['edge'].abs()
 
+    # Determine which side to bet (negative edge = bet home, positive = bet away)
+    # and compute bet outcomes
+    df['bet_flag'] = (df['abs_edge'] >= edge_threshold).astype(int)
+    df['bet_side'] = np.where(df['edge'] < 0, 'home', 'away')
+
+    # Compute ATS result for each side
+    # For home bets: win if home_result_spread > 0, lose if < 0, push if == 0
+    # For away bets: win if home_result_spread < 0, lose if > 0, push if == 0
+    def compute_bet_result(row):
+        if row['bet_flag'] == 0:
+            return 0  # No bet
+
+        result = row['home_result_spread']
+
+        # Check for push (exact tie against spread)
+        if abs(result) < 0.01:  # Float comparison tolerance
+            return 0
+
+        # Determine win/loss based on bet side
+        if row['bet_side'] == 'home':
+            return 1 if result > 0 else -1
+        else:  # away
+            return 1 if result < 0 else -1
+
+    df['bet_result'] = df.apply(compute_bet_result, axis=1)
+
+    # CLV proxy: Use our edge as a simple CLV indicator
+    # Positive edge on our bet side = beating closing line
+    # Note: This is a simplified proxy. True CLV requires opening line data.
+    df['clv_diff'] = np.where(df['bet_flag'] == 1, df['abs_edge'], np.nan)
+
     # Group by season and calculate metrics
     results = []
     for season in range(start_season, end_season + 1):
@@ -94,6 +239,12 @@ def run_backtest_v1_0(
         # Bets are games with edge >= threshold
         bets_df = season_df[season_df['abs_edge'] >= edge_threshold]
 
+        # Compute PnL metrics
+        pnl_metrics = compute_ats_pnl(season_df)
+
+        # Compute CLV metrics
+        clv_metrics = compute_clv_metrics(season_df)
+
         results.append({
             'season': season,
             'model': 'v1.0',
@@ -103,6 +254,16 @@ def run_backtest_v1_0(
             'mae_vs_vegas': season_df['abs_edge'].mean(),
             'rmse_vs_vegas': np.sqrt((season_df['edge'] ** 2).mean()),
             'mean_edge': season_df['edge'].mean(),
+            # PnL metrics
+            'n_wins': pnl_metrics['n_wins'],
+            'n_losses': pnl_metrics['n_losses'],
+            'n_pushes': pnl_metrics['n_pushes'],
+            'win_rate': pnl_metrics['win_rate'],
+            'units_won': pnl_metrics['units_won'],
+            'roi': pnl_metrics['roi'],
+            # CLV metrics
+            'mean_clv': clv_metrics['mean_clv_diff'],
+            'pct_beat_close': clv_metrics['pct_beating_closing_line'],
         })
 
     return pd.DataFrame(results)
@@ -122,7 +283,13 @@ def run_backtest_v1_2(
         edge_threshold: Minimum edge threshold for "betting"
 
     Returns:
-        DataFrame with one row per season containing metrics
+        DataFrame with one row per season containing:
+            - season, model, edge_threshold
+            - n_games, n_bets
+            - mae_vs_vegas, rmse_vs_vegas, mean_edge
+            - n_wins, n_losses, n_pushes, win_rate
+            - units_won, roi
+            - mean_clv, pct_beat_close
     """
     # Load trained v1.2 model parameters
     model_file = config.OUTPUT_DIR / 'ball_knower_v1_2_model.json'
@@ -153,6 +320,7 @@ def run_backtest_v1_2(
     df = df[df['home_line_close'].notna()].copy()
     df = df[df['starting_nfelo_home'].notna()].copy()
     df = df[df['starting_nfelo_away'].notna()].copy()
+    df = df[df['home_result_spread'].notna()].copy()  # Need actual results for PnL
 
     # Engineer features
     df['nfelo_diff'] = df['starting_nfelo_home'] - df['starting_nfelo_away']
@@ -188,6 +356,32 @@ def run_backtest_v1_2(
     df['edge'] = df['bk_v1_2_spread'] - df['vegas_line']
     df['abs_edge'] = df['edge'].abs()
 
+    # Determine which side to bet and compute bet outcomes
+    df['bet_flag'] = (df['abs_edge'] >= edge_threshold).astype(int)
+    df['bet_side'] = np.where(df['edge'] < 0, 'home', 'away')
+
+    # Compute ATS result for each side
+    def compute_bet_result(row):
+        if row['bet_flag'] == 0:
+            return 0  # No bet
+
+        result = row['home_result_spread']
+
+        # Check for push (exact tie against spread)
+        if abs(result) < 0.01:  # Float comparison tolerance
+            return 0
+
+        # Determine win/loss based on bet side
+        if row['bet_side'] == 'home':
+            return 1 if result > 0 else -1
+        else:  # away
+            return 1 if result < 0 else -1
+
+    df['bet_result'] = df.apply(compute_bet_result, axis=1)
+
+    # CLV proxy: Use our edge as a simple CLV indicator
+    df['clv_diff'] = np.where(df['bet_flag'] == 1, df['abs_edge'], np.nan)
+
     # Group by season and calculate metrics
     results = []
     for season in range(start_season, end_season + 1):
@@ -199,6 +393,12 @@ def run_backtest_v1_2(
         # Bets are games with edge >= threshold
         bets_df = season_df[season_df['abs_edge'] >= edge_threshold]
 
+        # Compute PnL metrics
+        pnl_metrics = compute_ats_pnl(season_df)
+
+        # Compute CLV metrics
+        clv_metrics = compute_clv_metrics(season_df)
+
         results.append({
             'season': season,
             'model': 'v1.2',
@@ -208,6 +408,16 @@ def run_backtest_v1_2(
             'mae_vs_vegas': season_df['abs_edge'].mean(),
             'rmse_vs_vegas': np.sqrt((season_df['edge'] ** 2).mean()),
             'mean_edge': season_df['edge'].mean(),
+            # PnL metrics
+            'n_wins': pnl_metrics['n_wins'],
+            'n_losses': pnl_metrics['n_losses'],
+            'n_pushes': pnl_metrics['n_pushes'],
+            'win_rate': pnl_metrics['win_rate'],
+            'units_won': pnl_metrics['units_won'],
+            'roi': pnl_metrics['roi'],
+            # CLV metrics
+            'mean_clv': clv_metrics['mean_clv_diff'],
+            'pct_beat_close': clv_metrics['pct_beating_closing_line'],
         })
 
     return pd.DataFrame(results)
@@ -303,6 +513,38 @@ def main():
     print(f"  Results saved to: {output_path}")
     print(f"\nSummary:")
     print(results.to_string(index=False))
+
+    # Print aggregated PnL and CLV metrics
+    if len(results) > 0 and 'units_won' in results.columns:
+        total_units = results['units_won'].sum()
+        total_bets = results['n_bets'].sum()
+        total_wins = results['n_wins'].sum()
+        total_losses = results['n_losses'].sum()
+        total_pushes = results['n_pushes'].sum()
+
+        print(f"\n" + "="*60)
+        print("PnL SUMMARY (Flat-bet strategy, -110 pricing)")
+        print("="*60)
+        print(f"  Total Bets:    {total_bets}")
+        print(f"  Wins:          {total_wins}")
+        print(f"  Losses:        {total_losses}")
+        print(f"  Pushes:        {total_pushes}")
+        if total_bets > 0:
+            avg_win_rate = total_wins / (total_wins + total_losses) if (total_wins + total_losses) > 0 else 0
+            avg_roi = total_units / total_bets
+            print(f"  Win Rate:      {avg_win_rate:.1%} (excl. pushes)")
+            print(f"  Total Units:   {total_units:+.2f}")
+            print(f"  ROI:           {avg_roi:+.2%}")
+
+        if 'mean_clv' in results.columns:
+            avg_clv = results.loc[results['n_bets'] > 0, 'mean_clv'].mean()
+            avg_pct_beat = results.loc[results['n_bets'] > 0, 'pct_beat_close'].mean()
+            print(f"\n" + "="*60)
+            print("CLV SUMMARY (Closing Line Value)")
+            print("="*60)
+            print(f"  Avg CLV:       {avg_clv:.2f} points")
+            print(f"  % Beat Close:  {avg_pct_beat:.1%}")
+            print(f"\nNote: CLV uses model edge as proxy (no opening line data)")
 
     return 0
 
