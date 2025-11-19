@@ -1,10 +1,18 @@
-# Ball Knower Feature Tiers
+# Feature Tier System
 
-This document categorizes features by their role, reliability, and risk of data leakage. Features are organized into tiers to help developers understand which features are safe to use, which require careful validation, and which are explicitly forbidden.
+[Docs Home](README.md) | [Architecture](ARCHITECTURE_OVERVIEW.md) | [Data Sources](DATA_SOURCES.md) | [Feature Tiers](FEATURE_TIERS.md) | [Spec](BALL_KNOWER_SPEC.md) | [Dev Guide](DEVELOPMENT_GUIDE.md)
+
+---
+
+## Overview
+
+This document defines the Ball Knower feature tier system, which categorizes features by their role, reliability, and risk of data leakage. Features are organized into tiers to help developers understand which features are safe to use, which require careful validation, and which are explicitly forbidden.
+
+---
 
 ## Tier Definitions
 
-### T0 - Structural Features (Always Safe)
+### Tier 0: Structural Features (Always Safe)
 
 **Definition**: Contextual information about the game that is knowable well in advance and carries zero risk of leakage.
 
@@ -14,31 +22,23 @@ This document categorizes features by their role, reliability, and risk of data 
 - Provides basic temporal and spatial context
 
 **Examples**:
-
-| Feature | Description | Values |
-|---------|-------------|--------|
-| `season` | NFL season year | 2009-2025 |
-| `week` | Week number in season | 1-18 (regular), 19-22 (playoffs) |
-| `is_home` | Home team indicator | 0 (away), 1 (home) |
-| `is_neutral` | Neutral site flag | 0 (home/away), 1 (neutral) |
-| `rest_days` | Days since last game | 3-14 (typical) |
-| `is_division_game` | Same-division matchup | 0 (no), 1 (yes) |
-| `is_playoff` | Playoff game flag | 0 (regular), 1 (playoff) |
-| `day_of_week` | Game day | 0 (Thu), 4 (Mon), 6 (Sun) |
+- `season` — NFL season year
+- `week` — Week number in season
+- `is_home` — Home team indicator (0/1)
+- `is_neutral` — Neutral site flag (0/1)
+- `rest_days` — Days since last game
+- `is_division_game` — Same-division matchup (0/1)
+- `is_playoff` — Playoff game flag (0/1)
+- `day_of_week` — Game day (0=Thursday, 6=Sunday, etc.)
 
 **Usage Notes**:
 - T0 features can be used freely without leakage concerns
 - Often interact with other features (e.g., home + rest advantage)
 - Provide interpretable baseline effects
 
-**Home Field Advantage**:
-- Constant applied: **2.5 points** (configurable in `config.py`)
-- Neutral site games: **0 points** home advantage
-- Some teams have historically stronger/weaker home advantages (future enhancement)
-
 ---
 
-### T1 - Core Model Inputs (Primary Predictors)
+### Tier 1: Core Model Features (Primary Predictors)
 
 **Definition**: Pre-game team strength metrics that are updated weekly and form the foundation of spread predictions.
 
@@ -48,26 +48,20 @@ This document categorizes features by their role, reliability, and risk of data 
 - No look-ahead bias if properly lagged
 
 **Examples**:
+- `nfelo_diff` — nfelo rating differential (home - away)
+- `qb_adj_elo` — QB-adjusted Elo rating
+- `off_rating` — Offensive power rating
+- `def_rating` — Defensive power rating
+- `overall_rating` — Overall team rating
+- `epa_off_L3` — Offensive EPA per play (last 3 games)
+- `epa_def_L3` — Defensive EPA per play (last 3 games)
+- `epa_margin_L5` — EPA differential (last 5 games)
+- `qb_epa` — QB EPA per play
+- `qb_completion_pct` — QB completion percentage
 
-| Feature | Description | Source | Typical Range |
-|---------|-------------|--------|---------------|
-| `nfelo_diff` | nfelo rating differential (home - away) | nfelo | -300 to +300 |
-| `qb_adj_elo` | QB-adjusted Elo rating | nfelo | 1300-1700 |
-| `off_rating` | Offensive power rating | Substack | 70-130 |
-| `def_rating` | Defensive power rating | Substack | 70-130 |
-| `overall_rating` | Overall team rating | Substack | 70-130 |
-| `epa_off_L3` | Offensive EPA per play (last 3 games) | nflverse | -0.3 to +0.3 |
-| `epa_def_L3` | Defensive EPA per play (last 3 games) | nflverse | -0.3 to +0.3 |
-| `epa_margin_L5` | EPA differential (last 5 games) | Derived | -0.5 to +0.5 |
-| `qb_epa` | QB EPA per play | Substack | -0.2 to +0.4 |
-| `qb_completion_pct` | QB completion percentage | Substack | 55-75% |
+**Critical Requirement**: All rolling features must use `.shift(1)` to exclude current game.
 
-**Rolling Windows**:
-- Standard windows: **3, 5, 10 games**
-- Always use `.shift(1)` to exclude current game
-- Example: `epa_off_L3` at Week 5 uses Weeks 2-4 data only
-
-**Leakage Prevention**:
+**Example**:
 ```python
 # CORRECT: Excludes current game
 df['epa_off_L3'] = df.groupby('team')['epa_off'].shift(1).rolling(3).mean()
@@ -76,13 +70,9 @@ df['epa_off_L3'] = df.groupby('team')['epa_off'].shift(1).rolling(3).mean()
 df['epa_off_L3'] = df.groupby('team')['epa_off'].rolling(3).mean()
 ```
 
-**Usage in Models**:
-- v1.0: Uses `nfelo_diff`, `epa_margin`, `overall_rating`
-- v1.2: Adds all T1 features + QB metrics
-
 ---
 
-### T2 - Market Context (Use with Caution)
+### Tier 2: Market Features (Use with Caution)
 
 **Definition**: Betting market information that provides context but must be handled carefully to avoid look-ahead bias.
 
@@ -92,30 +82,25 @@ df['epa_off_L3'] = df.groupby('team')['epa_off'].rolling(3).mean()
 - Useful for identifying model disagreement with market
 
 **Examples**:
+- `vegas_line_open` — Opening spread
+- `vegas_total` — Over/under total
+- `public_bet_pct` — Percentage of bets on favorite
+- `projected_spread` — Third-party spread projection
+- `projected_total` — Third-party total projection
 
-| Feature | Description | Leakage Risk | Usage |
-|---------|-------------|--------------|-------|
-| `vegas_line_open` | Opening spread | Low | Safe if from week-of-game open |
-| `vegas_line_close` | Closing spread | Medium | **Target variable** for v1.2, not a feature |
-| `vegas_total` | Over/under total | Low | Can inform scoring expectations |
-| `public_bet_pct` | % of bets on favorite | Medium | Only if timestamped before kickoff |
-| `sharp_money_indicator` | Line movement direction | High | Requires careful temporal filtering |
-| `projected_spread` | Substack projection | Low | Available before kickoff |
-| `projected_total` | Substack total projection | Low | Available before kickoff |
+**Critical Rules**:
+- NEVER use `vegas_line_close` as a feature when predicting spreads
+- It's acceptable as the **target variable** (what we're trying to predict)
+- Using it as a feature creates circular logic and perfect backtests
 
 **When to Use**:
 - **v1.0**: Do NOT use market features (pure football model)
 - **v1.2**: Can use as features IF available before prediction time
-- **Edge calculation**: Always compare model prediction to closing line
-
-**Critical Rule**:
-- **NEVER use `vegas_line_close` as a feature when predicting spreads**
-- It's acceptable as the **target variable** (what we're trying to predict)
-- Using it as a feature would create perfect predictions (circular logic)
+- **v2.0**: Can incorporate as meta-features
 
 ---
 
-### T3 - Experimental Features (Do Not Rely On)
+### Tier 3: Experimental Features (Do Not Rely On)
 
 **Definition**: Advanced or novel features that are not yet validated for production use.
 
@@ -125,16 +110,12 @@ df['epa_off_L3'] = df.groupby('team')['epa_off'].rolling(3).mean()
 - High risk of overfitting or instability
 
 **Examples**:
-
-| Feature | Description | Status | Risk |
-|---------|-------------|--------|------|
-| `coach_win_pct` | Head coach career win % | Available but unused | Unknown predictive value |
-| `roster_av` | Team Approximate Value | Data exists, not integrated | Multicollinearity with ratings |
-| `weather_severity` | Wind/temp/precipitation score | Partial data | Missing for many games |
-| `referee_tendency` | Ref's avg penalty differential | Not implemented | Small sample sizes |
-| `travel_distance` | Miles traveled for away team | Not implemented | Weak historical signal |
-| `primetime_flag` | Thursday/Monday night game | Easy to add | Effect size unclear |
-| `playoff_implications` | Win-and-in scenarios | Hard to quantify | Subjective |
+- `coach_win_pct` — Head coach career win percentage
+- `roster_av` — Team Approximate Value
+- `weather_severity` — Wind/temp/precipitation score
+- `referee_tendency` — Referee's average penalty differential
+- `travel_distance` — Miles traveled for away team
+- `primetime_flag` — Thursday/Monday night game indicator
 
 **Recommendation**:
 - Include in exploratory analysis
@@ -143,7 +124,7 @@ df['epa_off_L3'] = df.groupby('team')['epa_off'].rolling(3).mean()
 
 ---
 
-### TX - Forbidden Features (Never Use)
+### TX: Forbidden Features (Never Use)
 
 **Definition**: Features that contain post-game information, leaked market data, or obvious leakage.
 
@@ -153,26 +134,17 @@ df['epa_off_L3'] = df.groupby('team')['epa_off'].rolling(3).mean()
 - Destroy model credibility
 
 **Strictly Prohibited**:
-
-| Forbidden Feature | Why It's Forbidden | Leakage Type |
-|-------------------|-------------------|--------------|
-| `actual_margin` | Game result | Post-game information |
-| `final_score` | Game result | Post-game information |
-| `home_score` | Game result | Post-game information |
-| `away_score` | Game result | Post-game information |
-| `game_epa` | Calculated from game plays | Post-game statistic |
-| `game_total_yards` | Accumulated during game | Post-game statistic |
-| `turnovers` | Occurred during game | Post-game statistic |
-| `time_of_possession` | Game-specific metric | Post-game statistic |
-| `vegas_line_close` (as feature) | Circular prediction target | Market leakage |
-| `line_from_future_week` | Line from Week N+1 | Temporal leakage |
-| `epa_off_L3` (without shift) | Includes current game | Rolling stat leakage |
-
-**Red Flags to Watch For**:
-- Feature has perfect correlation with target (R² > 0.95)
-- Feature is not available until after kickoff
-- Feature uses `.rolling()` without `.shift(1)`
-- Feature references future dates/weeks
+- `actual_margin` — Game result
+- `final_score` — Game result
+- `home_score` — Home team final score
+- `away_score` — Away team final score
+- `game_epa` — Calculated from game plays
+- `game_total_yards` — Accumulated during game
+- `turnovers` — Occurred during game
+- `time_of_possession` — Game-specific metric
+- `vegas_line_close` (as feature) — Circular prediction target
+- `line_from_future_week` — Line from Week N+1
+- `epa_off_L3` (without shift) — Includes current game
 
 **Validation Check**:
 ```python
@@ -183,46 +155,58 @@ df['epa_off_L3'] = df.groupby('team')['epa_off'].rolling(3).mean()
 
 ---
 
-## Feature Engineering Best Practices
+## Feature-to-Model Mapping
 
-### Temporal Ordering
+### Which Features Each Model Version Uses
 
-1. **Sort by date before any calculations**:
-   ```python
-   df = df.sort_values(['team', 'season', 'week'])
-   ```
+| Model Version | T0 | T1 | T2 | T3 | TX |
+|---------------|----|----|----|----|-----|
+| v1.0 | ✅ Yes | ✅ Yes (subset) | ❌ No | ❌ No | ❌ Never |
+| v1.2 | ✅ Yes | ✅ Yes (all) | ⚠️ Conditional | ❌ No | ❌ Never |
+| v1.3 | ✅ Yes | ✅ Yes (all) | ⚠️ Conditional | ❌ No | ❌ Never |
+| v2.0 | ✅ Yes | ✅ Yes (all) | ⚠️ Conditional | 🔬 Testing | ❌ Never |
 
-2. **Always shift rolling stats**:
-   ```python
-   df['avg_epa'] = df.groupby('team')['epa'].shift(1).rolling(window=5).mean()
-   ```
+**Notes**:
+- **✅ Yes**: Features are used in production
+- **⚠️ Conditional**: Features are used only if available before prediction time
+- **🔬 Testing**: Features are being evaluated, not yet in production
+- **❌ No/Never**: Features are not used
 
-3. **Fill missing values thoughtfully**:
-   - First games of season: Use league average or prior season
-   - Missing data: Forward-fill or use sensible defaults (never backfill)
+---
 
-### Feature Scaling
+## How Features Flow Through Dataset Builders
 
-- **nfelo diffs**: Already scaled appropriately (~100 points = ~4-5 point spread)
-- **EPA**: Already normalized (mean ~0, std ~0.2)
-- **Ratings**: Substack ratings are 0-100 scale, may need normalization
-- **Binary flags**: Keep as 0/1 (do not scale)
+### Dataset Builder Workflow
 
-### Feature Interactions
+Each model version has a dedicated dataset builder that:
 
-Useful interaction terms (v2.0+):
-- `nfelo_diff × is_playoff` (playoff boost for strong teams)
-- `rest_days × travel_distance` (compounding fatigue)
-- `qb_epa × opponent_def_rating` (matchup-specific QB value)
+1. **Loads raw data** from `ball_knower/io/loaders/`
+2. **Computes features** based on tier requirements
+3. **Filters features** to only include allowed tiers
+4. **Validates** for leakage and missing values
+5. **Exports** to fixtures for testing
 
-### Multicollinearity
+**Example**:
+```python
+# Pseudocode for dataset builder
+class DatasetBuilderV10:
+    def build(self):
+        # Load raw data
+        games = load_games()
+        ratings = load_ratings()
 
-Watch for highly correlated features:
-- `nfelo` vs `overall_rating` (r > 0.8 typically)
-- `epa_off_L3` vs `epa_off_L5` (r > 0.9)
-- `is_home` vs `home_field_advantage` (redundant encoding)
+        # Compute T0 features
+        features = compute_structural_features(games)
 
-**Solution**: Use Ridge regression (v1.2) or select one representative feature per concept.
+        # Compute T1 features (subset for v1.0)
+        features = compute_core_features(features, ratings)
+
+        # Validate no T2/T3/TX features present
+        validate_tiers(features, allowed=[T0, T1])
+
+        # Return dataset
+        return features
+```
 
 ---
 
@@ -233,24 +217,19 @@ Before deploying a new feature:
 - [ ] Feature is available before kickoff of prediction target
 - [ ] Feature does not include current game statistics
 - [ ] Feature is documented in this file with tier assignment
-- [ ] Feature has been tested for leakage (see `features.validate_no_leakage()`)
-- [ ] Feature shows reasonable distribution (no extreme outliers without justification)
+- [ ] Feature has been tested for leakage
+- [ ] Feature shows reasonable distribution (no extreme outliers)
 - [ ] Feature has non-zero variance (not constant)
-- [ ] Feature has logical relationship to spread (positive/negative as expected)
+- [ ] Feature has logical relationship to spread
 
 ---
 
-## Summary Table
+## References
 
-| Tier | Safety Level | Example Features | Use in v1.0 | Use in v1.2 |
-|------|--------------|------------------|-------------|-------------|
-| **T0** | Always Safe | season, week, is_home, rest_days | Yes | Yes |
-| **T1** | Safe (if lagged) | nfelo_diff, epa_off_L3, qb_epa | Yes | Yes |
-| **T2** | Caution | vegas_total, projected_spread | No | Conditional |
-| **T3** | Experimental | coach_win_pct, weather_severity | No | No |
-| **TX** | Forbidden | actual_margin, home_score, post-game stats | Never | Never |
+- [BALL_KNOWER_SPEC.md](BALL_KNOWER_SPEC.md) — Model versions and workflow
+- [DATA_SOURCES.md](DATA_SOURCES.md) — Data loading and schemas
+- [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md) — Adding new features safely
 
 ---
 
-**Last Updated**: 2025-11-18
-**Maintained By**: Ball Knower Development Team
+**Status**: This tier system is enforced across all model versions and dataset builders.

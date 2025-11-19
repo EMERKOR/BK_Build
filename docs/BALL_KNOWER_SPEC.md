@@ -1,237 +1,188 @@
 # Ball Knower Specification
 
-## Purpose
-
-Ball Knower is an NFL betting engine designed to predict game outcomes and identify value in betting markets. The system combines historical data, power ratings, and structural features to generate spread predictions that can be compared against Vegas lines.
-
-The core philosophy is to build a **leak-free, interpretable, and modular** prediction system that:
-- Outperforms naive baselines
-- Identifies genuine betting edges
-- Provides transparent reasoning for predictions
-- Maintains strict temporal integrity in training/testing
-
-## Model Versions
-
-Ball Knower evolves through three distinct versions, each building on the previous:
-
-### v1.0 - Actual Margin Prediction (Baseline Football Brain)
-
-**Purpose**: Predict actual game margins from pure football features, with no reference to betting markets.
-
-**Target Variable**: `actual_margin = home_score - away_score`
-
-**Core Features**:
-- nfelo rating differential (Elo-based power ratings)
-- EPA (Expected Points Added) differentials
-- Substack power ratings (offensive/defensive/overall)
-- Structural factors: home field advantage, rest days, division games
-
-**Model Type**: Linear regression (deterministic baseline)
-
-**Key Insight**: This version establishes the "football truth" - what the actual game result should be based purely on team strength and context. It ignores what Vegas thinks.
-
-**Training Objective**: Minimize prediction error on actual game margins
-
-**Typical Performance**:
-- R² ~ 0.15-0.25 on actual margins
-- MAE ~ 10-12 points (inherent variance in NFL games)
-- Serves as baseline for all other versions
-
-### v1.2 - Vegas Spread Prediction (Market-Aware Model)
-
-**Purpose**: Predict Vegas closing spreads or learn spread corrections that align with market consensus.
-
-**Target Variable**: `vegas_spread_close` (closing line, from home team perspective)
-
-**Core Features**:
-- All v1.0 features (nfelo, EPA, power ratings, structural)
-- QB metrics and adjustments
-- Seasonal context flags
-- Historical line movement patterns (where applicable)
-
-**Model Type**: Ridge regression with regularization
-
-**Key Insight**: Vegas lines incorporate information beyond pure team strength (public perception, injury timing, sharp money). This version learns to predict what the market will settle on, not just what "should" happen.
-
-**Training Objective**: Minimize prediction error on Vegas closing lines
-
-**Typical Performance**:
-- R² ~ 0.75-0.85 on Vegas spreads (much higher than v1.0 on actuals)
-- MAE ~ 1.5-2.5 points vs closing line
-- Identifies discrepancies between model and market
-
-### Spread Correction Variant (v1.2 Alternative)
-
-Instead of predicting the full spread, v1.2 can be trained to predict **corrections**:
-
-```
-spread_correction = vegas_line - v1_0_prediction
-```
-
-This isolates the "market adjustment" component - the difference between pure football metrics and what Vegas sets.
-
-## Critical Constraints
-
-### 1. No Post-Game Information Leakage
-
-**Rule**: Features must be knowable **before kickoff** of the game being predicted.
-
-**Violations to Avoid**:
-- Using same-game stats (e.g., actual_margin, final_score, game_epa)
-- Including post-game injury reports
-- Using stats that reflect current game outcome
-
-**Enforcement**: All rolling features use `.shift(1)` to exclude current game.
-
-**Example**:
-```python
-# CORRECT: Uses only past games
-team_avg_epa = df.groupby('team')['epa_per_play'].rolling(window=4).mean().shift(1)
-
-# WRONG: Includes current game
-team_avg_epa = df.groupby('team')['epa_per_play'].rolling(window=4).mean()
-```
-
-### 2. No Future Line Information
-
-**Rule**: When predicting Week N games, only use betting lines available **before** Week N.
-
-**Violations to Avoid**:
-- Using closing lines from future weeks
-- Including line movements that occurred after prediction time
-- Leaking "sharp" line information from later in the season
-
-**Enforcement**: Strict time-based train/test splits with cutoff dates.
-
-### 3. Time-Based Train/Test Splits
-
-**Rule**: Always split data chronologically, never randomly.
-
-**Rationale**:
-- NFL changes over time (rules, scoring, strategy)
-- Random splits leak future information into training
-- Realistic simulation requires predicting truly unseen futures
-
-**Standard Split**:
-- Train: Seasons 2009-2024
-- Test: Season 2025 (out-of-sample)
-- Validation: Last 2-3 weeks of 2024 (for hyperparameter tuning)
-
-**Example**:
-```python
-# CORRECT: Chronological split
-train = df[df['season'] < 2025]
-test = df[df['season'] == 2025]
-
-# WRONG: Random split (leaks future into training)
-train, test = train_test_split(df, test_size=0.2, random_state=42)
-```
-
-### 4. Spread Convention
-
-All spreads follow the **home team perspective**:
-- **Negative** = home team favored (e.g., -7 means home favored by 7)
-- **Positive** = away team favored (e.g., +3 means away favored by 3)
-
-This convention must be consistent across:
-- Vegas lines
-- Model predictions
-- Edge calculations
-- ROI analysis
-
-## Scope and Non-Goals
-
-### In Scope for v1.0-v1.2
-
-- Predicting game spreads (total margin)
-- Comparing predictions to Vegas closing lines
-- Identifying betting edges (model disagrees with market)
-- Backtesting historical performance
-- Time-series safe feature engineering
-- Team-level aggregates (power ratings, EPA, QB metrics)
-
-### Explicitly Out of Scope
-
-- Predicting totals (over/under)
-- Player props (individual player performance)
-- Live in-game betting (requires real-time data)
-- Same-game parlays or exotic bets
-- Moneyline predictions (implied by spread, not modeled separately)
-
-### Future Considerations (v2.0+)
-
-- Ensemble models combining v1.0 and v1.2
-- Advanced QB injury adjustments
-- Weather impact modeling
-- Referee tendencies
-- Public betting percentage integration
-- Bayesian uncertainty quantification
-
-## Data Requirements
-
-### Minimum Viable Dataset
-
-To train Ball Knower models, you need:
-
-1. **Historical Games** (2009-2024):
-   - Game ID, season, week, date
-   - Home/away teams
-   - Final scores
-   - Vegas closing spreads
-
-2. **Team Ratings** (per game):
-   - nfelo ratings (Elo-based power metric)
-   - EPA offensive/defensive ratings
-   - Power rankings from trusted sources
-
-3. **Structural Context**:
-   - Home/away/neutral site flags
-   - Rest days (days since last game)
-   - Division game flags
-   - Playoff flags
-
-### Recommended Enhancements
-
-- QB-specific metrics (QBR, EPA, completion %)
-- Strength of schedule adjustments
-- Recent form (last 3-4 games)
-- Line movement data (open vs close)
-
-## Validation and Testing
-
-### Correctness Checks
-
-Before deploying any model:
-
-1. **Check for leakage**: Verify no future information in features
-2. **Validate splits**: Confirm train/test are properly time-separated
-3. **Inspect distributions**: Ensure feature distributions are reasonable
-4. **Test edge cases**: Neutral sites, playoff games, season openers
-
-### Performance Benchmarks
-
-**v1.0 (Actual Margin)**:
-- Should beat naive baseline (home wins by 2.5)
-- R² > 0.10 on test set
-- MAE < 13 points on test set
-
-**v1.2 (Vegas Spread)**:
-- Should beat v1.0 on spread prediction
-- R² > 0.70 vs Vegas closing lines
-- MAE < 3 points vs closing lines
-- Positive ROI on edges > 2 points (historically)
-
-## Architecture Philosophy
-
-Ball Knower is designed with these principles:
-
-1. **Interpretability First**: Prefer linear models over black boxes
-2. **Deterministic Baseline**: v1.0 requires no training, just weights
-3. **Incremental Complexity**: Each version adds one new capability
-4. **Leak-Free Guarantee**: Every feature is auditable for temporal validity
-5. **Modular Design**: Loaders, features, models are separate concerns
+[Docs Home](README.md) | [Architecture](ARCHITECTURE_OVERVIEW.md) | [Data Sources](DATA_SOURCES.md) | [Feature Tiers](FEATURE_TIERS.md) | [Spec](BALL_KNOWER_SPEC.md) | [Dev Guide](DEVELOPMENT_GUIDE.md)
 
 ---
 
-**Last Updated**: 2025-11-18
-**Maintained By**: Ball Knower Development Team
+## Purpose
+
+The Ball Knower system is designed to predict NFL game outcomes with increasing sophistication across multiple model versions. The system emphasizes:
+
+- **Transparency**: Clear feature definitions and model logic
+- **Reproducibility**: Deterministic results from frozen fixtures
+- **Extensibility**: Easy addition of new features and model versions
+- **Leakage Prevention**: Strict tier-based feature organization
+
+This specification documents the philosophy, architecture, and workflow of the Ball Knower prediction system.
+
+---
+
+## Model Philosophy
+
+### Evolution Across Versions
+
+The Ball Knower system follows a progressive evolution:
+
+#### v1.0 — Deterministic Baseline
+- **Purpose**: Establish a simple, interpretable baseline
+- **Approach**: Linear model with core features only
+- **Feature Tiers**: Tier 0 (structural) + Tier 1 (core)
+- **Output**: Win probability or margin prediction
+
+#### v1.2 — Residual Learning
+- **Purpose**: Model the residual error from v1.0
+- **Approach**: Train on the difference between actual outcomes and v1.0 predictions
+- **Feature Tiers**: Tier 0 + Tier 1 + Tier 2 (market features)
+- **Output**: Adjusted win probability or spread prediction
+
+#### v1.3 — Score Prediction
+- **Purpose**: Predict actual game scores, not just win probability
+- **Approach**: Multi-output regression (home_score, away_score)
+- **Feature Tiers**: Tier 0 + Tier 1 + Tier 2
+- **Output**: Predicted scores → implied win probability
+
+#### v2.0 — Meta-Model
+- **Purpose**: Combine predictions from multiple model versions
+- **Approach**: Ensemble or stacking approach using v1.0, v1.2, v1.3 outputs
+- **Feature Tiers**: Tier 0 + Tier 1 + Tier 2 + Tier 3 (experimental)
+- **Output**: Calibrated ensemble win probability
+
+---
+
+## End-to-End Workflow
+
+### 1. Data Ingestion
+
+Data is loaded from category-first directories using canonical loaders:
+
+- `ball_knower/io/loaders/` contains provider-specific loaders
+- Data is validated and normalized into consistent schemas
+- Missing data is handled gracefully with fallback logic
+
+See [DATA_SOURCES.md](DATA_SOURCES.md) for details.
+
+### 2. Feature Engineering
+
+Features are computed and organized by tier:
+
+- **Tier 0**: Structural features (always safe)
+- **Tier 1**: Core model features (ELO, basic stats)
+- **Tier 2**: Market features (betting lines, derived metrics)
+- **Tier 3**: Experimental features (advanced analytics)
+- **TX**: Forbidden features (leakage risk)
+
+See [FEATURE_TIERS.md](FEATURE_TIERS.md) for details.
+
+### 3. Dataset Construction
+
+Each model version has a dedicated dataset builder:
+
+- `ball_knower/datasets/dataset_builder_v1_0.py`
+- `ball_knower/datasets/dataset_builder_v1_2.py`
+- `ball_knower/datasets/dataset_builder_v1_3.py`
+- `ball_knower/datasets/dataset_builder_v2_0.py`
+
+Dataset builders:
+- Load raw data
+- Compute required features
+- Apply tier-based filtering
+- Generate train/val/test splits
+- Export to fixtures for testing
+
+### 4. Model Training
+
+Models are trained using version-specific logic:
+
+- `ball_knower/modeling/train_v1_0.py`
+- `ball_knower/modeling/train_v1_2.py`
+- `ball_knower/modeling/train_v1_3.py`
+- `ball_knower/modeling/train_v2_0.py`
+
+Training includes:
+- Hyperparameter configuration
+- Cross-validation (optional)
+- Model serialization
+- Performance metrics logging
+
+### 5. Prediction & Backtesting
+
+CLI tools in `src/` enable:
+
+- Single-game predictions
+- Multi-week backtests
+- Calibration analysis
+- Performance reporting
+
+### 6. Evaluation
+
+Results are evaluated using:
+
+- Log loss (calibration)
+- Accuracy (classification)
+- ROI (betting performance)
+- Calibration plots
+
+---
+
+## Supported Model Versions
+
+| Version | Type | Features | Output | Status |
+|---------|------|----------|--------|--------|
+| v1.0 | Linear Baseline | T0 + T1 | Win Probability | ✅ Implemented |
+| v1.2 | Residual Model | T0 + T1 + T2 | Adjusted Win Prob | ✅ Implemented |
+| v1.3 | Score Prediction | T0 + T1 + T2 | Scores → Win Prob | ✅ Implemented |
+| v2.0 | Meta-Model | T0 + T1 + T2 + T3 | Ensemble Win Prob | 🔨 In Development |
+
+---
+
+## Calibration & Weights Workflow
+
+### Placeholder: Calibration Process
+
+[To be documented]
+
+- How calibration is performed per model version
+- Weight initialization strategies
+- Validation procedures
+- Calibration metrics and thresholds
+
+### Placeholder: Weight Management
+
+[To be documented]
+
+- Where weights are stored
+- Versioning strategy
+- Loading and updating weights
+- Handling model updates
+
+---
+
+## Roadmap
+
+### Short-Term
+- Complete v2.0 meta-model implementation
+- Add comprehensive calibration workflow
+- Expand documentation with examples
+
+### Medium-Term
+- Add new feature tiers for advanced analytics
+- Implement automated retraining pipeline
+- Build web-based prediction interface
+
+### Long-Term
+- Multi-sport support (NBA, MLB, etc.)
+- Real-time prediction updates
+- API for external integrations
+
+---
+
+## References
+
+- [DATA_SOURCES.md](DATA_SOURCES.md) — Data loading and schemas
+- [FEATURE_TIERS.md](FEATURE_TIERS.md) — Feature organization
+- [ARCHITECTURE_OVERVIEW.md](ARCHITECTURE_OVERVIEW.md) — System design
+- [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md) — Development practices
+
+---
+
+**Status**: This specification is a living document and will evolve as the system grows.
