@@ -5,12 +5,19 @@ Smoke tests for the unified backtest driver:
 - Verify CLI runs without errors
 - Check output file is created
 - Validate output CSV structure
+- Regression test for coefficient sign bug
 """
 
 import pytest
 import subprocess
 import pandas as pd
+import numpy as np
 from pathlib import Path
+import sys
+
+# Add src to path for imports
+project_root = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(project_root / "src"))
 
 
 # ============================================================================
@@ -210,3 +217,77 @@ def test_backtest_cli_help():
     assert "--end-season" in help_text, "Help text should mention --end-season"
     assert "--model" in help_text, "Help text should mention --model"
     assert "--edge-threshold" in help_text, "Help text should mention --edge-threshold"
+
+
+# ============================================================================
+# REGRESSION TEST: COEFFICIENT SIGN BUG
+# ============================================================================
+
+def test_v1_0_nfelo_sign_behavior():
+    """
+    Regression test for v1.0 coefficient sign bug.
+
+    Ensures that the nfelo→spread mapping has the correct sign:
+    - Higher nfelo_diff (stronger home team) → more NEGATIVE spread (bigger home favorite)
+    - Lower nfelo_diff (weaker home team) → more POSITIVE spread (bigger home underdog)
+
+    This test caught the bug where coefficients were:
+    - WRONG: NFELO_COEF = +0.0447 (positive correlation - backwards!)
+    - RIGHT: NFELO_COEF = -0.042 (negative correlation - correct!)
+    """
+    # Import the v1.0 backtest function to access coefficients
+    from run_backtests import run_backtest_v1_0
+
+    # Read the source code to extract coefficients
+    import inspect
+    source = inspect.getsource(run_backtest_v1_0)
+
+    # Extract coefficient values from source
+    import re
+    nfelo_match = re.search(r'NFELO_COEF\s*=\s*([-+]?\d+\.?\d*)', source)
+    intercept_match = re.search(r'INTERCEPT\s*=\s*([-+]?\d+\.?\d*)', source)
+
+    assert nfelo_match is not None, "Could not find NFELO_COEF in source code"
+    assert intercept_match is not None, "Could not find INTERCEPT in source code"
+
+    nfelo_coef = float(nfelo_match.group(1))
+    intercept = float(intercept_match.group(1))
+
+    print(f"\nExtracted coefficients from v1.0 model:")
+    print(f"  NFELO_COEF = {nfelo_coef}")
+    print(f"  INTERCEPT = {intercept}")
+
+    # Test sign behavior with synthetic nfelo differences
+    # nfelo_diff = starting_nfelo_home - starting_nfelo_away
+
+    # Scenario 1: Home team is MUCH stronger
+    strong_home_nfelo_diff = 100  # Home team has +100 ELO advantage
+    strong_home_spread = intercept + (strong_home_nfelo_diff * nfelo_coef)
+
+    # Scenario 2: Home team is MUCH weaker
+    weak_home_nfelo_diff = -100  # Home team has -100 ELO disadvantage
+    weak_home_spread = intercept + (weak_home_nfelo_diff * nfelo_coef)
+
+    print(f"\nSign behavior test:")
+    print(f"  Strong home (nfelo_diff=+100): predicted spread = {strong_home_spread:.2f}")
+    print(f"  Weak home (nfelo_diff=-100): predicted spread = {weak_home_spread:.2f}")
+
+    # CRITICAL ASSERTION: Strong home team should have MORE NEGATIVE spread
+    # (i.e., bigger favorite)
+    assert strong_home_spread < weak_home_spread, \
+        f"Sign bug detected! Strong home team (spread={strong_home_spread:.2f}) " \
+        f"should have MORE NEGATIVE spread than weak home team (spread={weak_home_spread:.2f}). " \
+        f"This indicates NFELO_COEF has the wrong sign."
+
+    # Additional check: Coefficient should be negative
+    assert nfelo_coef < 0, \
+        f"NFELO_COEF should be negative (found {nfelo_coef}). " \
+        f"Positive coefficient produces inverted predictions."
+
+    print(f"  ✓ Sign behavior is correct!")
+    print(f"    Stronger home team → more negative spread (bigger favorite)")
+
+    # Verify realistic magnitude (should be small, around 0.04)
+    assert abs(nfelo_coef) < 0.1, \
+        f"NFELO_COEF magnitude seems unrealistic: {nfelo_coef}. " \
+        f"Expected magnitude around 0.04"

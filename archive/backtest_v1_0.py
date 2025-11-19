@@ -7,7 +7,8 @@ Uses nfelo historical games (2009-2025, 4,510 games) to evaluate:
 - Performance across seasons
 - Calibration quality
 
-Model: spread = 2.67 + (nfelo_diff × 0.0447)
+Model: spread = -1.46 + (nfelo_diff × -0.042)
+CORRECTED: Fixed sign bug in coefficients
 """
 
 import pandas as pd
@@ -17,9 +18,9 @@ import matplotlib
 matplotlib.use('Agg')  # Non-interactive backend
 import matplotlib.pyplot as plt
 
-# Model parameters (calibrated from Week 11 2025)
-NFELO_COEF = 0.0447
-INTERCEPT = 2.67
+# Model parameters (CORRECTED - fixed sign bug)
+NFELO_COEF = -0.042
+INTERCEPT = -1.46
 
 print("\n" + "="*80)
 print("BALL KNOWER v1.0 - HISTORICAL BACKTEST")

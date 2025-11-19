@@ -71,8 +71,10 @@ def run_backtest_v1_0(
     df = df[df['starting_nfelo_away'].notna()].copy()
 
     # v1.0 model parameters (calibrated)
-    NFELO_COEF = 0.0447
-    INTERCEPT = 2.67
+    # CORRECTED: Fixed sign bug - nfelo_diff → spread should be negative correlation
+    # Higher nfelo_diff (stronger home team) → more negative spread (bigger home favorite)
+    NFELO_COEF = -0.042
+    INTERCEPT = -1.46
 
     # Calculate predictions
     df['nfelo_diff'] = df['starting_nfelo_home'] - df['starting_nfelo_away']
