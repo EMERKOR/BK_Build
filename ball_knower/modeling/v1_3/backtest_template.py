@@ -74,6 +74,8 @@ TODO
 from typing import Dict, Optional, Any, List
 import pandas as pd
 import numpy as np
+from datetime import datetime
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 
 def backtest_v1_3(
@@ -180,45 +182,77 @@ def backtest_v1_3(
     >>> print(f"Spread MAE: {results['derived_metrics']['mae_spread']:.2f}")
     >>> print(f"Total MAE: {results['derived_metrics']['mae_total']:.2f}")
     """
-    # TODO: Validate inputs
-    # TODO: Generate predictions
-    # TODO: Compute score metrics
-    # TODO: Compute derived metrics
-    # TODO: Perform stratified analysis
-    # TODO: Generate summary
+    # Validate inputs
+    required_cols = ['home_score', 'away_score']
+    for col in required_cols:
+        if col not in test_df.columns:
+            raise ValueError(f"Missing required column: {col}")
 
-    print("WARNING: backtest_v1_3() is a placeholder. No backtesting performed.")
-    print(f"  Test samples: {len(test_df)}")
-    print(f"  Compute derived metrics: {compute_derived_metrics}")
-    print(f"  Stratify by: {stratify_by}")
+    # Generate predictions
+    predictions_df = model.predict(test_df)
 
-    # Return mock results with expected structure
+    # Merge predictions with actual outcomes
+    # Keep all columns from test_df, add predictions
+    full_df = test_df.copy()
+    for col in ['pred_home_score', 'pred_away_score', 'pred_spread', 'pred_total']:
+        full_df[col] = predictions_df[col].values
+
+    # Compute score metrics
+    score_metrics = compute_score_metrics(
+        actual_home=full_df['home_score'],
+        actual_away=full_df['away_score'],
+        pred_home=full_df['pred_home_score'],
+        pred_away=full_df['pred_away_score']
+    )
+
+    # Compute derived metrics if requested
+    derived_metrics = None
+    if compute_derived_metrics:
+        derived_metrics = compute_spread_total_metrics(
+            actual_home=full_df['home_score'],
+            actual_away=full_df['away_score'],
+            pred_home=full_df['pred_home_score'],
+            pred_away=full_df['pred_away_score']
+        )
+
+    # Perform stratified analysis if requested
+    stratified_results = None
+    if stratify_by:
+        stratified_results = {}
+        for strat_col in stratify_by:
+            if strat_col in full_df.columns:
+                stratified_results[strat_col] = {}
+                for group_val in full_df[strat_col].unique():
+                    group_df = full_df[full_df[strat_col] == group_val]
+                    group_metrics = compute_score_metrics(
+                        actual_home=group_df['home_score'],
+                        actual_away=group_df['away_score'],
+                        pred_home=group_df['pred_home_score'],
+                        pred_away=group_df['pred_away_score']
+                    )
+                    stratified_results[strat_col][str(group_val)] = group_metrics
+
+    # Generate summary
+    summary = {
+        "model_type": "v1.3",
+        "test_size": len(test_df),
+        "test_seasons": sorted(test_df['season'].unique().tolist()) if 'season' in test_df.columns else None,
+        "evaluation_date": datetime.now().isoformat()
+    }
+
+    print(f"Backtest complete on {len(test_df)} games:")
+    print(f"  Home Score MAE: {score_metrics['mae_home_score']:.2f}")
+    print(f"  Away Score MAE: {score_metrics['mae_away_score']:.2f}")
+    if derived_metrics:
+        print(f"  Spread MAE: {derived_metrics['mae_spread']:.2f}")
+        print(f"  Total MAE: {derived_metrics['mae_total']:.2f}")
+
     return {
-        "score_metrics": {
-            "mae_home_score": None,
-            "mae_away_score": None,
-            "rmse_home_score": None,
-            "rmse_away_score": None,
-            "r2_home_score": None,
-            "r2_away_score": None
-        },
-        "derived_metrics": {
-            "mae_spread": None,
-            "mae_total": None,
-            "rmse_spread": None,
-            "rmse_total": None,
-            "spread_accuracy_3pt": None,
-            "spread_accuracy_7pt": None,
-            "total_accuracy_3pt": None,
-            "total_accuracy_7pt": None
-        } if compute_derived_metrics else None,
-        "predictions_df": pd.DataFrame(),
-        "stratified_results": {} if stratify_by else None,
-        "summary": {
-            "model_type": "v1.3",
-            "test_size": len(test_df),
-            "evaluation_date": None
-        }
+        "score_metrics": score_metrics,
+        "derived_metrics": derived_metrics,
+        "predictions_df": full_df,
+        "stratified_results": stratified_results,
+        "summary": summary
     }
 
 
@@ -246,20 +280,25 @@ def compute_score_metrics(
     -------
     dict
         Score evaluation metrics (MAE, RMSE, R² for both home and away)
-
-    Notes
-    -----
-    PLACEHOLDER: Not yet implemented.
     """
-    # TODO: Implement metric calculations
-    print("WARNING: compute_score_metrics() is a placeholder.")
+    # Compute metrics for home scores
+    mae_home = mean_absolute_error(actual_home, pred_home)
+    rmse_home = np.sqrt(mean_squared_error(actual_home, pred_home))
+    r2_home = r2_score(actual_home, pred_home)
+
+    # Compute metrics for away scores
+    mae_away = mean_absolute_error(actual_away, pred_away)
+    rmse_away = np.sqrt(mean_squared_error(actual_away, pred_away))
+    r2_away = r2_score(actual_away, pred_away)
+
     return {
-        "mae_home_score": None,
-        "mae_away_score": None,
-        "rmse_home_score": None,
-        "rmse_away_score": None,
-        "r2_home_score": None,
-        "r2_away_score": None
+        "mae_home_score": mae_home,
+        "mae_away_score": mae_away,
+        "rmse_home_score": rmse_home,
+        "rmse_away_score": rmse_away,
+        "r2_home_score": r2_home,
+        "r2_away_score": r2_away,
+        "n_samples": len(actual_home)
     }
 
 
@@ -290,29 +329,41 @@ def compute_spread_total_metrics(
     -------
     dict
         Spread and total evaluation metrics
-
-    Notes
-    -----
-    PLACEHOLDER: Not yet implemented.
-
-    Future implementation will:
-    1. Compute actual_spread and predicted_spread
-    2. Compute actual_total and predicted_total
-    3. Calculate MAE, RMSE for both
-    4. Calculate accuracy within thresholds (±3, ±7, ±10)
     """
-    # TODO: Compute spread and total
-    # TODO: Calculate metrics
-    print("WARNING: compute_spread_total_metrics() is a placeholder.")
+    # Compute actual and predicted spreads
+    actual_spread = actual_home - actual_away
+    pred_spread = pred_home - pred_away
+
+    # Compute actual and predicted totals
+    actual_total = actual_home + actual_away
+    pred_total = pred_home + pred_away
+
+    # Compute MAE and RMSE for spread
+    mae_spread = mean_absolute_error(actual_spread, pred_spread)
+    rmse_spread = np.sqrt(mean_squared_error(actual_spread, pred_spread))
+
+    # Compute MAE and RMSE for total
+    mae_total = mean_absolute_error(actual_total, pred_total)
+    rmse_total = np.sqrt(mean_squared_error(actual_total, pred_total))
+
+    # Compute accuracy within thresholds
+    spread_errors = np.abs(actual_spread - pred_spread)
+    total_errors = np.abs(actual_total - pred_total)
+
+    spread_acc_3pt = (spread_errors <= 3).mean() * 100
+    spread_acc_7pt = (spread_errors <= 7).mean() * 100
+    total_acc_3pt = (total_errors <= 3).mean() * 100
+    total_acc_7pt = (total_errors <= 7).mean() * 100
+
     return {
-        "mae_spread": None,
-        "mae_total": None,
-        "rmse_spread": None,
-        "rmse_total": None,
-        "spread_accuracy_3pt": None,
-        "spread_accuracy_7pt": None,
-        "total_accuracy_3pt": None,
-        "total_accuracy_7pt": None
+        "mae_spread": mae_spread,
+        "mae_total": mae_total,
+        "rmse_spread": rmse_spread,
+        "rmse_total": rmse_total,
+        "spread_accuracy_3pt": spread_acc_3pt,
+        "spread_accuracy_7pt": spread_acc_7pt,
+        "total_accuracy_3pt": total_acc_3pt,
+        "total_accuracy_7pt": total_acc_7pt
     }
 
 

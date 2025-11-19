@@ -46,6 +46,7 @@ TODO
 from typing import Any, Dict, Optional
 import pandas as pd
 import numpy as np
+from pathlib import Path
 
 
 class ScorePredictionModelV13:
@@ -89,34 +90,35 @@ class ScorePredictionModelV13:
 
     def __init__(
         self,
-        model_type: str = "ridge",
-        feature_columns: Optional[list] = None,
-        **model_params: Any
+        home_model: Optional[Any] = None,
+        away_model: Optional[Any] = None,
+        feature_names: Optional[list] = None,
+        metadata: Optional[Dict[str, Any]] = None
     ):
         """
         Initialize the score prediction model.
 
         Parameters
         ----------
-        model_type : str, default='ridge'
-            Type of model to use. Options (future): 'ridge', 'lightgbm', 'xgboost'
-        feature_columns : list, optional
-            Explicit list of features to use. If None, will be auto-detected
-        **model_params : dict
-            Additional hyperparameters to pass to the underlying models
+        home_model : sklearn model, optional
+            Trained model for predicting home scores
+        away_model : sklearn model, optional
+            Trained model for predicting away scores
+        feature_names : list, optional
+            List of feature column names used by the models
+        metadata : dict, optional
+            Model metadata (training info, version, etc.)
 
         Notes
         -----
-        Currently a placeholder. Actual initialization logic to be implemented.
+        If home_model and away_model are provided, the model is considered fitted.
+        Otherwise, use the training pipeline to fit the models.
         """
-        self.model_type = model_type
-        self.feature_columns = feature_columns
-        self.model_params = model_params
-
-        # Placeholders for the actual models
-        self.home_model = None
-        self.away_model = None
-        self.is_fitted = False
+        self.home_model = home_model
+        self.away_model = away_model
+        self.feature_names = feature_names or []
+        self.metadata = metadata or {}
+        self.is_fitted = (home_model is not None and away_model is not None)
 
     def fit(self, df: pd.DataFrame) -> "ScorePredictionModelV13":
         """
@@ -173,45 +175,46 @@ class ScorePredictionModelV13:
         Returns
         -------
         pd.DataFrame
-            Original DataFrame with added columns:
-            - 'home_score_pred': Predicted home team score
-            - 'away_score_pred': Predicted away team score
-            - 'spread_pred': Predicted spread (home - away)
-            - 'total_pred': Predicted total (home + away)
-
-        Notes
-        -----
-        PLACEHOLDER: Returns mock predictions for now.
-
-        Future implementation will:
-        1. Validate model is fitted
-        2. Extract feature columns
-        3. Generate home_score predictions using home_model
-        4. Generate away_score predictions using away_model
-        5. Compute derived metrics (spread, total)
-        6. Return predictions
+            DataFrame with prediction columns:
+            - All original identifier columns (game_id, season, week, etc.)
+            - 'pred_home_score': Predicted home team score
+            - 'pred_away_score': Predicted away team score
+            - 'pred_spread': Predicted spread (home - away)
+            - 'pred_total': Predicted total (home + away)
 
         Raises
         ------
         ValueError
             If model is not fitted or required features are missing
         """
-        # TODO: Implement prediction logic
-        # TODO: Validate model is fitted
-        # TODO: Extract features
-        # TODO: Generate home_score predictions
-        # TODO: Generate away_score predictions
-        # TODO: Compute spread and total
+        if not self.is_fitted:
+            raise ValueError("Model has not been fitted yet. Call fit() first or load a trained model.")
 
-        print("WARNING: predict() is a placeholder. Returning mock predictions.")
+        # Validate required features are present
+        missing_features = [f for f in self.feature_names if f not in df.columns]
+        if missing_features:
+            raise ValueError(f"Missing required features: {missing_features}")
 
-        # Mock predictions
-        result = df.copy()
-        n = len(df)
-        result['home_score_pred'] = np.random.uniform(17, 28, n)
-        result['away_score_pred'] = np.random.uniform(17, 28, n)
-        result['spread_pred'] = result['home_score_pred'] - result['away_score_pred']
-        result['total_pred'] = result['home_score_pred'] + result['away_score_pred']
+        # Extract features in the correct order
+        X = df[self.feature_names].values
+
+        # Generate predictions
+        pred_home_score = self.home_model.predict(X)
+        pred_away_score = self.away_model.predict(X)
+
+        # Compute derived metrics
+        pred_spread = pred_home_score - pred_away_score  # Home perspective
+        pred_total = pred_home_score + pred_away_score
+
+        # Build result DataFrame with identifiers + predictions
+        metadata_cols = ['game_id', 'season', 'week', 'home_team', 'away_team']
+        result_cols = [col for col in metadata_cols if col in df.columns]
+
+        result = df[result_cols].copy() if result_cols else pd.DataFrame(index=df.index)
+        result['pred_home_score'] = pred_home_score
+        result['pred_away_score'] = pred_away_score
+        result['pred_spread'] = pred_spread
+        result['pred_total'] = pred_total
 
         return result
 
@@ -222,18 +225,27 @@ class ScorePredictionModelV13:
         Returns
         -------
         dict
-            Feature names mapped to importance scores
+            Dictionary with two keys:
+            - 'home_model': Feature names mapped to coefficients for home model
+            - 'away_model': Feature names mapped to coefficients for away model
 
         Notes
         -----
-        PLACEHOLDER: Not yet implemented.
-
-        Future implementation will aggregate feature importance
-        from both home_model and away_model.
+        For linear models (Ridge, LinearRegression), returns model coefficients.
+        For tree-based models, would return feature_importances_.
         """
-        # TODO: Implement feature importance extraction
-        print("WARNING: get_feature_importance() is a placeholder.")
-        return {}
+        if not self.is_fitted:
+            raise ValueError("Model has not been fitted yet.")
+
+        result = {}
+
+        # Extract coefficients for linear models
+        if hasattr(self.home_model, 'coef_'):
+            result['home_model'] = dict(zip(self.feature_names, self.home_model.coef_))
+        if hasattr(self.away_model, 'coef_'):
+            result['away_model'] = dict(zip(self.feature_names, self.away_model.coef_))
+
+        return result
 
     def save(self, path: str) -> None:
         """
@@ -242,20 +254,28 @@ class ScorePredictionModelV13:
         Parameters
         ----------
         path : str
-            Path to save the model artifacts
+            Directory path to save the model artifacts
 
         Notes
         -----
-        PLACEHOLDER: Not yet implemented.
-
-        Future implementation will serialize:
-        - home_model and away_model
-        - feature_columns
-        - model_params
-        - training metadata (date, version, etc.)
+        Saves the model using the training module's save_model_artifacts function.
         """
-        # TODO: Implement model serialization
-        print(f"WARNING: save() is a placeholder. Would save to {path}")
+        from ball_knower.modeling.v1_3.training_template import save_model_artifacts
+
+        if not self.is_fitted:
+            raise ValueError("Cannot save unfitted model.")
+
+        results = {
+            'home_model': self.home_model,
+            'away_model': self.away_model,
+            'feature_names': self.feature_names,
+            'metadata': self.metadata,
+            'train_metrics': self.metadata.get('train_metrics', {}),
+            'val_metrics': self.metadata.get('val_metrics', {}),
+            'training_metadata': self.metadata.get('training_metadata', {})
+        }
+
+        save_model_artifacts(results, path)
 
     @classmethod
     def load(cls, path: str) -> "ScorePredictionModelV13":
@@ -265,7 +285,7 @@ class ScorePredictionModelV13:
         Parameters
         ----------
         path : str
-            Path to load the model artifacts from
+            Directory path to load the model artifacts from
 
         Returns
         -------
@@ -274,11 +294,15 @@ class ScorePredictionModelV13:
 
         Notes
         -----
-        PLACEHOLDER: Not yet implemented.
-
-        Future implementation will deserialize all model artifacts
-        and restore the model to a fitted state.
+        Loads the model using the training module's load_model_artifacts function.
         """
-        # TODO: Implement model deserialization
-        print(f"WARNING: load() is a placeholder. Would load from {path}")
-        return cls()
+        from ball_knower.modeling.v1_3.training_template import load_model_artifacts
+
+        artifacts = load_model_artifacts(path)
+
+        return cls(
+            home_model=artifacts['home_model'],
+            away_model=artifacts['away_model'],
+            feature_names=artifacts['feature_names'],
+            metadata=artifacts['metadata']
+        )
