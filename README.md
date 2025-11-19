@@ -356,19 +356,19 @@ All map to nfl_data_py standard: `LAR`, `KC`, `BUF`
 
 1. **Load historical schedules** (2015-2024)
    ```python
-   from src import data_loader
-   schedules = data_loader.load_historical_schedules(2015, 2024)
+   from ball_knower.io import loaders
+   schedules = loaders.load_historical_schedules(2015, 2024)
    ```
 
 2. **Engineer features** (leak-free rolling EPA)
    ```python
-   from src import features
+   from ball_knower.features import engineering as features
    schedules_with_features = features.engineer_all_features(schedules, weekly_stats)
    ```
 
 3. **Train v1.2 model**
    ```python
-   from src import models
+   from ball_knower.modeling import models
    model = models.MLCorrectionModel()
    model.fit(X_train, y_train)
    ```
