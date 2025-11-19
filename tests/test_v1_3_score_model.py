@@ -292,6 +292,55 @@ def test_no_data_leakage():
         assert col not in df.columns, f"Leak column {col} found in training frame"
 
 
+def test_no_target_leakage_in_features():
+    """
+    Test that target columns (actual_total, actual_margin) are not used as features.
+
+    This is a regression test for the v1.3 leakage bug where actual_total
+    (home_score + away_score) was accidentally included as a feature to predict
+    home_score and away_score, leading to perfect but meaningless predictions.
+    """
+    # Import the comparison harness builder which includes actual_total
+    from ball_knower.benchmarks.v1_comparison import build_common_test_frame
+
+    # Build training data with target columns present (as comparison harness does)
+    train_df = build_common_test_frame(test_seasons=[2018, 2019])
+
+    # Verify that actual_total and actual_margin are in the dataframe
+    assert 'actual_total' in train_df.columns, "Test setup error: actual_total not in dataframe"
+    assert 'actual_margin' in train_df.columns, "Test setup error: actual_margin not in dataframe"
+
+    # Train the model
+    results = train_v1_3(
+        train_df=train_df,
+        val_df=None,
+        model_type='ridge',
+        hyperparams={'alpha': 1.0}
+    )
+
+    feature_names = results['feature_names']
+
+    # Assert that target columns are NOT in features
+    target_leak_cols = ['actual_total', 'actual_margin', 'home_score', 'away_score']
+    for col in target_leak_cols:
+        assert col not in feature_names, (
+            f"LEAKAGE DETECTED: Target column '{col}' is being used as a feature! "
+            f"This leads to perfect but meaningless predictions. "
+            f"Features used: {feature_names}"
+        )
+
+    # Verify that metrics are realistic (not perfect)
+    # With leakage, MAE would be near 0; without leakage, MAE should be > 5
+    assert results['train_metrics']['mae_home_score'] > 5, (
+        f"Training MAE is suspiciously low ({results['train_metrics']['mae_home_score']:.2f}), "
+        f"suggesting possible leakage"
+    )
+    assert results['train_metrics']['mae_total'] > 5, (
+        f"Total MAE is suspiciously low ({results['train_metrics']['mae_total']:.2f}), "
+        f"suggesting possible leakage"
+    )
+
+
 def test_end_to_end_workflow():
     """Test complete workflow from training to backtest."""
     # 1. Build data

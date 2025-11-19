@@ -264,7 +264,7 @@ def train_v1_3(
     """
     # Identify feature and target columns
     metadata_cols = ['game_id', 'season', 'week', 'home_team', 'away_team']
-    target_cols = ['home_score', 'away_score', 'actual_margin', 'vegas_closing_spread']
+    target_cols = ['home_score', 'away_score', 'actual_margin', 'actual_total', 'vegas_closing_spread']
 
     # Feature columns are everything else
     feature_cols = [col for col in train_df.columns
