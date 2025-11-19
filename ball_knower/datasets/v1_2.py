@@ -20,6 +20,8 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
+from ball_knower.features import engineering as features
+
 
 def build_training_frame(
     start_year: int = 2009,
@@ -82,9 +84,8 @@ def build_training_frame(
     df['nfelo_diff'] = df['starting_nfelo_home'] - df['starting_nfelo_away']
 
     # Situational adjustments
-    df['home_bye_mod'] = df['home_bye_mod'].fillna(0)
-    df['away_bye_mod'] = df['away_bye_mod'].fillna(0)
-    df['rest_advantage'] = df['home_bye_mod'] + df['away_bye_mod']
+    # Use canonical rest advantage calculation from ball_knower.features.engineering
+    df['rest_advantage'] = features.compute_rest_advantage_from_nfelo(df)
 
     df['div_game'] = df['div_game_mod'].fillna(0)
     df['surface_mod'] = df['dif_surface_mod'].fillna(0)

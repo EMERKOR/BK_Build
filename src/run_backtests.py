@@ -22,6 +22,7 @@ project_root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(project_root))
 
 from src import config
+from ball_knower.features import engineering as features
 
 
 # ============================================================================
@@ -155,7 +156,8 @@ def run_backtest_v1_2(
 
     # Engineer features
     df['nfelo_diff'] = df['starting_nfelo_home'] - df['starting_nfelo_away']
-    df['rest_advantage'] = df['home_bye_mod'].fillna(0) + df['away_bye_mod'].fillna(0)
+    # Use canonical rest advantage calculation from ball_knower.features.engineering
+    df['rest_advantage'] = features.compute_rest_advantage_from_nfelo(df)
     df['div_game'] = df['div_game_mod'].fillna(0)
     df['surface_mod'] = df['dif_surface_mod'].fillna(0)
     df['time_advantage'] = df['home_time_advantage_mod'].fillna(0)
