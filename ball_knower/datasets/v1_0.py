@@ -23,15 +23,17 @@ from pathlib import Path
 def build_training_frame(
     start_year: int = 2009,
     end_year: int = 2024,
-    data_url: str = None
+    data_url: str = None,
+    schedules_path: str = None
 ) -> pd.DataFrame:
     """
-    Build v1.0 training dataset from nfelo historical data.
+    Build v1.0 training dataset from nfelo historical data + actual scores.
 
     Args:
         start_year: Start season year (default: 2009)
         end_year: End season year (default: 2024)
         data_url: Optional custom nfelo data URL
+        schedules_path: Path to schedules.parquet (default: ./schedules.parquet)
 
     Returns:
         DataFrame with columns:
@@ -57,7 +59,10 @@ def build_training_frame(
     if data_url is None:
         data_url = 'https://raw.githubusercontent.com/greerreNFL/nfelo/main/output_data/nfelo_games.csv'
 
-    # Load nfelo historical data
+    if schedules_path is None:
+        schedules_path = Path(__file__).parent.parent.parent / 'schedules.parquet'
+
+    # Load nfelo historical data (for ratings and Vegas lines)
     df = pd.read_csv(data_url)
 
     # Extract season/week/teams from game_id
@@ -76,6 +81,26 @@ def build_training_frame(
 
     # Calculate primary feature: ELO differential
     df['nfelo_diff'] = df['starting_nfelo_home'] - df['starting_nfelo_away']
+
+    # Load actual game results from schedules
+    schedules = pd.read_parquet(schedules_path)
+
+    # Filter schedules to regular season games only (game_type == 'REG')
+    schedules = schedules[schedules['game_type'] == 'REG'].copy()
+
+    # Select needed columns from schedules (including spread_line for actual Vegas line)
+    schedules_cols = schedules[['game_id', 'home_score', 'away_score', 'spread_line']].copy()
+
+    # Merge in actual scores and spread line
+    df = df.merge(schedules_cols, on='game_id', how='left')
+
+    # Prefer spread_line from schedules (actual Vegas) over home_line_close from nfelo
+    # spread_line is from home perspective (negative = home favored)
+    df['home_line_close'] = df['spread_line'].fillna(df['home_line_close'])
+
+    # Filter to games with actual scores (completed games only)
+    df = df[df['home_score'].notna()].copy()
+    df = df[df['away_score'].notna()].copy()
 
     # Calculate target: actual margin (home perspective)
     df['actual_margin'] = df['home_score'] - df['away_score']
