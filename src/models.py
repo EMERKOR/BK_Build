@@ -26,9 +26,9 @@ from .config import HOME_FIELD_ADVANTAGE, OUTPUT_DIR
 # DYNAMIC WEIGHT LOADING
 # ============================================================================
 
-def load_calibrated_weights(weights_file: Path = None) -> dict:
+def load_calibrated_weights(weights_file: Path = None, require_calibration: bool = False) -> dict:
     """
-    Load calibrated model weights from JSON file with fallback to defaults.
+    Load calibrated model weights from JSON file.
 
     This allows recalibration without editing Python code - just regenerate
     the weights file and the model will automatically use updated values.
@@ -36,9 +36,15 @@ def load_calibrated_weights(weights_file: Path = None) -> dict:
     Args:
         weights_file: Path to calibrated weights JSON file
                      (default: output/calibrated_weights_v1.json)
+        require_calibration: If True, raise error if file missing or invalid.
+                           If False, fall back to hard-coded defaults.
 
     Returns:
         dict: Calibrated weights and HFA, or defaults if file not found
+              (only when require_calibration=False)
+
+    Raises:
+        RuntimeError: If require_calibration=True and file is missing or invalid
 
     Format of weights file:
         {
@@ -61,31 +67,78 @@ def load_calibrated_weights(weights_file: Path = None) -> dict:
     if weights_file is None:
         weights_file = OUTPUT_DIR / "calibrated_weights_v1.json"
 
+    # Check if file exists
+    if not weights_file.exists():
+        if require_calibration:
+            raise RuntimeError(
+                f"Calibration file not found: {weights_file}\n"
+                f"When use_calibrated=True, the calibration file must exist.\n"
+                f"Either generate the calibration file or set use_calibrated=False."
+            )
+        # Fallback to defaults when calibration not required
+        return _get_default_weights()
+
     # Try to load calibrated weights
-    if weights_file.exists():
-        try:
-            with open(weights_file, 'r') as f:
-                calibration = json.load(f)
+    try:
+        with open(weights_file, 'r') as f:
+            calibration = json.load(f)
 
-            hfa = calibration.get("hfa", HOME_FIELD_ADVANTAGE)
-            weights = calibration.get("weights", {})
-
-            # Log that we're using calibrated weights
-            metadata = calibration.get("metadata", {})
-            if metadata:
-                print(f"✓ Loaded calibrated weights from {weights_file.name}")
-                if "mae_vs_vegas" in metadata:
-                    print(f"  MAE vs Vegas: {metadata['mae_vs_vegas']:.2f} pts")
-            else:
-                print(f"✓ Using calibrated weights from {weights_file.name}")
-
-            return {"hfa": hfa, "weights": weights}
-
-        except (json.JSONDecodeError, IOError) as e:
-            print(f"⚠ Warning: Could not load calibrated weights from {weights_file}: {e}")
+        # Validate structure
+        if "weights" not in calibration:
+            if require_calibration:
+                raise RuntimeError(
+                    f"Invalid calibration file {weights_file}: missing 'weights' key\n"
+                    f"Expected format: {{'hfa': float, 'weights': dict, 'metadata': dict}}"
+                )
+            print(f"⚠ Warning: Invalid calibration file {weights_file}: missing 'weights' key")
             print(f"  Falling back to hard-coded defaults")
+            return _get_default_weights()
 
-    # Fallback to defaults (no file or error reading)
+        hfa = calibration.get("hfa", HOME_FIELD_ADVANTAGE)
+        weights = calibration.get("weights", {})
+
+        # Log that we're using calibrated weights
+        metadata = calibration.get("metadata", {})
+        if metadata:
+            print(f"✓ Loaded calibrated weights from {weights_file.name}")
+            if "mae_vs_vegas" in metadata:
+                print(f"  MAE vs Vegas: {metadata['mae_vs_vegas']:.2f} pts")
+        else:
+            print(f"✓ Using calibrated weights from {weights_file.name}")
+
+        return {"hfa": hfa, "weights": weights}
+
+    except json.JSONDecodeError as e:
+        if require_calibration:
+            raise RuntimeError(
+                f"Failed to parse calibration file {weights_file}: {e}\n"
+                f"The JSON file is malformed. Please fix or regenerate the calibration file."
+            ) from e
+        print(f"⚠ Warning: Could not parse calibration file {weights_file}: {e}")
+        print(f"  Falling back to hard-coded defaults")
+        return _get_default_weights()
+
+    except IOError as e:
+        if require_calibration:
+            raise RuntimeError(
+                f"Failed to read calibration file {weights_file}: {e}\n"
+                f"Check file permissions and try again."
+            ) from e
+        print(f"⚠ Warning: Could not read calibration file {weights_file}: {e}")
+        print(f"  Falling back to hard-coded defaults")
+        return _get_default_weights()
+
+
+def _get_default_weights() -> dict:
+    """
+    Get hard-coded default weights for non-calibrated mode.
+
+    These are reasonable starting values but should not be used as a silent
+    fallback when calibration is explicitly requested.
+
+    Returns:
+        dict: Default HFA and weights
+    """
     return {
         "hfa": HOME_FIELD_ADVANTAGE,
         "weights": {
@@ -118,23 +171,29 @@ class DeterministicSpreadModel:
         Args:
             hfa (float): Home field advantage in points (default: load from calibration or 2.5)
             weights_file (Path): Path to calibrated weights JSON (default: output/calibrated_weights_v1.json)
-            use_calibrated (bool): If True, attempt to load calibrated weights (default: True)
+            use_calibrated (bool): If True, require calibrated weights file to exist and be valid.
+                                  If False, use hard-coded defaults. (default: True)
+
+        Raises:
+            RuntimeError: If use_calibrated=True but calibration file is missing or invalid
         """
         # Load calibrated weights if requested
         if use_calibrated:
-            calibration = load_calibrated_weights(weights_file)
+            # Strict mode: require calibration file to exist and be valid
+            calibration = load_calibrated_weights(weights_file, require_calibration=True)
             self.hfa = hfa if hfa is not None else calibration["hfa"]
             # Only use base model weights (v1.0 weights)
             base_weights = {k: v for k, v in calibration["weights"].items()
                           if k in ['epa_margin', 'nfelo_diff', 'substack_ovr_diff']}
             self.weights = base_weights
         else:
-            # Use hard-coded defaults
-            self.hfa = hfa if hfa is not None else HOME_FIELD_ADVANTAGE
+            # Explicitly use hard-coded defaults (non-calibrated mode)
+            defaults = _get_default_weights()
+            self.hfa = hfa if hfa is not None else defaults["hfa"]
             self.weights = {
-                'epa_margin': 35,       # EPA differential * 35 ≈ point spread (calibrated default)
-                'nfelo_diff': 0.02,     # nfelo difference * 0.02 ≈ point spread
-                'substack_ovr_diff': 0.5  # Substack overall rating diff
+                'epa_margin': defaults["weights"]['epa_margin'],
+                'nfelo_diff': defaults["weights"]['nfelo_diff'],
+                'substack_ovr_diff': defaults["weights"]['substack_ovr_diff']
             }
 
     def predict(self, home_features, away_features):
@@ -206,23 +265,26 @@ class EnhancedSpreadModel(DeterministicSpreadModel):
 
         if use_calibrated:
             # Load full calibration including enhanced features
-            calibration = load_calibrated_weights(weights_file)
+            # Note: require_calibration was already enforced in parent __init__
+            calibration = load_calibrated_weights(weights_file, require_calibration=True)
             enhanced_weights = {k: v for k, v in calibration["weights"].items()
                               if k in ['rest_advantage', 'win_rate_L5', 'qb_adj_diff']}
             # If calibration doesn't have these weights, use defaults
             if not enhanced_weights:
+                defaults = _get_default_weights()
                 enhanced_weights = {
-                    'rest_advantage': 0.3,
-                    'win_rate_L5': 5.0,
-                    'qb_adj_diff': 0.1,
+                    'rest_advantage': defaults["weights"]['rest_advantage'],
+                    'win_rate_L5': defaults["weights"]['win_rate_L5'],
+                    'qb_adj_diff': defaults["weights"]['qb_adj_diff'],
                 }
             self.weights.update(enhanced_weights)
         else:
             # Use hard-coded defaults for additional weights
+            defaults = _get_default_weights()
             self.weights.update({
-                'rest_advantage': 0.3,      # Points per day of rest advantage
-                'win_rate_L5': 5.0,         # Recent win rate impact
-                'qb_adj_diff': 0.1,         # QB adjustment differential
+                'rest_advantage': defaults["weights"]['rest_advantage'],
+                'win_rate_L5': defaults["weights"]['win_rate_L5'],
+                'qb_adj_diff': defaults["weights"]['qb_adj_diff'],
             })
 
     def predict(self, home_features, away_features):
