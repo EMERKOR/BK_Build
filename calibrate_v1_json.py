@@ -24,6 +24,7 @@ project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
 from src import config
+from ball_knower.features import engineering as features
 
 print("\n" + "="*80)
 print("CALIBRATING BALL KNOWER v1.x - JSON EXPORT")
@@ -67,9 +68,8 @@ df['nfelo_diff'] = df['starting_nfelo_home'] - df['starting_nfelo_away']
 # In a full implementation, you would merge EPA and substack from other sources
 
 # v1.1 features: rest, form, QB
-df['home_bye_mod'] = df['home_bye_mod'].fillna(0)
-df['away_bye_mod'] = df['away_bye_mod'].fillna(0)
-df['rest_advantage'] = df['home_bye_mod'] + df['away_bye_mod']
+# Use canonical rest advantage calculation from ball_knower.features.engineering
+df['rest_advantage'] = features.compute_rest_advantage_from_nfelo(df)
 
 df['qb_diff'] = (df['home_538_qb_adj'].fillna(0) - df['away_538_qb_adj'].fillna(0))
 

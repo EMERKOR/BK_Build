@@ -1,22 +1,136 @@
 """
-Feature Engineering Module
+Feature Engineering Functions
 
 CRITICAL: All features must be LEAK-FREE.
-Rolling statistics ONLY use past games, never include current game.
+Centralized canonical implementations for rest-related features.
 
-Features engineered:
-1. Rolling EPA (offense, defense, margin) - 3, 5, 10 game windows
-2. Rest days since last game
-3. Home/away splits
-4. Matchup-specific features (vs opponent defense, etc.)
-5. Recent form (win streak, ATS performance)
+This module contains the single source of truth for:
+1. Rest advantage from NFElo bye modifiers
+2. Schedule-based rest days calculations
+
+All dataset builders and backtest scripts MUST use these functions.
 """
 
+from __future__ import annotations
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
 
-from ball_knower.features import engineering as canonical_features
+
+# ============================================================================
+# REST ADVANTAGE FROM NFELO BYE MODIFIERS
+# ============================================================================
+
+def compute_rest_advantage_from_nfelo(df: pd.DataFrame) -> pd.Series:
+    """
+    Canonical rest advantage calculation from NFElo bye modifiers.
+
+    This is the primary rest advantage metric used in v1.2 models.
+    It combines home and away bye week modifiers from the NFElo dataset.
+
+    Args:
+        df: DataFrame with 'home_bye_mod' and 'away_bye_mod' columns
+
+    Returns:
+        pd.Series: rest_advantage = home_bye_mod.fillna(0) + away_bye_mod.fillna(0)
+
+    Raises:
+        ValueError: If required columns are missing
+
+    Example:
+        >>> df['rest_advantage'] = compute_rest_advantage_from_nfelo(df)
+    """
+    required = {"home_bye_mod", "away_bye_mod"}
+    missing = required - set(df.columns)
+    if missing:
+        raise ValueError(f"Missing required columns for rest advantage: {missing}")
+
+    return df["home_bye_mod"].fillna(0) + df["away_bye_mod"].fillna(0)
+
+
+# ============================================================================
+# SCHEDULE-BASED REST DAYS
+# ============================================================================
+
+def compute_rest_days_from_schedule(
+    schedules: pd.DataFrame,
+    home_team_col: str = "team_home",
+    away_team_col: str = "team_away",
+    date_col: str = "gameday",
+    game_id_col: str = "game_id",
+) -> pd.DataFrame:
+    """
+    Canonical schedule-based rest days computation.
+
+    Calculates days of rest since the last game for each team based on
+    schedule chronology. This is an alternative rest metric to NFElo's
+    bye modifiers.
+
+    Args:
+        schedules: Game-level schedule DataFrame
+        home_team_col: Column name for home team (default: "team_home")
+        away_team_col: Column name for away team (default: "team_away")
+        date_col: Column name for game date (default: "gameday")
+        game_id_col: Column name for game ID (default: "game_id")
+
+    Returns:
+        pd.DataFrame: Original schedules with added columns:
+            - home_rest_days: Days since home team's last game
+            - away_rest_days: Days since away team's last game
+            - rest_advantage: home_rest_days - away_rest_days
+
+    Example:
+        >>> schedules = compute_rest_days_from_schedule(schedules)
+        >>> print(schedules[['home_team', 'away_team', 'rest_advantage']])
+    """
+    schedules = schedules.copy()
+    schedules[date_col] = pd.to_datetime(schedules[date_col])
+
+    # Build team-level schedule
+    team_games = []
+
+    for team in schedules[home_team_col].unique():
+        # Get all games for this team (home and away)
+        home_games = schedules[schedules[home_team_col] == team][[date_col, game_id_col]].copy()
+        home_games['team'] = team
+
+        away_games = schedules[schedules[away_team_col] == team][[date_col, game_id_col]].copy()
+        away_games['team'] = team
+
+        team_schedule = pd.concat([home_games, away_games]).sort_values(date_col)
+
+        # Calculate rest days (days since previous game)
+        team_schedule['rest_days'] = team_schedule[date_col].diff().dt.days
+
+        team_games.append(team_schedule)
+
+    rest_df = pd.concat(team_games, ignore_index=True)
+
+    # Merge home team rest days
+    schedules = schedules.merge(
+        rest_df[[game_id_col, 'team', 'rest_days']].rename(
+            columns={'rest_days': 'home_rest_days'}
+        ),
+        left_on=[game_id_col, home_team_col],
+        right_on=[game_id_col, 'team'],
+        how='left'
+    ).drop(columns=['team'])
+
+    # Merge away team rest days
+    schedules = schedules.merge(
+        rest_df[[game_id_col, 'team', 'rest_days']].rename(
+            columns={'rest_days': 'away_rest_days'}
+        ),
+        left_on=[game_id_col, away_team_col],
+        right_on=[game_id_col, 'team'],
+        how='left'
+    ).drop(columns=['team'])
+
+    # Compute rest advantage (home - away)
+    schedules['rest_advantage'] = (
+        schedules['home_rest_days'].fillna(0) - schedules['away_rest_days'].fillna(0)
+    )
+
+    return schedules
 
 
 # ============================================================================
@@ -133,27 +247,6 @@ def validate_no_leakage(df, date_col='gameday'):
         pass
 
     print("✓ Leakage validation passed")
-
-
-# ============================================================================
-# REST & SCHEDULE FEATURES
-# ============================================================================
-
-def calculate_rest_days(schedules):
-    """
-    Calculate days of rest since last game for each team.
-
-    DEPRECATED: This function now wraps the canonical implementation in
-    ball_knower.features.engineering.compute_rest_days_from_schedule().
-
-    Args:
-        schedules (pd.DataFrame): Game schedules
-
-    Returns:
-        pd.DataFrame: Schedules with rest days added
-    """
-    # Use canonical implementation from ball_knower.features.engineering
-    return canonical_features.compute_rest_days_from_schedule(schedules)
 
 
 # ============================================================================
@@ -281,50 +374,4 @@ def create_matchup_features(schedules, team_ratings):
         schedules['away_off_vs_home_def'] = schedules['epa_off_away'] - schedules['epa_def']
 
     print("✓ Created matchup features")
-    return schedules
-
-
-# ============================================================================
-# MASTER FEATURE ENGINEERING FUNCTION
-# ============================================================================
-
-def engineer_all_features(schedules, weekly_stats=None, team_ratings=None):
-    """
-    Engineer all features for spread prediction.
-
-    Args:
-        schedules (pd.DataFrame): Game schedules
-        weekly_stats (pd.DataFrame): Weekly team stats (optional)
-        team_ratings (pd.DataFrame): External team ratings (optional)
-
-    Returns:
-        pd.DataFrame: Schedules with all engineered features
-    """
-    print("\n" + "="*60)
-    print("ENGINEERING FEATURES (LEAK-FREE)")
-    print("="*60 + "\n")
-
-    # Calculate rest days
-    schedules = calculate_rest_days(schedules)
-
-    # Calculate rolling EPA if weekly stats provided
-    if weekly_stats is not None:
-        team_epa = calculate_rolling_epa(schedules, weekly_stats)
-        # TODO: Merge back to schedules
-
-    # Calculate recent form
-    team_form = calculate_recent_form(schedules)
-    # TODO: Merge back to schedules
-
-    # Create matchup features if team ratings provided
-    if team_ratings is not None:
-        schedules = create_matchup_features(schedules, team_ratings)
-
-    # Validate no leakage
-    validate_no_leakage(schedules)
-
-    print("\n" + "="*60)
-    print("✓ ALL FEATURES ENGINEERED")
-    print("="*60 + "\n")
-
     return schedules
