@@ -211,12 +211,38 @@ pytest --cov=ball_knower --cov=src
 - **test_weekly_cli.py**: Smoke tests for run_weekly_predictions.py CLI
 - **test_backtest_cli.py**: Smoke tests for unified backtest driver (src/run_backtests.py)
 
-**Note on data-dependent tests:**
+## Testing & Fixtures
 
-Some tests require local data files to be present:
-- If `data/current_season/` files are missing, loader and CLI tests will **skip** (not fail)
-- Dataset tests download nfelo data from the internet (may take a few seconds)
-- To run all tests, ensure you have the Week 11 2025 data files in `data/current_season/`
+**Phase 4 Update**: The test suite is now fully CI-friendly and does not require real data files.
+
+### Fixture Directory Override
+
+During tests, the environment variable `BALL_KNOWER_DATA_DIR` is automatically set to:
+
+```
+tests/fixtures/current_season/
+```
+
+This ensures:
+- All loader functions use fixture CSVs instead of real data
+- Tests do not depend on `./data/current_season`
+- CI environments can run the test suite without external data
+
+**How it works:**
+- `tests/conftest.py` sets the environment variable before any test modules import loaders
+- Fixture CSVs cover nfelo + Substack sources for 2025 Week 1
+- Tests no longer skip when data is missing
+
+### Example
+
+To run tests manually using the fixtures:
+
+```bash
+export BALL_KNOWER_DATA_DIR=tests/fixtures/current_season
+pytest -q
+```
+
+Or simply run `pytest` without setting the variable — the conftest will handle it automatically.
 
 **Legacy test scripts:**
 
@@ -227,28 +253,37 @@ The following scripts are also available in `tests/`:
 
 ## Project Structure
 
+**As of the Phase 1–4 refactor, all reusable library logic now lives in `ball_knower/`.**
+The `src/` directory contains only CLI entry scripts and legacy wrappers.
+
 ```
 BK_Build/
+├── ball_knower/                 # Reusable library code (Phase 1 refactor)
+│   ├── __init__.py
+│   ├── io/
+│   │   └── loaders.py          # Unified loaders for all data sources
+│   ├── datasets/               # Dataset builders for training models
+│   │   ├── v1_0.py             # v1.0 baseline dataset (actual margin)
+│   │   └── v1_2.py             # v1.2 enhanced dataset (Vegas spread)
+│   └── features/               # Centralized feature engineering (Phase 2)
+│       └── engineering.py      # Rest features + leakage validation (Phase 3)
+├── src/                         # CLI entry scripts and legacy modules
+│   ├── __init__.py
+│   ├── run_weekly_predictions.py  # Weekly predictions CLI (official)
+│   ├── run_backtests.py        # Unified backtest driver CLI (official)
+│   ├── team_mapping.py         # Normalize team names across data sources
+│   ├── data_loader.py          # Legacy compatibility wrapper
+│   ├── config.py               # Single source of truth for all settings
+│   ├── features.py             # Leak-free rolling EPA features
+│   ├── models.py               # v1.0, v1.1, v1.2 spread models + backtest
+│   └── betting_utils.py        # EV, Kelly, probability utilities
 ├── data/
 │   ├── current_season/          # Weekly nfelo & Substack CSVs (Week 11)
 │   └── reference/               # Head coaches, AV data
-├── src/                         # Core Python modules & CLI tools
-│   ├── __init__.py
-│   ├── config.py               # Single source of truth for all settings
-│   ├── team_mapping.py         # Normalize team names across data sources
-│   ├── data_loader.py          # Load nfelo, Substack, nfl_data_py
-│   ├── features.py             # Leak-free rolling EPA features
-│   ├── models.py               # v1.0, v1.1, v1.2 spread models + backtest
-│   ├── betting_utils.py        # EV, Kelly, probability utilities
-│   ├── run_weekly_predictions.py  # Weekly predictions CLI (official)
-│   └── run_backtests.py        # Unified backtest driver CLI (official)
-├── ball_knower/                 # Unified data loading package
-│   ├── io/
-│   │   └── loaders.py          # Unified loaders for all data sources
-│   └── datasets/               # Dataset builders for training models
-│       ├── v1_0.py             # v1.0 baseline dataset (actual margin)
-│       └── v1_2.py             # v1.2 enhanced dataset (Vegas spread)
-├── tests/                       # Test suite
+├── tests/                       # Test suite (Phase 4: fixture-based)
+│   ├── conftest.py             # Auto-sets BALL_KNOWER_DATA_DIR to fixtures
+│   ├── fixtures/
+│   │   └── current_season/     # CSV fixtures for 2025 Week 1
 │   ├── test_loaders.py         # Test unified data loaders
 │   ├── test_datasets.py        # Test v1.0/v1.2 dataset builders
 │   ├── test_models.py          # Test model instantiation and predictions
@@ -339,6 +374,22 @@ All features are **strictly leak-free**:
 - Rolling averages use `.shift(1)` to exclude current game
 - No future information in any feature
 - Date-based validation ensures proper time ordering
+
+**Phase 3 Addition**: Automated leakage validation is now available in `ball_knower.features.engineering`:
+
+```python
+from ball_knower.features.engineering import validate_no_leakage
+
+# Protects against same-row and future leakage
+validate_no_leakage(df, date_col='gameday')
+```
+
+**What it checks:**
+- Ensures all feature columns only use past data (via `.shift(1)`)
+- Validates proper time-based ordering
+- Prevents accidental same-game data leakage
+
+This function is used throughout dataset builders and feature engineering pipelines to guarantee leak-free features.
 
 ### Data Integrity
 
