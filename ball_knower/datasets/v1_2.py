@@ -24,15 +24,17 @@ from pathlib import Path
 def build_training_frame(
     start_year: int = 2009,
     end_year: int = 2024,
-    data_url: str = None
+    nfelo_url: str = None,
+    nflverse_url: str = None
 ) -> pd.DataFrame:
     """
-    Build v1.2 training dataset from nfelo historical data.
+    Build v1.2 training dataset from nfelo historical data and nflverse scores.
 
     Args:
         start_year: Start season year (default: 2009)
         end_year: End season year (default: 2024)
-        data_url: Optional custom nfelo data URL
+        nfelo_url: Optional custom nfelo data URL
+        nflverse_url: Optional custom nflverse games URL
 
     Returns:
         DataFrame with columns:
@@ -52,13 +54,15 @@ def build_training_frame(
 
     Expected shape:
         - Rows: 2000-4500 games (depending on year range)
-        - Columns: 26
+        - Columns: 19
     """
-    if data_url is None:
-        data_url = 'https://raw.githubusercontent.com/greerreNFL/nfelo/main/output_data/nfelo_games.csv'
+    if nfelo_url is None:
+        nfelo_url = 'https://raw.githubusercontent.com/greerreNFL/nfelo/main/output_data/nfelo_games.csv'
+    if nflverse_url is None:
+        nflverse_url = 'https://raw.githubusercontent.com/nflverse/nfldata/master/data/games.csv'
 
-    # Load nfelo historical data
-    df = pd.read_csv(data_url)
+    # Load nfelo historical data (for ELO ratings and features)
+    df = pd.read_csv(nfelo_url)
 
     # Extract season/week/teams from game_id
     df[['season', 'week', 'away_team', 'home_team']] = \
@@ -66,13 +70,29 @@ def build_training_frame(
     df['season'] = df['season'].astype(int)
     df['week'] = df['week'].astype(int)
 
-    # Filter to requested year range
+    # Load nflverse games (for actual scores)
+    nflverse_df = pd.read_csv(nflverse_url)
+
+    # Filter nflverse to regular season games only
+    nflverse_df = nflverse_df[nflverse_df['game_type'] == 'REG'].copy()
+
+    # Filter both to requested year range
     df = df[(df['season'] >= start_year) & (df['season'] <= end_year)].copy()
+    nflverse_df = nflverse_df[(nflverse_df['season'] >= start_year) & (nflverse_df['season'] <= end_year)].copy()
+
+    # Merge nfelo features with nflverse scores on game_id
+    df = df.merge(
+        nflverse_df[['game_id', 'home_score', 'away_score']],
+        on='game_id',
+        how='inner'
+    )
 
     # Filter to complete data
     df = df[df['home_line_close'].notna()].copy()
     df = df[df['starting_nfelo_home'].notna()].copy()
     df = df[df['starting_nfelo_away'].notna()].copy()
+    df = df[df['home_score'].notna()].copy()
+    df = df[df['away_score'].notna()].copy()
 
     # =========================================================================
     # FEATURE ENGINEERING
@@ -97,9 +117,7 @@ def build_training_frame(
     # Target: Vegas closing spread
     df['vegas_closing_spread'] = df['home_line_close']
 
-    # Actual outcomes
-    df['home_score'] = df['home_score'].fillna(0)
-    df['away_score'] = df['away_score'].fillna(0)
+    # Actual outcomes (scores already from nflverse, no need to fillna)
     df['actual_margin'] = df['home_score'] - df['away_score']
 
     # Intentionally unused columns (for leak detection)

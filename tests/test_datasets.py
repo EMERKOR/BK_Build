@@ -1,11 +1,25 @@
 """
 Test ball_knower.datasets module
 
-Ensures v1.0 and v1.2 dataset builders:
-- Return DataFrames with stable shapes and columns
-- Have expected minimum row counts
-- Include required columns
-- Handle intentionally unused columns correctly
+Validates dataset builders for v1.0 and v1.2 models.
+
+Dataset Modules Tested:
+- v1_0: Baseline actual margin prediction (ELO-based)
+  - Data sources: nfelo (ELO ratings) + nflverse (game scores)
+  - Target: actual_margin (home_score - away_score)
+
+- v1_2: Enhanced Vegas spread prediction (situational + QB features)
+  - Data sources: nfelo (ELO, situational features) + nflverse (game scores)
+  - Target: vegas_closing_spread
+
+Data Integrity Constraints Enforced:
+- No missing values in core feature columns (nfelo_diff, rest_advantage, etc.)
+- No missing values in target columns (actual_margin, vegas_closing_spread)
+- No missing values in game metadata (game_id, season, week, teams)
+- Intentionally unused columns exist for leak detection (home_points, away_points)
+- Stable column counts across builds
+- Minimum row counts (>1000 games for full dataset, <500 for single season)
+- Custom year range filtering works correctly
 """
 
 import pytest
