@@ -49,24 +49,17 @@ def check_current_season_data_exists(season: int = 2025, week: int = 11) -> bool
 # TEST LOAD_ALL_SOURCES
 # ============================================================================
 
-def test_load_all_sources():
+def test_load_all_sources(data_dir):
     """
-    Test that load_all_sources returns expected structure when data exists.
+    Test that load_all_sources returns expected structure using fixtures.
 
-    If data files are missing, skip the test.
+    Uses synthetic fixture data from tests/fixtures/.
     """
     season = 2025
     week = 11
 
-    if not check_current_season_data_exists(season, week):
-        pytest.skip(
-            f"Current-season data files for {season} Week {week} not found. "
-            "Skipping load_all_sources test. "
-            "To run this test, add the required CSV files to data/current_season/."
-        )
-
-    # Load all sources
-    data = loaders.load_all_sources(season=season, week=week)
+    # Load all sources from fixtures
+    data = loaders.load_all_sources(season=season, week=week, data_dir=data_dir)
 
     # Assert result is a dict
     assert isinstance(data, dict), "load_all_sources should return a dict"
@@ -95,23 +88,17 @@ def test_load_all_sources():
             f"{key} should have a 'team' column"
 
 
-def test_load_all_sources_merged_ratings():
+def test_load_all_sources_merged_ratings(data_dir):
     """
-    Test that merged_ratings key contains properly merged data.
+    Test that merged_ratings key contains properly merged data using fixtures.
 
-    If data files are missing, skip the test.
+    Uses synthetic fixture data from tests/fixtures/.
     """
     season = 2025
     week = 11
 
-    if not check_current_season_data_exists(season, week):
-        pytest.skip(
-            f"Current-season data files for {season} Week {week} not found. "
-            "Skipping merged_ratings test."
-        )
-
-    # Load all sources
-    data = loaders.load_all_sources(season=season, week=week)
+    # Load all sources from fixtures
+    data = loaders.load_all_sources(season=season, week=week, data_dir=data_dir)
 
     # Assert merged_ratings exists
     assert "merged_ratings" in data, "Expected 'merged_ratings' key"

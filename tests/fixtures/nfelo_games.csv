@@ -1,0 +1,9 @@
+game_id,season,week,home_team,away_team,home_score,away_score,home_line_close,starting_nfelo_home,starting_nfelo_away,home_bye_mod,away_bye_mod,div_game_mod,dif_surface_mod,home_time_advantage_mod,home_538_qb_adj,away_538_qb_adj
+2023_01_BUF_KC,2023,1,KC,BUF,24,21,-3.5,1600,1550,0,0,0,0,0,25,20
+2023_01_PHI_BUF,2023,1,BUF,PHI,27,24,-4.0,1620,1560,0,0,10,5,0,30,22
+2023_02_KC_PHI,2023,2,PHI,KC,21,17,-2.5,1590,1570,0,0,0,0,15,20,18
+2023_02_BUF_KC,2023,2,KC,BUF,28,24,-5.0,1605,1555,0,-25,0,-5,0,28,24
+2023_03_PHI_KC,2023,3,KC,PHI,17,14,-1.5,1595,1565,25,0,10,0,0,22,19
+2023_03_BUF_PHI,2023,3,PHI,BUF,31,28,-6.0,1625,1550,0,0,0,0,0,32,28
+2024_01_KC_BUF,2024,1,BUF,KC,23,20,-3.0,1610,1585,0,0,0,5,0,27,25
+2024_01_PHI_KC,2024,1,KC,PHI,20,17,-2.0,1598,1575,0,0,10,0,15,24,21
