@@ -74,6 +74,16 @@ def test_backtest_cli_v1_0_smoke_test():
         "n_games",
         "n_bets",
         "mae_vs_vegas",
+        # PnL metrics
+        "n_wins",
+        "n_losses",
+        "n_pushes",
+        "win_rate",
+        "units_won",
+        "roi",
+        # CLV metrics
+        "mean_clv",
+        "pct_beat_close",
     ]
 
     for col in required_cols:
@@ -87,6 +97,19 @@ def test_backtest_cli_v1_0_smoke_test():
     assert df['n_games'].iloc[0] > 0, "Should have games"
     assert df['n_bets'].iloc[0] >= 0, "Should have non-negative bets"
     assert 0 < df['mae_vs_vegas'].iloc[0] < 20, "MAE should be reasonable"
+
+    # Assert PnL metrics are present and reasonable (when bets exist)
+    if df['n_bets'].iloc[0] > 0:
+        assert df['n_wins'].iloc[0] >= 0, "n_wins should be non-negative"
+        assert df['n_losses'].iloc[0] >= 0, "n_losses should be non-negative"
+        assert df['n_pushes'].iloc[0] >= 0, "n_pushes should be non-negative"
+        assert 0 <= df['win_rate'].iloc[0] <= 1, "win_rate should be between 0 and 1"
+        assert df['roi'].notna().iloc[0], "roi should not be NaN when bets exist"
+        assert df['mean_clv'].notna().iloc[0], "mean_clv should not be NaN when bets exist"
+
+    # Assert CLI output mentions PnL metrics
+    assert "PnL SUMMARY" in result.stdout or "units_won" in result.stdout.lower(), \
+        "CLI output should include PnL summary"
 
     # Clean up test output file
     if output_path.exists():
@@ -156,7 +179,7 @@ def test_backtest_cli_v1_2_smoke_test():
     assert len(df) == 1, \
         f"Output should have 1 row for single season, got {len(df)}"
 
-    # Assert required columns exist
+    # Assert required columns exist (including new PnL and CLV metrics)
     required_cols = [
         "season",
         "model",
@@ -164,6 +187,16 @@ def test_backtest_cli_v1_2_smoke_test():
         "n_games",
         "n_bets",
         "mae_vs_vegas",
+        # PnL metrics
+        "n_wins",
+        "n_losses",
+        "n_pushes",
+        "win_rate",
+        "units_won",
+        "roi",
+        # CLV metrics
+        "mean_clv",
+        "pct_beat_close",
     ]
 
     for col in required_cols:
@@ -175,6 +208,11 @@ def test_backtest_cli_v1_2_smoke_test():
     assert df['model'].iloc[0] == 'v1.2', "Model should be v1.2"
     assert df['edge_threshold'].iloc[0] == 0.5, "Edge threshold should be 0.5"
     assert df['n_games'].iloc[0] > 0, "Should have games"
+
+    # Assert PnL metrics when bets exist
+    if df['n_bets'].iloc[0] > 0:
+        assert df['n_wins'].iloc[0] >= 0, "n_wins should be non-negative"
+        assert df['roi'].notna().iloc[0], "roi should not be NaN when bets exist"
 
     # Clean up test output file
     if output_path.exists():
