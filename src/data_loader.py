@@ -36,7 +36,7 @@ warnings.warn(
 )
 
 from .team_mapping import normalize_team_name, normalize_team_column
-from .config import (
+from ball_knower.config import (
     NFELO_POWER_RATINGS, NFELO_SOS, NFELO_EPA_TIERS,
     NFELO_QB_RANKINGS, SUBSTACK_POWER_RATINGS, SUBSTACK_QB_EPA,
     SUBSTACK_WEEKLY_PROJ_ELO, SUBSTACK_WEEKLY_PROJ_PPG,

@@ -21,7 +21,7 @@ import json
 project_root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(project_root))
 
-from src import config
+from ball_knower import config
 
 
 # ============================================================================

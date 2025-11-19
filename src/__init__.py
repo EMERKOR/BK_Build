@@ -6,11 +6,14 @@ A leak-free, modular NFL spread prediction system.
 
 __version__ = '1.0.0'
 
-from . import config
+# Import from ball_knower canonical modules (source of truth)
+from ball_knower import config  # type: ignore
+from ball_knower.features import engineering as features  # type: ignore
+from ball_knower.modeling import models  # type: ignore
+
+# Import from src (still housed here)
 from . import team_mapping
 from . import data_loader
-from . import features
-from . import models
 
 __all__ = [
     'config',

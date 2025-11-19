@@ -20,7 +20,8 @@ import numpy as np
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
-from src import config, data_loader
+from ball_knower import config
+from src import data_loader  # Legacy loader by design (archive file)
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.width', 150)

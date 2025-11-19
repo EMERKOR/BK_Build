@@ -23,7 +23,7 @@ from datetime import datetime
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
-from src import config
+from ball_knower import config
 
 print("\n" + "="*80)
 print("CALIBRATING BALL KNOWER v1.x - JSON EXPORT")

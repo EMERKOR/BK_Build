@@ -14,7 +14,8 @@ import json
 from pathlib import Path
 from unittest.mock import patch
 
-from src import models, config
+from ball_knower import config
+from ball_knower.modeling import models
 
 
 # ============================================================================
