@@ -34,6 +34,8 @@ env/
 
 # Cache
 data/cache/
+.data_cache/
+.pytest_cache/
 *.csv.cache
 
 # OS
@@ -49,6 +51,7 @@ Thumbs.db
 output/*.png
 output/*.csv
 output/*.json
+output/*.parquet
 !output/ball_knower_v1_2_model.json
 
 # Large data files (raw play-by-play - use aggregated versions instead)
@@ -56,6 +59,7 @@ data/*.parquet
 data/*.zip
 data/*.zip.*
 data/temp_pbp/
+data/uploads/
 
 # Keep aggregated data
 !data/team_week_epa_*.csv

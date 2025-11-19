@@ -104,6 +104,29 @@ df_v1_2 = v1_2.build_training_frame()
 
 ## Quick Start
 
+### Command-Line Entry Points
+
+Ball Knower provides three official CLI tools for production use:
+
+**1. Weekly Predictions** - Generate predictions for the current week:
+```bash
+python src/run_weekly_predictions.py --season 2025 --week 11
+python src/run_weekly_predictions.py --season 2025 --week 12 --output my_predictions.csv
+```
+
+**2. Backtests** - Run historical backtests across multiple seasons:
+```bash
+python src/run_backtests.py --start-season 2019 --end-season 2024 --model v1.2 --edge-threshold 0.5
+python src/run_backtests.py --start-season 2019 --end-season 2019 --model v1.0 --output results.csv
+```
+
+**3. Calibration** - Generate calibrated model weights:
+```bash
+python calibrate_v1_json.py
+```
+
+**Note:** Older experimental scripts have been moved to `archive/` and are no longer maintained.
+
 ### Run the Demo Notebook
 
 ```bash
@@ -120,17 +143,14 @@ The demo notebook will:
 3. Generate spread predictions with v1.0 model
 4. Identify value bets vs Vegas lines
 
-### Run Weekly Predictions CLI
+### Weekly Predictions CLI Details
 
 ```bash
 # Generate predictions for a specific week
-python run_weekly_predictions.py --season 2025 --week 11
+python src/run_weekly_predictions.py --season 2025 --week 11
 
 # Custom output location
-python run_weekly_predictions.py --season 2025 --week 12 --output my_predictions.csv
-
-# Use v1.0 model instead of default v1.1
-python run_weekly_predictions.py --season 2025 --week 11 --model v1.0
+python src/run_weekly_predictions.py --season 2025 --week 12 --output my_predictions.csv
 ```
 
 **What it does**:
@@ -212,7 +232,7 @@ BK_Build/
 ├── data/
 │   ├── current_season/          # Weekly nfelo & Substack CSVs (Week 11)
 │   └── reference/               # Head coaches, AV data
-├── src/                         # Core Python modules
+├── src/                         # Core Python modules & CLI tools
 │   ├── __init__.py
 │   ├── config.py               # Single source of truth for all settings
 │   ├── team_mapping.py         # Normalize team names across data sources
@@ -220,7 +240,8 @@ BK_Build/
 │   ├── features.py             # Leak-free rolling EPA features
 │   ├── models.py               # v1.0, v1.1, v1.2 spread models + backtest
 │   ├── betting_utils.py        # EV, Kelly, probability utilities
-│   └── run_backtests.py        # Unified backtest driver CLI
+│   ├── run_weekly_predictions.py  # Weekly predictions CLI (official)
+│   └── run_backtests.py        # Unified backtest driver CLI (official)
 ├── ball_knower/                 # Unified data loading package
 │   ├── io/
 │   │   └── loaders.py          # Unified loaders for all data sources
@@ -235,13 +256,15 @@ BK_Build/
 │   └── test_backtest_cli.py    # Test unified backtest driver
 ├── notebooks/                   # Jupyter notebooks
 │   └── ball_knower_demo.ipynb  # Quick start demo
+├── archive/                     # Legacy/superseded scripts (not maintained)
+│   ├── README.md               # Guide to archived scripts
+│   ├── run_demo.py             # Superseded by src/run_weekly_predictions.py
+│   ├── backtest_v1_0.py        # Superseded by src/run_backtests.py
+│   ├── backtest_v1_2.py        # Superseded by src/run_backtests.py
+│   └── ...                     # Other legacy scripts
 ├── output/                      # Model predictions and backtest results
-│   └── calibrated_weights_v1.json  # Calibrated model weights
-├── run_weekly_predictions.py   # CLI for weekly predictions
-├── run_demo.py                 # Quick demo script
-├── backtest_v1_0.py            # v1.0 backtest (standalone)
-├── backtest_v1_2.py            # v1.2 professional backtest (standalone)
-├── calibrate_v1_json.py        # Generate calibrated weights JSON
+│   └── calibrated_weights_v1.json  # Calibrated model weights (v1.1)
+├── calibrate_v1_json.py        # Generate calibrated weights JSON (official)
 ├── requirements-dev.txt        # Development dependencies (pytest, etc.)
 └── README.md                    # This file
 ```
@@ -372,7 +395,7 @@ All map to nfl_data_py standard: `LAR`, `KC`, `BUF`
    - `strength_of_schedule_nfelo_{season}_week_{week}.csv`
 3. Run the weekly predictions CLI:
    ```bash
-   python run_weekly_predictions.py --season 2025 --week {week}
+   python src/run_weekly_predictions.py --season 2025 --week {week}
    ```
 4. Review output CSV in `output/predictions_{season}_week_{week}.csv`
 5. Compare predictions to live betting lines

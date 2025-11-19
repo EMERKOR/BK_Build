@@ -75,7 +75,7 @@ def test_weekly_predictions_cli_smoke_test():
         output_path.unlink()
 
     # Run CLI
-    cli_script = project_root / "run_weekly_predictions.py"
+    cli_script = project_root / "src" / "run_weekly_predictions.py"
     result = subprocess.run(
         [
             "python",
@@ -137,7 +137,7 @@ def test_weekly_predictions_cli_with_default_output():
         )
 
     project_root = Path(__file__).resolve().parents[1]
-    cli_script = project_root / "run_weekly_predictions.py"
+    cli_script = project_root / "src" / "run_weekly_predictions.py"
 
     # Run CLI without --output flag (uses default)
     result = subprocess.run(
@@ -175,7 +175,7 @@ def test_weekly_predictions_cli_help():
     Test that CLI --help flag works.
     """
     project_root = Path(__file__).resolve().parents[1]
-    cli_script = project_root / "run_weekly_predictions.py"
+    cli_script = project_root / "src" / "run_weekly_predictions.py"
 
     # Run with --help
     result = subprocess.run(

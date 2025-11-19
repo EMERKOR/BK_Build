@@ -4,8 +4,8 @@ Ball Knower Weekly Predictions CLI
 Generate weekly NFL predictions using calibrated weights and unified data loaders.
 
 Usage:
-    python run_weekly_predictions.py --season 2025 --week 11
-    python run_weekly_predictions.py --season 2025 --week 11 --output my_predictions.csv
+    python src/run_weekly_predictions.py --season 2025 --week 11
+    python src/run_weekly_predictions.py --season 2025 --week 11 --output my_predictions.csv
 
 Output CSV columns:
     - game_id: Unique game identifier
@@ -25,7 +25,7 @@ import pandas as pd
 import numpy as np
 
 # Add project root to path
-project_root = Path(__file__).parent
+project_root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(project_root))
 
 # Import Ball Knower modules
@@ -40,8 +40,8 @@ def parse_args():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python run_weekly_predictions.py --season 2025 --week 11
-  python run_weekly_predictions.py --season 2025 --week 12 --output predictions_week12.csv
+  python src/run_weekly_predictions.py --season 2025 --week 11
+  python src/run_weekly_predictions.py --season 2025 --week 12 --output predictions_week12.csv
         """
     )
 
