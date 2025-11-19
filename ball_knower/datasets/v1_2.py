@@ -19,6 +19,7 @@ Use Case:
 import pandas as pd
 import numpy as np
 from pathlib import Path
+from src import features
 
 
 def build_training_frame(
@@ -81,10 +82,8 @@ def build_training_frame(
     # Primary feature: ELO differential
     df['nfelo_diff'] = df['starting_nfelo_home'] - df['starting_nfelo_away']
 
-    # Situational adjustments
-    df['home_bye_mod'] = df['home_bye_mod'].fillna(0)
-    df['away_bye_mod'] = df['away_bye_mod'].fillna(0)
-    df['rest_advantage'] = df['home_bye_mod'] + df['away_bye_mod']
+    # Situational adjustments - rest advantage using canonical helper
+    df = features.add_nfelo_rest_advantage(df)
 
     df['div_game'] = df['div_game_mod'].fillna(0)
     df['surface_mod'] = df['dif_surface_mod'].fillna(0)

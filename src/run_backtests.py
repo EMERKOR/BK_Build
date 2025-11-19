@@ -21,7 +21,7 @@ import json
 project_root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(project_root))
 
-from src import config
+from src import config, features
 
 
 # ============================================================================
@@ -155,7 +155,7 @@ def run_backtest_v1_2(
 
     # Engineer features
     df['nfelo_diff'] = df['starting_nfelo_home'] - df['starting_nfelo_away']
-    df['rest_advantage'] = df['home_bye_mod'].fillna(0) + df['away_bye_mod'].fillna(0)
+    df = features.add_nfelo_rest_advantage(df)
     df['div_game'] = df['div_game_mod'].fillna(0)
     df['surface_mod'] = df['dif_surface_mod'].fillna(0)
     df['time_advantage'] = df['home_time_advantage_mod'].fillna(0)

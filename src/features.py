@@ -190,6 +190,39 @@ def calculate_rest_days(schedules):
     return schedules
 
 
+def add_nfelo_rest_advantage(df):
+    """
+    Add NFelo-style rest_advantage to a games DataFrame.
+
+    Expected columns:
+    - 'home_bye_mod': NFelo's pre-computed home team bye week modifier
+    - 'away_bye_mod': NFelo's pre-computed away team bye week modifier
+
+    Behavior (must match existing code exactly):
+    - Treat missing bye modifiers as 0
+    - Compute rest_advantage = home_bye_mod.fillna(0) + away_bye_mod.fillna(0)
+    - Return a copy of df with a 'rest_advantage' column added (or overwritten)
+
+    This is a thin wrapper around the existing NFelo rest logic. It is NOT
+    trying to redefine what rest should be, only to centralize the current
+    behavior that appears in multiple locations (datasets/v1_2.py,
+    run_backtests.py, etc.).
+
+    Args:
+        df (pd.DataFrame): DataFrame with home_bye_mod and away_bye_mod columns
+
+    Returns:
+        pd.DataFrame: Copy of df with 'rest_advantage' column added
+
+    Example:
+        >>> games_df = add_nfelo_rest_advantage(games_df)
+        >>> assert 'rest_advantage' in games_df.columns
+    """
+    df = df.copy()
+    df['rest_advantage'] = df['home_bye_mod'].fillna(0) + df['away_bye_mod'].fillna(0)
+    return df
+
+
 # ============================================================================
 # RECENT FORM FEATURES
 # ============================================================================
