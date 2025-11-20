@@ -637,3 +637,80 @@ def load_all_sources(
         warnings.warn("Cannot create merged_ratings without nfelo power ratings as base", UserWarning)
 
     return result
+
+
+# ============================================================================
+# STRUCTURAL METRICS LOADERS
+# ============================================================================
+
+REQUIRED_STRUCTURAL_COLUMNS = [
+    "season", "week", "team",
+    "osr_raw", "dsr_raw",
+    "osr_z", "dsr_z",
+    "olsi_raw", "olsi_z",
+    "go_rate_over_expected_raw",
+    "wpa_lost_raw",
+    "cea_raw", "cea_z",
+    "structural_edge",
+]
+
+
+def load_structural_metrics(
+    base_path: str = "structural",
+    seasons: Optional[list] = None,
+) -> pd.DataFrame:
+    """
+    Load precomputed structural metrics CSV(s).
+
+    If seasons is None, load structural/structural_metrics_all.csv.
+    Otherwise, read and concat structural/structural_metrics_{season}.csv for each season.
+
+    Validate that REQUIRED_STRUCTURAL_COLUMNS are present.
+
+    Args:
+        base_path: Base directory for structural metrics files (default: "structural")
+        seasons: Optional list of seasons to load. If None, loads all seasons from
+                structural_metrics_all.csv
+
+    Returns:
+        DataFrame with structural metrics
+
+    Raises:
+        FileNotFoundError: If required files don't exist
+        ValueError: If required columns are missing
+    """
+    base_dir = Path(base_path)
+
+    if seasons is None:
+        # Load all seasons from combined file
+        all_file = base_dir / "structural_metrics_all.csv"
+        if not all_file.exists():
+            raise FileNotFoundError(
+                f"Structural metrics file not found: {all_file}\n"
+                f"Run scripts/build_structural_metrics.py to generate this file."
+            )
+
+        df = pd.read_csv(all_file)
+    else:
+        # Load individual season files and concatenate
+        dfs = []
+        for season in seasons:
+            season_file = base_dir / f"structural_metrics_{season}.csv"
+            if not season_file.exists():
+                raise FileNotFoundError(
+                    f"Structural metrics file not found for season {season}: {season_file}\n"
+                    f"Run scripts/build_structural_metrics.py to generate this file."
+                )
+            dfs.append(pd.read_csv(season_file))
+
+        df = pd.concat(dfs, ignore_index=True)
+
+    # Validate required columns
+    missing_cols = [col for col in REQUIRED_STRUCTURAL_COLUMNS if col not in df.columns]
+    if missing_cols:
+        raise ValueError(
+            f"Missing required structural metrics columns: {missing_cols}\n"
+            f"Found columns: {list(df.columns)}"
+        )
+
+    return df
