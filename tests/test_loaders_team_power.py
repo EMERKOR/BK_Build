@@ -55,7 +55,7 @@ def test_load_team_power_ratings_required_columns():
 
 def test_load_team_power_ratings_lar_rating():
     """
-    Test that LAR (Rams) has the expected blended rating.
+    Test that LAR (Rams) has the expected blended rating (with structural edge).
     """
     season = 2025
     week = 12
@@ -67,10 +67,11 @@ def test_load_team_power_ratings_lar_rating():
     lar_row = df[df["team_code"] == "LAR"]
     assert len(lar_row) == 1, "Should have exactly one LAR row"
 
-    # Check blended rating (approximately 4.89)
+    # Check blended rating (approximately 5.017 with structural edge of 1.25)
     lar_rating = lar_row["bk_blended_rating"].iloc[0]
-    assert abs(lar_rating - 4.89) < 1e-1, \
-        f"LAR blended rating should be ~4.89, got {lar_rating}"
+    expected = 5.016577
+    assert lar_rating == pytest.approx(expected, abs=1e-3), \
+        f"LAR blended rating should be ~{expected}, got {lar_rating}"
 
 
 def test_load_team_power_ratings_file_not_found():
