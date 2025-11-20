@@ -1,0 +1,65 @@
+{
+  "models": [
+    {
+      "version": "v1.0",
+      "description": "Deterministic baseline model using power rating differentials",
+      "target": "actual_margin",
+      "features": [
+        "nfelo_diff",
+        "home_field_advantage"
+      ],
+      "feature_description": "Simple power rating differential (nfelo) plus calibrated home field advantage. Deterministic formula: spread = nfelo_diff * coef + HFA",
+      "artifacts_path": "output/models/v1_0/",
+      "intended_use": "backtesting baseline, historical analysis",
+      "training_period": "2015-2024",
+      "calibration_method": "Ridge regression on nfelo differential to predict Vegas closing lines",
+      "notes": "Serves as baseline for comparison. Does not use EPA, rest, or structural features."
+    },
+    {
+      "version": "v1.1",
+      "description": "Enhanced model with structural features (rest, form, QB adjustments)",
+      "target": "actual_margin",
+      "features": [
+        "epa_margin",
+        "nfelo_diff",
+        "substack_ovr_diff",
+        "rest_advantage",
+        "win_rate_L5",
+        "qb_adj_diff"
+      ],
+      "feature_description": "Adds EPA metrics, rest advantage, recent form (L5 win rate), and QB adjustments to v1.0 power ratings. Uses calibrated weights loaded from JSON.",
+      "artifacts_path": "output/",
+      "calibration_file": "output/calibrated_weights_v1.json",
+      "intended_use": "live weekly predictions, current season",
+      "training_period": "2015-2024",
+      "calibration_method": "Ridge regression with alpha=10.0, calibrated to Vegas closing lines",
+      "notes": "Primary model for weekly predictions. Weights can be recalibrated without code changes by updating calibrated_weights_v1.json."
+    },
+    {
+      "version": "v1.2",
+      "description": "ML correction layer on top of v1.1 structural features",
+      "target": "vegas_spread",
+      "features": [
+        "nfelo_diff",
+        "rest_advantage",
+        "div_game",
+        "surface_mod",
+        "time_advantage",
+        "qb_diff"
+      ],
+      "feature_description": "Uses v1.1 structural features but targets Vegas line directly rather than actual margin. ML model learns correction on top of structural features.",
+      "artifacts_path": "output/models/v1_2/",
+      "model_file": "output/ball_knower_v1_2_model.json",
+      "intended_use": "advanced backtesting, edge detection vs Vegas",
+      "training_period": "2009-2024",
+      "calibration_method": "Ridge or ML regression trained to predict Vegas closing line",
+      "notes": "Experimental model. Targets Vegas spread rather than actual margin, learning market inefficiencies. Requires nfelo historical data for training."
+    }
+  ],
+  "metadata": {
+    "created_at": "2025-11-20",
+    "schema_version": "1.0",
+    "repository": "EMERKOR/BK_Build",
+    "notes": "All models predict spread from HOME TEAM perspective. Negative spread = home favored, positive = home underdog."
+  }
+}
