@@ -63,21 +63,16 @@ def compute_offense_form(df: pd.DataFrame, window: int = 4) -> pd.DataFrame:
         return result
 
     # Compute rolling offensive EPA (LEAK-FREE: shift(1) before rolling)
+    # Use transform to maintain group boundaries during rolling calculation
     result['offense_form_epa'] = (
         df.groupby('team')['off_epa_per_play']
-        .shift(1)  # Exclude current game
-        .rolling(window=window, min_periods=1)
-        .mean()
-        .reset_index(level=0, drop=True)
+        .transform(lambda x: x.shift(1).rolling(window=window, min_periods=1).mean())
     )
 
     # Compute rolling offensive success rate (LEAK-FREE: shift(1) before rolling)
     result['offense_form_success'] = (
         df.groupby('team')['off_success_rate']
-        .shift(1)  # Exclude current game
-        .rolling(window=window, min_periods=1)
-        .mean()
-        .reset_index(level=0, drop=True)
+        .transform(lambda x: x.shift(1).rolling(window=window, min_periods=1).mean())
     )
 
     return result
@@ -126,21 +121,16 @@ def compute_defense_form(df: pd.DataFrame, window: int = 4) -> pd.DataFrame:
         return result
 
     # Compute rolling defensive EPA (LEAK-FREE: shift(1) before rolling)
+    # Use transform to maintain group boundaries during rolling calculation
     result['defense_form_epa'] = (
         df.groupby('team')['def_epa_per_play']
-        .shift(1)  # Exclude current game
-        .rolling(window=window, min_periods=1)
-        .mean()
-        .reset_index(level=0, drop=True)
+        .transform(lambda x: x.shift(1).rolling(window=window, min_periods=1).mean())
     )
 
     # Compute rolling defensive success rate (LEAK-FREE: shift(1) before rolling)
     result['defense_form_success'] = (
         df.groupby('team')['def_success_rate']
-        .shift(1)  # Exclude current game
-        .rolling(window=window, min_periods=1)
-        .mean()
-        .reset_index(level=0, drop=True)
+        .transform(lambda x: x.shift(1).rolling(window=window, min_periods=1).mean())
     )
 
     return result

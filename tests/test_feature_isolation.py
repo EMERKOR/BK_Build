@@ -25,27 +25,39 @@ def test_form_module_is_importable():
     assert form is not None
 
 
-def test_form_functions_raise_not_implemented():
+def test_form_functions_are_implemented():
     """
-    Test that all form functions raise NotImplementedError.
+    Test that all form functions are now implemented (v1.3).
 
-    This ensures the placeholder functions cannot be accidentally used.
+    This verifies the functions exist and can be called without raising NotImplementedError.
     """
     from ball_knower.features import form
     import pandas as pd
 
-    # Create dummy DataFrame
-    dummy_df = pd.DataFrame({'team': ['KC', 'BUF'], 'value': [1, 2]})
+    # Create valid DataFrame with required columns
+    dummy_df = pd.DataFrame({
+        'team': ['KC', 'BUF'],
+        'season': [2024, 2024],
+        'week': [1, 1],
+        'off_epa_per_play': [0.1, 0.2],
+        'off_success_rate': [0.4, 0.5],
+        'def_epa_per_play': [-0.1, -0.2],
+        'def_success_rate': [0.35, 0.40]
+    })
 
-    # All form functions should raise NotImplementedError
-    with pytest.raises(NotImplementedError, match="placeholder for v1.3"):
-        form.compute_offense_form(dummy_df)
+    # All form functions should now work (return DataFrames, not raise NotImplementedError)
+    offense_result = form.compute_offense_form(dummy_df)
+    assert isinstance(offense_result, pd.DataFrame)
+    assert 'offense_form_epa' in offense_result.columns
 
-    with pytest.raises(NotImplementedError, match="placeholder for v1.3"):
-        form.compute_defense_form(dummy_df)
+    defense_result = form.compute_defense_form(dummy_df)
+    assert isinstance(defense_result, pd.DataFrame)
+    assert 'defense_form_epa' in defense_result.columns
 
-    with pytest.raises(NotImplementedError, match="placeholder for v1.3"):
-        form.compute_team_form(dummy_df)
+    team_result = form.compute_team_form(dummy_df)
+    assert isinstance(team_result, pd.DataFrame)
+    assert 'offense_form_epa' in team_result.columns
+    assert 'defense_form_epa' in team_result.columns
 
 
 def test_form_import_triggers_warning():
