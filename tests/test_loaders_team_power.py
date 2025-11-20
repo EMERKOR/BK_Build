@@ -1,5 +1,5 @@
 """
-Test ball_knower.io.loaders.load_team_power_ratings
+Test ball_knower.io.loaders.load_team_power_ratings and load_bk_ratings
 
 Tests for the Ball Knower blended team power ratings loader.
 """
@@ -8,7 +8,7 @@ import pytest
 import pandas as pd
 from pathlib import Path
 
-from ball_knower.io.loaders import load_team_power_ratings
+from ball_knower.io.loaders import load_team_power_ratings, load_bk_ratings
 
 
 def test_load_team_power_ratings_basic():
@@ -100,3 +100,86 @@ def test_load_team_power_ratings_season_week_metadata():
     # Check season and week columns
     assert (df["season"] == season).all(), "All rows should have correct season"
     assert (df["week"] == week).all(), "All rows should have correct week"
+
+
+# ============================================================================
+# TEST LOAD_BK_RATINGS (CANONICAL API)
+# ============================================================================
+
+
+def test_load_bk_ratings_basic():
+    """
+    Test that load_bk_ratings loads and returns the canonical format.
+    """
+    season = 2025
+    week = 12
+
+    # Load via canonical API
+    df = load_bk_ratings(season=season, week=week)
+
+    # Should have 32 teams
+    assert len(df) == 32, "Should have 32 teams"
+
+    # Required columns
+    required_cols = ["season", "week", "team_code", "team_name", "bk_rating"]
+    for col in required_cols:
+        assert col in df.columns, f"Missing required column: {col}"
+
+    # bk_rating should equal bk_blended_rating (default rating_column)
+    assert "bk_blended_rating" in df.columns
+    assert (df["bk_rating"] == df["bk_blended_rating"]).all(), \
+        "bk_rating should be a copy of bk_blended_rating"
+
+
+def test_load_bk_ratings_custom_column():
+    """
+    Test that load_bk_ratings can use a custom rating column.
+    """
+    season = 2025
+    week = 12
+
+    # Load with market_rating as the canonical rating
+    df = load_bk_ratings(season=season, week=week, rating_column="market_rating")
+
+    # Should have 32 teams
+    assert len(df) == 32, "Should have 32 teams"
+
+    # bk_rating should equal market_rating
+    assert "market_rating" in df.columns
+    assert (df["bk_rating"] == df["market_rating"]).all(), \
+        "bk_rating should be a copy of market_rating"
+
+    # Check that at least one value is non-zero
+    assert df["bk_rating"].abs().sum() > 0, "Ratings should have non-zero values"
+
+
+def test_load_bk_ratings_missing_column():
+    """
+    Test that load_bk_ratings raises ValueError for nonexistent column.
+    """
+    season = 2025
+    week = 12
+
+    with pytest.raises(ValueError) as exc_info:
+        load_bk_ratings(season=season, week=week, rating_column="nonexistent_column")
+
+    assert "not found in ratings" in str(exc_info.value)
+    assert "nonexistent_column" in str(exc_info.value)
+
+
+def test_load_bk_ratings_require_complete_false():
+    """
+    Test that load_bk_ratings works with require_complete=False.
+    """
+    season = 2025
+    week = 12
+
+    # Load without requiring completeness checks
+    df = load_bk_ratings(season=season, week=week, require_complete=False)
+
+    # Should still have data (in this case, the file is complete anyway)
+    assert len(df) > 0, "Should return data"
+    assert "bk_rating" in df.columns, "Should have bk_rating column"
+
+    # For this particular file, we still have 32 teams
+    assert len(df) == 32, "Current file has 32 teams"

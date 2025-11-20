@@ -400,6 +400,96 @@ def load_team_power_ratings(
     return df
 
 
+def load_bk_ratings(
+    season: int,
+    week: int,
+    base_path: str = "subjective",
+    rating_column: str = "bk_blended_rating",
+    require_complete: bool = True,
+) -> pd.DataFrame:
+    """
+    Load Ball Knower canonical team strength ratings.
+
+    This is the primary loader for BK team ratings. It provides a stable,
+    versioned interface for accessing team strength ratings across the codebase.
+
+    Currently wraps: subjective/team_power_ratings_{season}_week{week:02d}.csv
+    Currently uses: bk_blended_rating column by default
+
+    Other code should prefer this loader over direct CSV access wherever possible.
+    This allows us to change the underlying storage format or rating methodology
+    without breaking downstream consumers.
+
+    Args:
+        season: NFL season year
+        week: NFL week number
+        base_path: Base directory for ratings files (default: "subjective")
+        rating_column: Which column to use as the canonical rating
+                      (default: "bk_blended_rating")
+        require_complete: If True, validate that we have exactly 32 teams
+                         with unique team codes and consistent season/week
+
+    Returns:
+        DataFrame with columns:
+            - season: Season year
+            - week: Week number
+            - team_code: Standard 2-3 letter team abbreviation
+            - team_name: Full team name
+            - bk_rating: The canonical rating (copy of rating_column)
+            - <rating_column>: The original rating column
+            - ... (additional columns from underlying data)
+
+    Raises:
+        FileNotFoundError: If ratings file doesn't exist
+        ValueError: If rating_column doesn't exist or completeness checks fail
+    """
+    # Load underlying team power ratings
+    df = load_team_power_ratings(season=season, week=week, base_path=base_path)
+
+    # Verify rating column exists
+    if rating_column not in df.columns:
+        raise ValueError(
+            f"Requested rating_column '{rating_column}' not found in ratings.\n"
+            f"Available columns: {sorted(df.columns)}"
+        )
+
+    # Create standardized bk_rating column (copy of specified rating column)
+    df = df.copy()
+    df["bk_rating"] = df[rating_column]
+
+    # Completeness checks
+    if require_complete:
+        # Check we have exactly 32 teams
+        if len(df) != 32:
+            raise ValueError(
+                f"Expected 32 teams in ratings file, found {len(df)}"
+            )
+
+        # Check team_code is unique
+        if df["team_code"].nunique() != len(df):
+            duplicates = df[df.duplicated(subset=["team_code"], keep=False)]
+            raise ValueError(
+                f"Found duplicate team codes: {duplicates['team_code'].tolist()}"
+            )
+
+        # Check season and week are constant and match arguments
+        if not (df["season"] == season).all():
+            found_seasons = df["season"].unique()
+            raise ValueError(
+                f"Expected all rows to have season={season}, "
+                f"found: {found_seasons.tolist()}"
+            )
+
+        if not (df["week"] == week).all():
+            found_weeks = df["week"].unique()
+            raise ValueError(
+                f"Expected all rows to have week={week}, "
+                f"found: {found_weeks.tolist()}"
+            )
+
+    return df
+
+
 def merge_team_ratings(
     sources: Dict[str, pd.DataFrame],
 ) -> pd.DataFrame:
