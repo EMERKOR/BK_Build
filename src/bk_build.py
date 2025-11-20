@@ -29,20 +29,13 @@ from ball_knower.utils import paths, version
 
 def cmd_train_v1_2(args):
     """Train v1.2 model on historical data."""
-    version.print_version_banner("train_v1_2", model_version="v1.2")
+    from src import train_v1_2
 
-    print(f"Training v1.2 model on seasons {args.start_season}-{args.end_season}...")
-    print("NOTE: v1.2 training requires nfelo historical data and feature engineering.")
-    print("This functionality is currently in ball_knower.datasets.v1_2")
-    print("\nTo train v1.2, use the dataset modules directly:")
-    print("  from ball_knower.datasets import v1_2")
-    print("  dataset = v1_2.load_v1_2_dataset(start_season=2009, end_season=2024)")
-    print("  # Then train your model on dataset")
-
-    print(f"\n⚠ Training script not yet implemented in CLI.")
-    print("   Model artifacts will be saved to:", paths.get_models_dir("v1.2"))
-
-    return 1  # Not implemented yet
+    return train_v1_2.main(
+        start_season=args.start_season,
+        end_season=args.end_season,
+        alpha=getattr(args, 'alpha', 1.0)
+    )
 
 
 # ============================================================================
@@ -322,6 +315,12 @@ Examples:
         type=int,
         default=2024,
         help='End season for training (default: 2024)'
+    )
+    parser_train.add_argument(
+        '--alpha',
+        type=float,
+        default=1.0,
+        help='Ridge regression regularization strength (default: 1.0)'
     )
     parser_train.add_argument(
         '--output',
