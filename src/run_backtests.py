@@ -331,23 +331,39 @@ def main():
             verbose=True
         )
 
-    # Determine output path
+    # Determine output path using standardized convention
     if args.output is None:
-        output_path = (
-            config.OUTPUT_DIR /
-            f"backtest_{args.model.replace('.', '_')}_{args.start_season}_{args.end_season}.csv"
-        )
+        # Standard convention: output/backtests/{model_version}/backtest_{model_version}_{start}_{end}.csv
+        model_dir = config.OUTPUT_DIR / 'backtests' / args.model
+        model_dir.mkdir(parents=True, exist_ok=True)
+        output_path = model_dir / f"backtest_{args.model}_{args.start_season}_{args.end_season}.csv"
     else:
         output_path = Path(args.output)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Ensure output directory exists
-    output_path.parent.mkdir(parents=True, exist_ok=True)
+    # Ensure consistent schema across all model versions
+    # Standardized column order for backtest CSVs
+    standard_cols = [
+        'game_id', 'season', 'week',
+        'home_team', 'away_team',
+        'actual_margin', 'closing_spread',
+        'bk_line', 'model_line',
+        'edge', 'abs_edge', 'bet'
+    ]
 
-    # Save game-level results
-    results_df.to_csv(output_path, index=False)
+    # Select columns that exist in the DataFrame
+    output_cols = [col for col in standard_cols if col in results_df.columns]
+
+    # Add any additional columns not in the standard list (preserve extra data)
+    extra_cols = [col for col in results_df.columns if col not in standard_cols]
+    output_cols.extend(extra_cols)
+
+    # Save game-level results with consistent schema
+    results_df[output_cols].to_csv(output_path, index=False)
 
     print(f"✓ Game-level results saved to: {output_path}")
     print(f"  {len(results_df)} games written")
+    print(f"  Standard schema: {', '.join(standard_cols[:5])}...")
 
     return 0
 
