@@ -80,15 +80,15 @@
       "intended_use": "edge detection with momentum/form indicators",
       "training_period": "2013-2024",
       "calibration_method": "Ridge regression (alpha=1.0) trained to predict Vegas closing line",
-      "calibration_window": "TBD (run: python src/bk_build.py calibrate-v1-3 --start-season 2013 --end-season 2018)",
-      "backtest_window": "TBD (run: python src/bk_build.py backtest --model v1.3 --start-season 2019 --end-season 2024)",
-      "performance_metrics": {
-        "calibration_mae": "TBD",
-        "calibration_rmse": "TBD",
-        "backtest_mae_2019_2024": "TBD",
-        "backtest_rmse_2019_2024": "TBD",
-        "comparison_vs_v1_2": "TBD - Run backtests for both v1.2 and v1.3 on 2019-2024 to compare"
-      },
+      "calibration_window": "2013-2018",
+"backtest_window": "2019-2024",
+"performance_metrics": {
+  "calibration_mae": 1.6992782647420408,
+  "calibration_rmse": 2.194385002012277,
+  "backtest_mae_2019_2024": 1.752,
+  "backtest_rmse_2019_2024": 2.310,
+  "comparison_vs_v1_2": "Over the 2019–2024 test window, v1.3 improved MAE by 0.046 points (~2.6%) and improved RMSE by 0.041 points (~1.7%) compared to v1.2, using 1484 games with complete form features."
+}
       "cli_usage": {
         "train": "python src/bk_build.py train-v1-3",
         "calibrate": "python src/bk_build.py calibrate-v1-3 --start-season 2013 --end-season 2018",
