@@ -137,6 +137,40 @@ Summary:
 - `0`: All required files present and valid
 - `1`: Missing or invalid required files
 
+## One-Shot Weekly Pipeline
+
+Run the complete weekly workflow with a single command:
+
+```bash
+# Run full workflow for Week 11 with v1.3 model
+python src/bk_build.py weekly-pipeline \
+  --season 2025 \
+  --week 11 \
+  --model-version v1.3 \
+  --backtest \
+  --export-predictiontracker
+
+# Minimal workflow (data check + predictions only)
+python src/bk_build.py weekly-pipeline --week 11
+
+# Use different model
+python src/bk_build.py weekly-pipeline --week 12 --model-version v1.2
+```
+
+**What it does**:
+1. Validates all required data files (same as `check-weekly-data`)
+2. Generates predictions using specified model
+3. Optionally runs backtest for this week (if `--backtest` flag provided)
+4. Optionally exports to PredictionTracker format (if `--export-predictiontracker` flag provided)
+
+**Default behavior**:
+- Season: Current season from `config.CURRENT_SEASON`
+- Model: v1.3 (most recent)
+- Backtest: Disabled
+- PredictionTracker export: Disabled
+
+**Note**: Backtest and PredictionTracker export features are not yet implemented.
+
 ## Weekly Predictions
 
 ### Generate Predictions for Current Week

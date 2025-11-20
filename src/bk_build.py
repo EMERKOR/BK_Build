@@ -197,6 +197,52 @@ def cmd_check_weekly_data(args):
 
 
 # ============================================================================
+# SUBCOMMAND: weekly-pipeline
+# ============================================================================
+
+def cmd_weekly_pipeline(args):
+    """Run complete weekly workflow (validate, predict, backtest, export)."""
+    from ball_knower.pipeline import weekly
+
+    version.print_version_banner("weekly_pipeline", model_version=args.model_version)
+
+    try:
+        result = weekly.run_weekly_pipeline(
+            season=args.season,
+            week=args.week,
+            model_version=args.model_version,
+            run_backtest=args.backtest,
+            export_predictiontracker=args.export_predictiontracker
+        )
+
+        # Print human-readable summary
+        print("\n" + "="*80)
+        print("WEEKLY PIPELINE SUMMARY")
+        print("="*80)
+        print(f"Season/Week: {result['season']} Week {result['week']}")
+        print(f"Model: {result['model_version']}")
+        print(f"\nOutputs:")
+        print(f"  Predictions: {result['predictions_path']}")
+        if result['backtest_path']:
+            print(f"  Backtest: {result['backtest_path']}")
+        if result['predictiontracker_path']:
+            print(f"  PredictionTracker: {result['predictiontracker_path']}")
+
+        if result['warnings']:
+            print(f"\nWarnings:")
+            for warning in result['warnings']:
+                print(f"  ⚠ {warning}")
+
+        print("="*80 + "\n")
+
+        return 0
+
+    except RuntimeError as e:
+        print(f"\n✗ Pipeline failed: {e}", file=sys.stderr)
+        return 1
+
+
+# ============================================================================
 # CLI SETUP
 # ============================================================================
 
@@ -387,6 +433,44 @@ Examples:
         help='Week number'
     )
     parser_check.set_defaults(func=cmd_check_weekly_data)
+
+    # ========================================
+    # weekly-pipeline subcommand
+    # ========================================
+    parser_pipeline = subparsers.add_parser(
+        'weekly-pipeline',
+        help='Run complete weekly workflow (validate data, predict, backtest, export)'
+    )
+    parser_pipeline.add_argument(
+        '--season',
+        type=int,
+        default=config.CURRENT_SEASON,
+        help=f'Season year (default: {config.CURRENT_SEASON})'
+    )
+    parser_pipeline.add_argument(
+        '--week',
+        type=int,
+        required=True,
+        help='Week number'
+    )
+    parser_pipeline.add_argument(
+        '--model-version',
+        type=str,
+        choices=['v1.0', 'v1.2', 'v1.3'],
+        default='v1.3',
+        help='Model version to use (default: v1.3)'
+    )
+    parser_pipeline.add_argument(
+        '--backtest',
+        action='store_true',
+        help='Run backtest for this week (not yet implemented)'
+    )
+    parser_pipeline.add_argument(
+        '--export-predictiontracker',
+        action='store_true',
+        help='Export to PredictionTracker format (not yet implemented)'
+    )
+    parser_pipeline.set_defaults(func=cmd_weekly_pipeline)
 
     return parser
 
