@@ -34,6 +34,7 @@ from ball_knower.io import loaders
 from ball_knower.io import schemas
 from ball_knower import config
 from ball_knower.utils import paths
+from ball_knower.validation import sanity
 from src import models
 
 
@@ -471,6 +472,9 @@ def main():
             args.week,
             args.output
         )
+
+        # Run sanity checks on predictions
+        sanity_results = sanity.run_all_sanity_checks(predictions_df, feature_df)
 
         # Print summary
         print_summary(predictions_df)
