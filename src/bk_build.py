@@ -203,6 +203,35 @@ def cmd_check_weekly_data(args):
 
 
 # ============================================================================
+# SUBCOMMAND: calibrate-v1-3
+# ============================================================================
+
+def cmd_calibrate_v1_3(args):
+    """Generate calibration parameters for v1.3 model."""
+    from src import calibrate_v1_3
+
+    # Convert args to match calibrate_v1_3.main() expectations
+    sys.argv = ['calibrate_v1_3.py']
+
+    if args.backtest_path:
+        sys.argv.extend(['--backtest-path', args.backtest_path])
+
+    if args.start_season:
+        sys.argv.extend(['--start-season', str(args.start_season)])
+
+    if args.end_season:
+        sys.argv.extend(['--end-season', str(args.end_season)])
+
+    if args.output:
+        sys.argv.extend(['--output', args.output])
+
+    if args.edge_bins:
+        sys.argv.extend(['--edge-bins', args.edge_bins])
+
+    return calibrate_v1_3.main()
+
+
+# ============================================================================
 # SUBCOMMAND: weekly-pipeline
 # ============================================================================
 
@@ -439,6 +468,45 @@ Examples:
         help='Week number'
     )
     parser_check.set_defaults(func=cmd_check_weekly_data)
+
+    # ========================================
+    # calibrate-v1-3 subcommand
+    # ========================================
+    parser_calibrate_v1_3 = subparsers.add_parser(
+        'calibrate-v1-3',
+        help='Generate calibration parameters for v1.3 model from backtest results'
+    )
+    parser_calibrate_v1_3.add_argument(
+        '--backtest-path',
+        type=str,
+        default=None,
+        help='Path to existing backtest CSV (if omitted, will run backtest)'
+    )
+    parser_calibrate_v1_3.add_argument(
+        '--start-season',
+        type=int,
+        default=None,
+        help='Start season for calibration (required if --backtest-path not provided)'
+    )
+    parser_calibrate_v1_3.add_argument(
+        '--end-season',
+        type=int,
+        default=None,
+        help='End season for calibration (required if --backtest-path not provided)'
+    )
+    parser_calibrate_v1_3.add_argument(
+        '--output',
+        type=str,
+        default=None,
+        help='Output JSON path (default: output/models/v1_3/calibration_v1_3.json)'
+    )
+    parser_calibrate_v1_3.add_argument(
+        '--edge-bins',
+        type=str,
+        default='0.5,1.0,1.5,2.0,2.5,3.0',
+        help='Comma-separated edge bin thresholds'
+    )
+    parser_calibrate_v1_3.set_defaults(func=cmd_calibrate_v1_3)
 
     # ========================================
     # weekly-pipeline subcommand
