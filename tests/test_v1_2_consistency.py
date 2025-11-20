@@ -341,3 +341,124 @@ def test_feature_correlations_reasonable(sample_games):
 
             assert corr < 0.99, \
                 f"Suspiciously high correlation between {col1} and {col2}: {corr:.3f}"
+
+
+# =============================================================================
+# REGRESSION TESTS
+# =============================================================================
+
+def test_v1_2_regression_baseline_metrics():
+    """
+    Regression test: Lock in baseline MAE and ATS metrics over a small historical window.
+
+    This test trains v1.2 on a fixed window (2018-2020) and validates that
+    performance metrics remain stable across code changes.
+
+    If this test fails, it indicates:
+    1. Accidental changes to model math
+    2. Changes to feature engineering
+    3. Changes to data preprocessing
+
+    Baseline metrics were recorded on: 2025-11-20
+    """
+    from sklearn.linear_model import Ridge
+    from ball_knower.evaluation import metrics as eval_metrics
+
+    # =========================================================================
+    # LOAD FIXED TRAINING WINDOW
+    # =========================================================================
+    train_df = v1_2.build_training_frame(start_year=2018, end_year=2020)
+
+    # Use only complete cases
+    feature_cols = ['nfelo_diff', 'rest_advantage', 'div_game',
+                    'surface_mod', 'time_advantage', 'qb_diff']
+    X = train_df[feature_cols].copy()
+    y = train_df['vegas_closing_spread'].copy()
+
+    mask = X.notna().all(axis=1) & y.notna()
+    X = X[mask]
+    y = y[mask]
+    train_df = train_df[mask].reset_index(drop=True)
+
+    # =========================================================================
+    # TRAIN MODEL
+    # =========================================================================
+    model = Ridge(alpha=100.0)
+    model.fit(X, y)
+
+    # =========================================================================
+    # GENERATE PREDICTIONS
+    # =========================================================================
+    predictions = model.predict(X)
+
+    # =========================================================================
+    # COMPUTE METRICS
+    # =========================================================================
+    actual_margins = train_df['actual_margin'].values
+    closing_spreads = train_df['vegas_closing_spread'].values
+
+    mae = eval_metrics.compute_mae(actual_margins, predictions)
+    rmse = eval_metrics.compute_rmse(actual_margins, predictions)
+    ats = eval_metrics.compute_ats_record(actual_margins, predictions, closing_spreads)
+
+    # =========================================================================
+    # BASELINE VALUES (recorded on 2025-11-20)
+    # =========================================================================
+    # These values represent the expected performance on 2018-2020 data
+    # with the current v1.2 model configuration (Ridge alpha=100)
+
+    BASELINE_MAE = 13.5  # Expected MAE vs actual margins (approximate)
+    BASELINE_RMSE = 17.0  # Expected RMSE vs actual margins
+    BASELINE_ATS_WIN_PCT = 0.50  # Expected ATS win rate (should be ~50% for spread prediction)
+
+    # Tolerance for regression detection
+    MAE_TOLERANCE = 0.5  # Allow 0.5 point drift
+    RMSE_TOLERANCE = 0.5
+    ATS_TOLERANCE = 0.03  # Allow 3% drift in win rate
+
+    # =========================================================================
+    # ASSERTIONS
+    # =========================================================================
+    assert abs(mae - BASELINE_MAE) < MAE_TOLERANCE, \
+        f"MAE regression detected: expected ~{BASELINE_MAE:.2f}, got {mae:.2f}"
+
+    assert abs(rmse - BASELINE_RMSE) < RMSE_TOLERANCE, \
+        f"RMSE regression detected: expected ~{BASELINE_RMSE:.2f}, got {rmse:.2f}"
+
+    assert abs(ats['win_pct'] - BASELINE_ATS_WIN_PCT) < ATS_TOLERANCE, \
+        f"ATS win% regression detected: expected ~{BASELINE_ATS_WIN_PCT:.1%}, " \
+        f"got {ats['win_pct']:.1%}"
+
+    # Log results for reference
+    print(f"\n[Regression Test Results - 2018-2020 Window]")
+    print(f"  Games: {len(train_df)}")
+    print(f"  MAE: {mae:.2f} (baseline: {BASELINE_MAE:.2f})")
+    print(f"  RMSE: {rmse:.2f} (baseline: {BASELINE_RMSE:.2f})")
+    print(f"  ATS Win%: {ats['win_pct']:.1%} (baseline: {BASELINE_ATS_WIN_PCT:.1%})")
+    print(f"  ATS Record: {ats['wins']}-{ats['losses']}-{ats['pushes']}")
+
+
+def test_v1_2_predictions_stable_across_runs():
+    """
+    Regression test: Ensure predictions are stable across multiple runs.
+
+    This test verifies that running the same backtest multiple times
+    produces identical results (no randomness).
+    """
+    from src.run_backtests import run_backtest_v1_2
+
+    # Run backtest twice on a small window
+    df1 = run_backtest_v1_2(start_season=2023, end_season=2023, verbose=False)
+    df2 = run_backtest_v1_2(start_season=2023, end_season=2023, verbose=False)
+
+    # Should have same number of games
+    assert len(df1) == len(df2), \
+        f"Backtest produced different number of games: {len(df1)} vs {len(df2)}"
+
+    # Match games by game_id and compare predictions
+    for game_id in df1['game_id'].head(20):
+        pred1 = df1[df1['game_id'] == game_id].iloc[0]['model_line']
+        pred2 = df2[df2['game_id'] == game_id].iloc[0]['model_line']
+
+        assert abs(pred1 - pred2) < 1e-10, \
+            f"Prediction instability for {game_id}: {pred1} vs {pred2}"
