@@ -522,3 +522,76 @@ def load_all_sources(
         warnings.warn("Cannot create merged_ratings without nfelo power ratings as base", UserWarning)
 
     return result
+
+
+def load_team_week_epa(
+    data_dir: Optional[Union[str, Path]] = None,
+    start_season: Optional[int] = None,
+    end_season: Optional[int] = None
+) -> pd.DataFrame:
+    """
+    Load team-week EPA aggregated statistics.
+
+    This data is produced by aggregate_pbp_to_team_stats.py and contains
+    offensive and defensive EPA metrics aggregated by team and week.
+
+    Args:
+        data_dir: Optional data directory (defaults to repo root)
+        start_season: Optional start season for filtering (inclusive)
+        end_season: Optional end season for filtering (inclusive)
+
+    Returns:
+        DataFrame with columns:
+            - season: NFL season year
+            - week: Week number
+            - team: Team abbreviation (normalized)
+            - off_plays: Offensive plays
+            - off_epa_total: Total offensive EPA
+            - off_success_rate: Offensive success rate
+            - off_epa_per_play: Offensive EPA per play
+            - def_plays: Defensive plays
+            - def_epa_total: Total defensive EPA
+            - def_success_rate: Defensive success rate
+            - def_epa_per_play: Defensive EPA per play
+
+    Raises:
+        FileNotFoundError: If team-week EPA file not found
+    """
+    if data_dir is None:
+        # Default to project root
+        data_dir = Path(__file__).resolve().parents[2]
+    else:
+        data_dir = Path(data_dir)
+
+    # Look for team_week_epa file in data directory
+    team_week_file = data_dir / 'team_week_epa_2013_2024.csv'
+
+    if not team_week_file.exists():
+        # Try alternate location
+        team_week_file = data_dir / 'data' / 'team_week_epa_2013_2024.csv'
+
+    if not team_week_file.exists():
+        raise FileNotFoundError(
+            f"Team-week EPA file not found. Tried: {team_week_file}. "
+            "Generate this file using: python aggregate_pbp_to_team_stats.py"
+        )
+
+    df = pd.read_csv(team_week_file)
+
+    # Normalize team names
+    df = _normalize_team_column(df, team_col="team")
+
+    # Filter by season range if specified
+    if start_season is not None:
+        df = df[df['season'] >= start_season]
+    if end_season is not None:
+        df = df[df['season'] <= end_season]
+
+    # Sort by team, season, week for proper rolling calculations
+    df = df.sort_values(['team', 'season', 'week']).reset_index(drop=True)
+
+    # Validate schema
+    schemas.validate_team_week_epa_df(df)
+
+    return df
+

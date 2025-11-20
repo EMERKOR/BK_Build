@@ -137,6 +137,29 @@ SUBSTACK_WEEKLY_PROJ_SCHEMA = {
     ]
 }
 
+# Team-week EPA aggregated statistics (from team_week_epa_2013_2024.csv)
+TEAM_WEEK_EPA_SCHEMA = {
+    'required_columns': [
+        'season',
+        'week',
+        'team',
+    ],
+    'numeric_columns': [
+        'season',
+        'week',
+    ],
+    'optional_columns': [
+        'off_epa_per_play',    # Offensive EPA per play
+        'def_epa_per_play',    # Defensive EPA per play
+        'off_success_rate',    # Offensive success rate
+        'def_success_rate',    # Defensive success rate
+        'off_epa_total',       # Total offensive EPA
+        'def_epa_total',       # Total defensive EPA
+        'off_plays',           # Number of offensive plays
+        'def_plays',           # Number of defensive plays
+    ]
+}
+
 
 # ============================================================================
 # VALIDATION HELPERS
@@ -210,6 +233,33 @@ def _check_non_empty(
     """
     if len(df) == 0:
         raise ValueError(f"{data_source_name} DataFrame is empty (0 rows)")
+
+
+def _check_optional_columns(
+    df: pd.DataFrame,
+    optional_columns: List[str],
+    data_source_name: str
+) -> None:
+    """
+    Check for optional columns and log warnings if missing.
+
+    Does not raise exceptions - only logs warnings for missing columns.
+
+    Args:
+        df: DataFrame to validate
+        optional_columns: List of optional column names
+        data_source_name: Human-readable name for warning messages
+    """
+    import warnings
+
+    missing_optional = set(optional_columns) - set(df.columns)
+
+    if missing_optional:
+        warnings.warn(
+            f"Optional columns missing in {data_source_name}: {sorted(missing_optional)}. "
+            f"Some features may not be available.",
+            UserWarning
+        )
 
 
 # ============================================================================
@@ -346,3 +396,29 @@ def validate_substack_weekly_proj_df(df: pd.DataFrame) -> None:
     _check_non_empty(df, data_source_name)
     # No strict column requirements for weekly projections
     # as format varies significantly
+
+
+def validate_team_week_epa_df(df: pd.DataFrame) -> None:
+    """
+    Validate team-week EPA aggregated statistics DataFrame.
+
+    Expected source: team_week_epa_2013_2024.csv (produced by aggregate_pbp_to_team_stats.py)
+
+    Required columns: season, week, team
+    Optional columns: EPA metrics (off_epa_per_play, def_epa_per_play, etc.)
+                      and success rates (off_success_rate, def_success_rate)
+
+    If optional columns are missing, a warning is logged but validation passes.
+
+    Args:
+        df: DataFrame to validate
+
+    Raises:
+        ValueError: If validation fails with descriptive message
+    """
+    data_source_name = "team-week EPA"
+
+    _check_non_empty(df, data_source_name)
+    _check_required_columns(df, TEAM_WEEK_EPA_SCHEMA['required_columns'], data_source_name)
+    _check_numeric_columns(df, TEAM_WEEK_EPA_SCHEMA['numeric_columns'], data_source_name)
+    _check_optional_columns(df, TEAM_WEEK_EPA_SCHEMA['optional_columns'], data_source_name)
