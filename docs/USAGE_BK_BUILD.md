@@ -14,12 +14,54 @@ The Ball Knower Build System (`bk_build.py`) provides a unified CLI for:
 ## Installation & Setup
 
 ```bash
-# Ensure all dependencies are installed
+# Install package in editable mode (recommended)
+pip install -e .
+
+# Or install dependencies only
 pip install -r requirements-dev.txt
 
 # Verify the CLI is executable
 python src/bk_build.py --help
 ```
+
+## Quickstart for a Weekly Run
+
+The fastest way to generate predictions for the current week:
+
+**Step 1: Place data files in `data/current_season/`:**
+- `power_ratings_nfelo_2025_week_11.csv`
+- `epa_tiers_nfelo_2025_week_11.csv`
+- `power_ratings_substack_2025_week_11.csv`
+- `weekly_projections_ppg_substack_2025_week_11.csv`
+
+**Step 2: Run the one-shot pipeline:**
+```bash
+python src/bk_build.py weekly-pipeline --week 11
+```
+
+**What it does:**
+1. Validates all data files are present and correctly formatted (`check-weekly-data`)
+2. Generates predictions using the v1.3 model (default)
+3. Saves predictions to `output/predictions/v1_3/predictions_2025_week_11.csv`
+
+**Customize the pipeline:**
+```bash
+# Use a different model version
+python src/bk_build.py weekly-pipeline --week 11 --model-version v1.2
+
+# Run for a different season
+python src/bk_build.py weekly-pipeline --season 2024 --week 18
+
+# Include backtest and export (not yet implemented)
+python src/bk_build.py weekly-pipeline --week 11 --backtest --export-predictiontracker
+```
+
+**Validate data only (without predictions):**
+```bash
+python src/bk_build.py check-weekly-data --week 11
+```
+
+For detailed documentation of individual commands, see sections below.
 
 ## Model Versions
 
