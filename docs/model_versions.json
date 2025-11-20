@@ -76,10 +76,25 @@
       "model_file": "output/models/v1_3/model.pkl",
       "features_file": "output/models/v1_3/features.json",
       "metrics_file": "output/models/v1_3/metrics.json",
+      "calibration_file": "output/models/v1_3/calibration_v1_3.json",
       "intended_use": "edge detection with momentum/form indicators",
       "training_period": "2013-2024",
       "calibration_method": "Ridge regression (alpha=1.0) trained to predict Vegas closing line",
-      "notes": "Training data starts from 2013 due to team-week EPA availability. Form features capture recent offensive/defensive efficiency trends beyond simple power ratings."
+      "calibration_window": "TBD (run: python src/bk_build.py calibrate-v1-3 --start-season 2013 --end-season 2018)",
+      "backtest_window": "TBD (run: python src/bk_build.py backtest --model v1.3 --start-season 2019 --end-season 2024)",
+      "performance_metrics": {
+        "calibration_mae": "TBD",
+        "calibration_rmse": "TBD",
+        "backtest_mae_2019_2024": "TBD",
+        "backtest_rmse_2019_2024": "TBD",
+        "comparison_vs_v1_2": "TBD - Run backtests for both v1.2 and v1.3 on 2019-2024 to compare"
+      },
+      "cli_usage": {
+        "train": "python src/bk_build.py train-v1-3",
+        "calibrate": "python src/bk_build.py calibrate-v1-3 --start-season 2013 --end-season 2018",
+        "backtest": "python src/bk_build.py backtest --model v1.3 --start-season 2019 --end-season 2024 --edge-threshold 0.5"
+      },
+      "notes": "Training data starts from 2013 due to team-week EPA availability. Form features capture recent offensive/defensive efficiency trends beyond simple power ratings. Fully integrated into backtest and calibration pipelines as of 2025-11-20."
     }
   ],
   "metadata": {

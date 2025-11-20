@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **v1.3 Model Calibration Pipeline**:
+  - `ball_knower/evaluation/calibration_v1_3.py` - Calibration utilities for computing bias, MAE, RMSE, and edge-bin ATS rates
+  - `src/calibrate_v1_3.py` - CLI script to generate calibration parameters from backtest results
+  - `bk_build calibrate-v1-3` subcommand for streamlined calibration workflow
+  - Unit tests for v1.3 calibration utilities (`tests/test_calibration_v1_3.py`)
+- **v1.3 Backtest Integration**:
+  - v1.3 support in `src/run_backtests.py` - loads trained v1.3 model and generates backtest results
+  - v1.3 support in `bk_build backtest` CLI subcommand
+  - Validation to reject v1.3 backtests before 2013 (EPA data availability constraint)
+  - Smoke tests for v1.3 backtest CLI integration (`tests/test_backtest_cli.py`)
 - Weekly prediction sanity validation module (`ball_knower/validation/sanity.py`)
 - Diagnostic and fallback handling for missing weekly data sources
 - v1.2 evaluation notebook (`notebooks/v1_2_evaluation.ipynb`)
@@ -19,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Enhanced `src/run_weekly_predictions.py` with data diagnostics and sanity checks
 - Improved error handling and fallback logic for missing datasets
+- Updated `docs/model_versions.json` with v1.3 calibration and backtest CLI usage
 
 ## [2.0.0] - 2025-11-20
 
