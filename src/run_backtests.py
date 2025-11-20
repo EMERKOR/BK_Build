@@ -23,7 +23,7 @@ sys.path.insert(0, str(project_root))
 
 from ball_knower import config
 from ball_knower.features import engineering as features
-from ball_knower.utils import paths
+from ball_knower.utils import paths, version
 
 
 # ============================================================================
@@ -260,6 +260,9 @@ def main():
     )
 
     args = parser.parse_args()
+
+    # Print version banner
+    version.print_version_banner("run_backtests", model_version=args.model)
 
     # Validate season range
     if args.start_season > args.end_season:

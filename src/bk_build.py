@@ -20,7 +20,7 @@ project_root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(project_root))
 
 from ball_knower import config
-from ball_knower.utils import paths
+from ball_knower.utils import paths, version
 
 
 # ============================================================================
@@ -29,9 +29,7 @@ from ball_knower.utils import paths
 
 def cmd_train_v1_2(args):
     """Train v1.2 model on historical data."""
-    print(f"\n{'='*80}")
-    print("TRAIN V1.2 MODEL")
-    print(f"{'='*80}\n")
+    version.print_version_banner("train_v1_2", model_version="v1.2")
 
     print(f"Training v1.2 model on seasons {args.start_season}-{args.end_season}...")
     print("NOTE: v1.2 training requires nfelo historical data and feature engineering.")
@@ -56,9 +54,7 @@ def cmd_backtest(args):
     # Import run_backtests module
     from src import run_backtests
 
-    print(f"\n{'='*80}")
-    print(f"BACKTEST {args.model.upper()} MODEL")
-    print(f"{'='*80}\n")
+    version.print_version_banner("backtest", model_version=args.model)
 
     print(f"Backtesting {args.model} model...")
     print(f"  Seasons: {args.start_season}-{args.end_season}")
@@ -116,9 +112,7 @@ def cmd_predict(args):
     # Import run_weekly_predictions module
     from src import run_weekly_predictions
 
-    print(f"\n{'='*80}")
-    print(f"GENERATE WEEKLY PREDICTIONS - {args.model.upper()}")
-    print(f"{'='*80}\n")
+    version.print_version_banner("predict", model_version=args.model)
 
     print(f"Generating predictions for {args.season} Week {args.week}...")
     print(f"  Model: {args.model}")
@@ -158,9 +152,7 @@ def cmd_predict(args):
 
 def cmd_export_predictiontracker(args):
     """Export predictions to PredictionTracker format."""
-    print(f"\n{'='*80}")
-    print("EXPORT TO PREDICTIONTRACKER FORMAT")
-    print(f"{'='*80}\n")
+    version.print_version_banner("export_predictiontracker", model_version=args.model)
 
     print(f"Exporting {args.model} predictions to PredictionTracker format...")
     print(f"  Seasons: {args.start_season}-{args.end_season}")

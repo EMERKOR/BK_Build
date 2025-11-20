@@ -33,7 +33,7 @@ sys.path.insert(0, str(project_root))
 from ball_knower.io import loaders
 from ball_knower.io import schemas
 from ball_knower import config
-from ball_knower.utils import paths
+from ball_knower.utils import paths, version
 from ball_knower.validation import sanity
 from src import models
 
@@ -444,12 +444,11 @@ def main():
     # Parse arguments
     args = parse_args()
 
-    print("\n" + "="*80)
-    print(f"BALL KNOWER - WEEKLY PREDICTIONS")
-    print("="*80)
+    # Print version banner
+    version.print_version_banner("weekly_predictions", model_version=args.model)
+
     print(f"\nSeason: {args.season}")
     print(f"Week: {args.week}")
-    print(f"Model: {args.model}")
 
     try:
         # Load data
