@@ -23,6 +23,8 @@ import argparse
 from pathlib import Path
 import pandas as pd
 import numpy as np
+import json
+import pickle
 
 # Add project root to path
 project_root = Path(__file__).resolve().parents[1]
@@ -71,7 +73,7 @@ Examples:
     parser.add_argument(
         '--model',
         type=str,
-        choices=['v1.0', 'v1.1'],
+        choices=['v1.0', 'v1.1', 'v1.2'],
         default='v1.1',
         help='Model version to use (default: v1.1 - EnhancedSpreadModel with calibrated weights)'
     )
@@ -158,67 +160,134 @@ def generate_predictions(feature_df, model_version='v1.1'):
 
     Args:
         feature_df (pd.DataFrame): Feature matrix with home/away features
-        model_version (str): Model version ('v1.0' or 'v1.1')
+        model_version (str): Model version ('v1.0', 'v1.1', or 'v1.2')
 
     Returns:
         list: Prediction dictionaries
     """
     print(f"\n[3/4] Generating predictions with {model_version} model...")
 
-    # Instantiate model (will automatically load calibrated weights)
-    if model_version == 'v1.0':
-        model = models.DeterministicSpreadModel(use_calibrated=True)
-        model_name = 'v1.0'
+    # Load or instantiate model based on version
+    if model_version == 'v1.2':
+        # Load trained v1.2 model artifacts
+        model_dir = config.OUTPUT_DIR / 'models' / 'v1_2'
+
+        if not model_dir.exists():
+            raise FileNotFoundError(
+                f"v1.2 model not found at {model_dir}. "
+                "Please run 'python src/train_v1_2.py' first to train the model."
+            )
+
+        # Load correction model (Ridge)
+        with open(model_dir / 'correction_model.pkl', 'rb') as f:
+            correction_model = pickle.load(f)
+
+        # Load feature columns
+        with open(model_dir / 'feature_columns.json', 'r') as f:
+            ml_feature_cols = json.load(f)
+
+        # Load base model config
+        with open(model_dir / 'base_model_config.json', 'r') as f:
+            base_config = json.load(f)
+
+        print(f"  ✓ Loaded v1.2 model from {model_dir}")
+
+        # Generate predictions using v1.2 model
+        predictions = []
+
+        for idx, game in feature_df.iterrows():
+            # Compute base prediction (v1.1 logic)
+            base_pred = (
+                game.get('nfelo_diff', 0) * 0.04 +
+                game.get('rest_advantage', 0) * 0.3 +
+                game.get('qb_diff', 0) * 0.1
+            )
+
+            # Compute ML correction
+            game_features = np.array([[
+                game.get(col, 0) for col in ml_feature_cols
+            ]])
+            correction = correction_model.predict(game_features)[0]
+
+            # Final prediction
+            bk_line = base_pred + correction
+
+            # Calculate edge (only if vegas_line is available)
+            vegas_line = game.get('vegas_line')
+            if pd.notna(vegas_line):
+                edge = bk_line - vegas_line
+            else:
+                edge = np.nan
+
+            # Create game_id
+            game_id = f"{game['season']}_{game['week']:02d}_{game['team_away']}_{game['team_home']}"
+
+            predictions.append({
+                'game_id': game_id,
+                'season': game['season'],
+                'week': game['week'],
+                'away_team': game['team_away'],
+                'home_team': game['team_home'],
+                'bk_line': round(bk_line, 1),
+                'vegas_line': vegas_line if pd.notna(vegas_line) else None,
+                'edge': round(edge, 1) if pd.notna(edge) else None
+            })
+
     else:
-        model = models.EnhancedSpreadModel(use_calibrated=True)
-        model_name = 'v1.1'
-
-    predictions = []
-
-    for idx, game in feature_df.iterrows():
-        # Extract home team features
-        home_features = {
-            'nfelo': game.get('nfelo_home'),
-            'epa_margin': game.get('epa_margin_home'),
-            'Ovr.': game.get('Ovr._home'),
-            'rest_days': game.get('rest_days_home'),
-            'win_rate_L5': game.get('win_rate_L5_home'),
-            'QB Adj': game.get('QB Adj_home')
-        }
-
-        # Extract away team features
-        away_features = {
-            'nfelo': game.get('nfelo_away'),
-            'epa_margin': game.get('epa_margin_away'),
-            'Ovr.': game.get('Ovr._away'),
-            'rest_days': game.get('rest_days_away'),
-            'win_rate_L5': game.get('win_rate_L5_away'),
-            'QB Adj': game.get('QB Adj_away')
-        }
-
-        # Generate prediction
-        bk_line = model.predict(home_features, away_features)
-
-        # Calculate edge (only if vegas_line is available)
-        vegas_line = game.get('vegas_line')
-        if pd.notna(vegas_line):
-            edge = bk_line - vegas_line
+        # v1.0 or v1.1 models (existing logic)
+        if model_version == 'v1.0':
+            model = models.DeterministicSpreadModel(use_calibrated=True)
+            model_name = 'v1.0'
         else:
-            edge = np.nan
+            model = models.EnhancedSpreadModel(use_calibrated=True)
+            model_name = 'v1.1'
 
-        # Create game_id
-        game_id = f"{game['season']}_{game['week']:02d}_{game['team_away']}_{game['team_home']}"
+        predictions = []
 
-        predictions.append({
-            'game_id': game_id,
-            'season': game['season'],
-            'week': game['week'],
-            'away_team': game['team_away'],
-            'home_team': game['team_home'],
-            'bk_line': round(bk_line, 1),
-            'vegas_line': vegas_line if pd.notna(vegas_line) else None,
-            'edge': round(edge, 1) if pd.notna(edge) else None
-        })
+        for idx, game in feature_df.iterrows():
+            # Extract home team features
+            home_features = {
+                'nfelo': game.get('nfelo_home'),
+                'epa_margin': game.get('epa_margin_home'),
+                'Ovr.': game.get('Ovr._home'),
+                'rest_days': game.get('rest_days_home'),
+                'win_rate_L5': game.get('win_rate_L5_home'),
+                'QB Adj': game.get('QB Adj_home')
+            }
+
+            # Extract away team features
+            away_features = {
+                'nfelo': game.get('nfelo_away'),
+                'epa_margin': game.get('epa_margin_away'),
+                'Ovr.': game.get('Ovr._away'),
+                'rest_days': game.get('rest_days_away'),
+                'win_rate_L5': game.get('win_rate_L5_away'),
+                'QB Adj': game.get('QB Adj_away')
+            }
+
+            # Generate prediction
+            bk_line = model.predict(home_features, away_features)
+
+            # Calculate edge (only if vegas_line is available)
+            vegas_line = game.get('vegas_line')
+            if pd.notna(vegas_line):
+                edge = bk_line - vegas_line
+            else:
+                edge = np.nan
+
+            # Create game_id
+            game_id = f"{game['season']}_{game['week']:02d}_{game['team_away']}_{game['team_home']}"
+
+            predictions.append({
+                'game_id': game_id,
+                'season': game['season'],
+                'week': game['week'],
+                'away_team': game['team_away'],
+                'home_team': game['team_home'],
+                'bk_line': round(bk_line, 1),
+                'vegas_line': vegas_line if pd.notna(vegas_line) else None,
+                'edge': round(edge, 1) if pd.notna(edge) else None
+            })
 
     print(f"  Generated {len(predictions)} predictions")
 
