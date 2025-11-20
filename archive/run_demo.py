@@ -14,7 +14,7 @@ sys.path.insert(0, str(project_root))
 
 # Import Ball Knower modules - use unified loader
 from ball_knower.io import loaders
-from src import config, team_mapping, models
+from ball_knower import config, team_mapping, models
 
 # Display settings
 pd.set_option('display.max_columns', None)

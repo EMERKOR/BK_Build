@@ -21,8 +21,9 @@ import json
 project_root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(project_root))
 
-from src import config
+from ball_knower import config
 from ball_knower.features import engineering as features
+from ball_knower.utils import paths, version
 
 
 # ============================================================================
@@ -125,12 +126,12 @@ def run_backtest_v1_2(
         DataFrame with one row per season containing metrics
     """
     # Load trained v1.2 model parameters
-    model_file = config.OUTPUT_DIR / 'ball_knower_v1_2_model.json'
+    model_file = paths.get_model_artifact_path("v1.2", "ball_knower_v1_2_model.json")
 
     if not model_file.exists():
         raise FileNotFoundError(
             f"v1.2 model file not found at {model_file}. "
-            "Run ball_knower_v1_2.py to train the model first."
+            "Train the v1.2 model first."
         )
 
     with open(model_file, 'r') as f:
@@ -260,6 +261,9 @@ def main():
 
     args = parser.parse_args()
 
+    # Print version banner
+    version.print_version_banner("run_backtests", model_version=args.model)
+
     # Validate season range
     if args.start_season > args.end_season:
         print(f"Error: start-season ({args.start_season}) cannot be greater than "
@@ -286,15 +290,15 @@ def main():
 
     # Determine output path
     if args.output is None:
-        output_path = (
-            config.OUTPUT_DIR /
-            f"backtest_{args.model.replace('.', '_')}_{args.start_season}_{args.end_season}.csv"
+        output_path = paths.get_backtest_results_path(
+            args.model,
+            args.start_season,
+            args.end_season
         )
     else:
         output_path = Path(args.output)
-
-    # Ensure output directory exists
-    output_path.parent.mkdir(parents=True, exist_ok=True)
+        # Ensure output directory exists
+        output_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Save results
     results.to_csv(output_path, index=False)

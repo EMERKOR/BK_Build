@@ -23,6 +23,7 @@ import argparse
 from pathlib import Path
 import pandas as pd
 import numpy as np
+import warnings
 
 # Add project root to path
 project_root = Path(__file__).resolve().parents[1]
@@ -30,7 +31,11 @@ sys.path.insert(0, str(project_root))
 
 # Import Ball Knower modules
 from ball_knower.io import loaders
-from src import config, models
+from ball_knower.io import schemas
+from ball_knower import config
+from ball_knower.utils import paths, version
+from ball_knower.validation import sanity
+from src import models
 
 
 def parse_args():
@@ -77,6 +82,98 @@ Examples:
     return parser.parse_args()
 
 
+def diagnose_weekly_data(all_data, season, week):
+    """
+    Diagnose loaded weekly data and report any issues.
+
+    Checks for missing datasets, invalid schemas, and missing features.
+    Prints warnings but does not raise exceptions.
+
+    Args:
+        all_data (dict): Dictionary of loaded data sources
+        season (int): Season year
+        week (int): Week number
+
+    Returns:
+        dict: Status report with missing/disabled features
+    """
+    print(f"\n[Diagnostics] Validating weekly data for {season} Week {week}...")
+
+    status = {
+        'missing_datasets': [],
+        'disabled_features': [],
+        'warnings': []
+    }
+
+    # Check for required datasets
+    required_datasets = {
+        'power_ratings_nfelo': 'nfelo power ratings',
+        'power_ratings_substack': 'Substack power ratings',
+        'epa_tiers_nfelo': 'nfelo EPA tiers',
+        'qb_epa_substack': 'Substack QB EPA'
+    }
+
+    for key, name in required_datasets.items():
+        if key not in all_data or all_data[key] is None or len(all_data[key]) == 0:
+            status['missing_datasets'].append(name)
+            warnings.warn(f"Missing dataset: {name}. Related features will be disabled or defaulted.", UserWarning)
+
+    # Validate schemas for present datasets
+    if 'power_ratings_nfelo' in all_data and len(all_data['power_ratings_nfelo']) > 0:
+        try:
+            schemas.validate_nfelo_power_ratings_df(all_data['power_ratings_nfelo'])
+        except ValueError as e:
+            status['warnings'].append(f"nfelo power ratings schema issue: {e}")
+            warnings.warn(f"nfelo power ratings schema validation failed: {e}", UserWarning)
+
+    if 'power_ratings_substack' in all_data and len(all_data['power_ratings_substack']) > 0:
+        try:
+            schemas.validate_substack_power_ratings_df(all_data['power_ratings_substack'])
+        except ValueError as e:
+            status['warnings'].append(f"Substack power ratings schema issue: {e}")
+            warnings.warn(f"Substack power ratings schema validation failed: {e}", UserWarning)
+
+    if 'epa_tiers_nfelo' in all_data and len(all_data['epa_tiers_nfelo']) > 0:
+        try:
+            schemas.validate_nfelo_epa_tiers_df(all_data['epa_tiers_nfelo'])
+        except ValueError as e:
+            status['warnings'].append(f"nfelo EPA tiers schema issue: {e}")
+            warnings.warn(f"nfelo EPA tiers schema validation failed: {e}", UserWarning)
+
+    if 'qb_epa_substack' in all_data and len(all_data['qb_epa_substack']) > 0:
+        try:
+            schemas.validate_substack_qb_epa_df(all_data['qb_epa_substack'])
+        except ValueError as e:
+            status['warnings'].append(f"Substack QB EPA schema issue: {e}")
+            warnings.warn(f"Substack QB EPA schema validation failed: {e}", UserWarning)
+
+    # Report feature implications
+    if 'power_ratings_substack' in status['missing_datasets']:
+        status['disabled_features'].append('substack_ovr_diff (will default to 0)')
+
+    if 'qb_epa_substack' in status['missing_datasets']:
+        status['disabled_features'].append('qb_adj_diff (will default to 0)')
+
+    if 'epa_tiers_nfelo' in status['missing_datasets']:
+        status['disabled_features'].append('epa_margin (will default to 0)')
+
+    # Print summary
+    if status['missing_datasets']:
+        print(f"  ⚠ Missing {len(status['missing_datasets'])} dataset(s):")
+        for ds in status['missing_datasets']:
+            print(f"    - {ds}")
+
+    if status['disabled_features']:
+        print(f"  ⚠ Disabled features (will use defaults):")
+        for feature in status['disabled_features']:
+            print(f"    - {feature}")
+
+    if not status['missing_datasets'] and not status['warnings']:
+        print("  ✓ All datasets loaded successfully")
+
+    return status
+
+
 def load_weekly_data(season, week):
     """
     Load all required data for the given season and week.
@@ -86,19 +183,37 @@ def load_weekly_data(season, week):
         week (int): Week number
 
     Returns:
-        tuple: (team_ratings, matchups) DataFrames
+        tuple: (team_ratings, matchups, status) - DataFrames and diagnostic status
     """
     print(f"\n[1/4] Loading data for {season} Week {week}...")
 
-    # Load all data sources using unified loaders
-    all_data = loaders.load_all_sources(season=season, week=week)
+    # Load all data sources using unified loaders with warnings suppressed temporarily
+    with warnings.catch_warnings(record=True):
+        warnings.simplefilter("always")
+        all_data = loaders.load_all_sources(season=season, week=week)
+
+    # Run diagnostics
+    status = diagnose_weekly_data(all_data, season, week)
 
     # Get merged team ratings
-    team_ratings = all_data['merged_ratings']
-    print(f"  Loaded ratings for {len(team_ratings)} teams")
+    if 'merged_ratings' in all_data:
+        team_ratings = all_data['merged_ratings']
+        print(f"  Loaded ratings for {len(team_ratings)} teams")
+    else:
+        # Fallback: If merge failed, try to construct minimal ratings from nfelo only
+        if 'power_ratings_nfelo' in all_data and len(all_data['power_ratings_nfelo']) > 0:
+            team_ratings = all_data['power_ratings_nfelo'].copy()
+            warnings.warn("Using nfelo power ratings only (merge failed). Features will be limited.", UserWarning)
+            print(f"  ⚠ Using limited ratings for {len(team_ratings)} teams")
+        else:
+            raise RuntimeError("Cannot proceed: No team ratings data available (neither nfelo nor merged)")
 
     # Load weekly projections to get matchups
-    weekly_projections = loaders.load_weekly_projections_ppg("substack", season=season, week=week)
+    try:
+        weekly_projections = loaders.load_weekly_projections_ppg("substack", season=season, week=week)
+    except FileNotFoundError:
+        warnings.warn("Weekly projections not found. Cannot determine matchups.", UserWarning)
+        raise RuntimeError("Cannot proceed: Weekly projections (matchups) are required")
 
     # Parse matchups
     if 'team_away' in weekly_projections.columns and 'team_home' in weekly_projections.columns:
@@ -124,7 +239,7 @@ def load_weekly_data(season, week):
 
     print(f"  Found {len(matchups)} scheduled games")
 
-    return team_ratings, matchups
+    return team_ratings, matchups, status
 
 
 def build_feature_matrix(matchups, team_ratings):
@@ -261,9 +376,8 @@ def save_predictions(predictions, season, week, output_path=None):
 
     # Determine output path
     if output_path is None:
-        output_dir = config.OUTPUT_DIR
-        output_dir.mkdir(parents=True, exist_ok=True)
-        output_file = output_dir / f"predictions_{season}_week_{week}.csv"
+        # Use centralized path helper - defaults to output/ directory
+        output_file = paths.get_output_dir() / f"predictions_{season}_week_{week}.csv"
     else:
         output_file = Path(output_path)
         output_file.parent.mkdir(parents=True, exist_ok=True)
@@ -330,16 +444,15 @@ def main():
     # Parse arguments
     args = parse_args()
 
-    print("\n" + "="*80)
-    print(f"BALL KNOWER - WEEKLY PREDICTIONS")
-    print("="*80)
+    # Print version banner
+    version.print_version_banner("weekly_predictions", model_version=args.model)
+
     print(f"\nSeason: {args.season}")
     print(f"Week: {args.week}")
-    print(f"Model: {args.model}")
 
     try:
         # Load data
-        team_ratings, matchups = load_weekly_data(args.season, args.week)
+        team_ratings, matchups, status = load_weekly_data(args.season, args.week)
 
         # Add season/week to matchups for feature matrix
         matchups['season'] = args.season
@@ -358,6 +471,9 @@ def main():
             args.week,
             args.output
         )
+
+        # Run sanity checks on predictions
+        sanity_results = sanity.run_all_sanity_checks(predictions_df, feature_df)
 
         # Print summary
         print_summary(predictions_df)

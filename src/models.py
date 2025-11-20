@@ -19,7 +19,8 @@ from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
-from .config import HOME_FIELD_ADVANTAGE, OUTPUT_DIR
+from ball_knower.config import HOME_FIELD_ADVANTAGE
+from ball_knower.utils import paths
 
 
 # ============================================================================
@@ -59,7 +60,7 @@ def load_calibrated_weights(weights_file: Path = None) -> dict:
         }
     """
     if weights_file is None:
-        weights_file = OUTPUT_DIR / "calibrated_weights_v1.json"
+        weights_file = paths.get_output_dir() / "calibrated_weights_v1.json"
 
     # Try to load calibrated weights
     if weights_file.exists():

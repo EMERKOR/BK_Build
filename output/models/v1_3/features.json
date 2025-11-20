@@ -1,0 +1,15 @@
+{
+  "features": [
+    "nfelo_diff",
+    "rest_advantage",
+    "div_game",
+    "surface_mod",
+    "time_advantage",
+    "qb_diff",
+    "offense_form_epa_diff",
+    "offense_form_success_diff",
+    "defense_form_epa_diff",
+    "defense_form_success_diff"
+  ],
+  "n_features": 10
+}

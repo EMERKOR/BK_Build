@@ -20,8 +20,47 @@ Build a reliable NFL spread prediction system that:
 - Leak-free feature engineering framework
 - v1.0 deterministic spread model
 - v1.2 ML correction layer
+- v1.3 team form features
 - Backtest and ROI analysis functions
+- One-shot weekly pipeline for automated predictions
 - Demo notebook with Week 11, 2025 predictions
+
+## Quickstart for a Weekly Run
+
+**Prerequisites:**
+1. Install the package in editable mode:
+   ```bash
+   pip install -e .
+   ```
+
+2. Place weekly data files in `data/current_season/`:
+   - `power_ratings_nfelo_2025_week_11.csv`
+   - `epa_tiers_nfelo_2025_week_11.csv`
+   - `power_ratings_substack_2025_week_11.csv`
+   - `weekly_projections_ppg_substack_2025_week_11.csv`
+
+**Run the weekly pipeline:**
+```bash
+python src/bk_build.py weekly-pipeline --week 11
+```
+
+This will:
+1. Validate all data files are present and correctly formatted
+2. Generate predictions using the v1.3 model (default)
+3. Save predictions to `output/predictions/v1_3/predictions_2025_week_11.csv`
+
+**Optional flags:**
+- `--model-version v1.2` - Use a different model version
+- `--season 2024` - Run for a different season
+- `--backtest` - Run single-week backtest (not yet implemented)
+- `--export-predictiontracker` - Export to PredictionTracker format (not yet implemented)
+
+**Validate data only:**
+```bash
+python src/bk_build.py check-weekly-data --week 11
+```
+
+See `docs/USAGE_BK_BUILD.md` for complete CLI documentation.
 
 ## Architecture at a Glance
 

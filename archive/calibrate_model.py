@@ -17,7 +17,7 @@ from scipy.optimize import minimize
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
-from src import config, data_loader
+from ball_knower import config, data_loader
 
 print("\n" + "="*80)
 print("CALIBRATING BALL KNOWER v1.0 MODEL")

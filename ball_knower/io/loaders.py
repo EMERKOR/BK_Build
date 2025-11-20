@@ -32,6 +32,9 @@ from typing import Dict, Optional, Union
 import sys
 import importlib.util
 
+# Import schema validators
+from ball_knower.io import schemas
+
 # Import team normalization function directly (avoid importing models.py dependencies via src/__init__.py)
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(_PROJECT_ROOT) not in sys.path:
@@ -187,7 +190,15 @@ def load_power_ratings(
         first_col = df.columns[0]
         df = df.rename(columns={first_col: 'team'})
 
-    return _normalize_team_column(df, team_col="team")
+    df = _normalize_team_column(df, team_col="team")
+
+    # Validate schema based on provider
+    if provider == "nfelo":
+        schemas.validate_nfelo_power_ratings_df(df)
+    elif provider == "substack":
+        schemas.validate_substack_power_ratings_df(df)
+
+    return df
 
 
 def load_epa_tiers(
@@ -218,7 +229,13 @@ def load_epa_tiers(
     if 'Team' in df.columns:
         df = df.rename(columns={'Team': 'team'})
 
-    return _normalize_team_column(df, team_col="team")
+    df = _normalize_team_column(df, team_col="team")
+
+    # Validate schema - nfelo EPA tiers only (substack doesn't have this category)
+    if provider == "nfelo":
+        schemas.validate_nfelo_epa_tiers_df(df)
+
+    return df
 
 
 def load_strength_of_schedule(
@@ -249,7 +266,13 @@ def load_strength_of_schedule(
     if 'Team' in df.columns:
         df = df.rename(columns={'Team': 'team'})
 
-    return _normalize_team_column(df, team_col="team")
+    df = _normalize_team_column(df, team_col="team")
+
+    # Validate schema - nfelo SOS only (substack doesn't have this category)
+    if provider == "nfelo":
+        schemas.validate_nfelo_sos_df(df)
+
+    return df
 
 
 def load_qb_epa(
@@ -294,7 +317,13 @@ def load_qb_epa(
         first_col = df.columns[0]
         df = df.rename(columns={first_col: 'team'})
 
-    return _normalize_team_column(df, team_col="team")
+    df = _normalize_team_column(df, team_col="team")
+
+    # Validate schema - primarily Substack QB EPA
+    if provider == "substack":
+        schemas.validate_substack_qb_epa_df(df)
+
+    return df
 
 
 def load_weekly_projections_ppg(
@@ -333,12 +362,17 @@ def load_weekly_projections_ppg(
     # Individual providers can handle this differently
     if 'Team' in df.columns:
         df = df.rename(columns={'Team': 'team'})
-        return _normalize_team_column(df, team_col="team")
+        df = _normalize_team_column(df, team_col="team")
     else:
         # Return as-is for matchup-based projections
         # Add a dummy 'team' column to avoid errors
         df['team'] = None
-        return df
+
+    # Validate schema - primarily Substack weekly projections
+    if provider == "substack":
+        schemas.validate_substack_weekly_proj_df(df)
+
+    return df
 
 
 def merge_team_ratings(
@@ -488,3 +522,76 @@ def load_all_sources(
         warnings.warn("Cannot create merged_ratings without nfelo power ratings as base", UserWarning)
 
     return result
+
+
+def load_team_week_epa(
+    data_dir: Optional[Union[str, Path]] = None,
+    start_season: Optional[int] = None,
+    end_season: Optional[int] = None
+) -> pd.DataFrame:
+    """
+    Load team-week EPA aggregated statistics.
+
+    This data is produced by aggregate_pbp_to_team_stats.py and contains
+    offensive and defensive EPA metrics aggregated by team and week.
+
+    Args:
+        data_dir: Optional data directory (defaults to repo root)
+        start_season: Optional start season for filtering (inclusive)
+        end_season: Optional end season for filtering (inclusive)
+
+    Returns:
+        DataFrame with columns:
+            - season: NFL season year
+            - week: Week number
+            - team: Team abbreviation (normalized)
+            - off_plays: Offensive plays
+            - off_epa_total: Total offensive EPA
+            - off_success_rate: Offensive success rate
+            - off_epa_per_play: Offensive EPA per play
+            - def_plays: Defensive plays
+            - def_epa_total: Total defensive EPA
+            - def_success_rate: Defensive success rate
+            - def_epa_per_play: Defensive EPA per play
+
+    Raises:
+        FileNotFoundError: If team-week EPA file not found
+    """
+    if data_dir is None:
+        # Default to project root
+        data_dir = Path(__file__).resolve().parents[2]
+    else:
+        data_dir = Path(data_dir)
+
+    # Look for team_week_epa file in data directory
+    team_week_file = data_dir / 'team_week_epa_2013_2024.csv'
+
+    if not team_week_file.exists():
+        # Try alternate location
+        team_week_file = data_dir / 'data' / 'team_week_epa_2013_2024.csv'
+
+    if not team_week_file.exists():
+        raise FileNotFoundError(
+            f"Team-week EPA file not found. Tried: {team_week_file}. "
+            "Generate this file using: python aggregate_pbp_to_team_stats.py"
+        )
+
+    df = pd.read_csv(team_week_file)
+
+    # Normalize team names
+    df = _normalize_team_column(df, team_col="team")
+
+    # Filter by season range if specified
+    if start_season is not None:
+        df = df[df['season'] >= start_season]
+    if end_season is not None:
+        df = df[df['season'] <= end_season]
+
+    # Sort by team, season, week for proper rolling calculations
+    df = df.sort_values(['team', 'season', 'week']).reset_index(drop=True)
+
+    # Validate schema
+    schemas.validate_team_week_epa_df(df)
+
+    return df
+

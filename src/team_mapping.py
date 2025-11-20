@@ -96,9 +96,9 @@ TEAM_NAME_MAPPING = {
     'sdg': 'LAC', 'lac': 'LAC',
 
     # Los Angeles Rams (formerly St. Louis)
-    'LAR': 'LAR', 'STL': 'LAR', 'LA Rams': 'LAR', 'Los Angeles Rams': 'LAR',
+    'LAR': 'LAR', 'LA': 'LAR', 'STL': 'LAR', 'LA Rams': 'LAR', 'Los Angeles Rams': 'LAR',
     'St. Louis Rams': 'LAR', 'St Louis Rams': 'LAR', 'Rams': 'LAR',
-    'ram': 'LAR', 'lar': 'LAR', 'stl': 'LAR',
+    'ram': 'LAR', 'lar': 'LAR', 'stl': 'LAR', 'la': 'LAR',
 
     # Miami Dolphins
     'MIA': 'MIA', 'Miami': 'MIA', 'Dolphins': 'MIA', 'Miami Dolphins': 'MIA',

@@ -98,15 +98,22 @@ def build_training_frame(
     # Target: Vegas closing spread
     df['vegas_closing_spread'] = df['home_line_close']
 
-    # Actual outcomes
-    df['home_score'] = df['home_score'].fillna(0)
-    df['away_score'] = df['away_score'].fillna(0)
-    df['actual_margin'] = df['home_score'] - df['away_score']
+    # Actual outcomes (if available)
+    # Note: nfelo historical data may not include scores
+    if 'home_score' in df.columns and 'away_score' in df.columns:
+        df['home_score'] = df['home_score'].fillna(0)
+        df['away_score'] = df['away_score'].fillna(0)
+        df['actual_margin'] = df['home_score'] - df['away_score']
+    else:
+        # Scores not available in data source
+        df['home_score'] = np.nan
+        df['away_score'] = np.nan
+        df['actual_margin'] = np.nan
 
     # Intentionally unused columns (for leak detection)
-    df['home_points'] = df['home_score']
-    df['away_points'] = df['away_score']
-    df['home_margin'] = df['actual_margin']
+    df['home_points'] = df.get('home_score', np.nan)
+    df['away_points'] = df.get('away_score', np.nan)
+    df['home_margin'] = df.get('actual_margin', np.nan)
 
     # Remove rows with NaN in critical feature columns
     feature_cols = [
