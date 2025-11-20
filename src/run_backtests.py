@@ -23,6 +23,7 @@ sys.path.insert(0, str(project_root))
 
 from src import config
 from ball_knower.features import engineering as features
+from ball_knower.evaluation import metrics as eval_metrics
 
 
 # ============================================================================
@@ -32,7 +33,8 @@ from ball_knower.features import engineering as features
 def run_backtest_v1_0(
     start_season: int,
     end_season: int,
-    edge_threshold: float = 0.0
+    edge_threshold: float = 0.0,
+    verbose: bool = True
 ) -> pd.DataFrame:
     """
     Run backtest for v1.0 model across specified seasons.
@@ -41,17 +43,10 @@ def run_backtest_v1_0(
         start_season: Start season year
         end_season: End season year
         edge_threshold: Minimum edge threshold for "betting"
+        verbose: Print summary statistics
 
     Returns:
-        DataFrame with one row per season containing:
-            - season
-            - model (v1.0)
-            - edge_threshold
-            - n_games
-            - n_bets (games with edge >= threshold)
-            - mae_vs_vegas
-            - rmse_vs_vegas
-            - mean_edge
+        DataFrame with one row per game containing all predictions and actuals
     """
     # Load nfelo data
     nfelo_url = 'https://raw.githubusercontent.com/greerreNFL/nfelo/main/output_data/nfelo_games.csv'
@@ -70,6 +65,8 @@ def run_backtest_v1_0(
     df = df[df['home_line_close'].notna()].copy()
     df = df[df['starting_nfelo_home'].notna()].copy()
     df = df[df['starting_nfelo_away'].notna()].copy()
+    df = df[df['home_score'].notna()].copy()
+    df = df[df['away_score'].notna()].copy()
 
     # v1.0 model parameters (calibrated)
     NFELO_COEF = 0.0447
@@ -77,41 +74,67 @@ def run_backtest_v1_0(
 
     # Calculate predictions
     df['nfelo_diff'] = df['starting_nfelo_home'] - df['starting_nfelo_away']
-    df['bk_v1_0_spread'] = INTERCEPT + (df['nfelo_diff'] * NFELO_COEF)
+    df['model_line'] = INTERCEPT + (df['nfelo_diff'] * NFELO_COEF)
+    df['bk_line'] = df['model_line']  # For compatibility
+
+    # Actual outcomes
+    df['actual_margin'] = df['home_score'] - df['away_score']
+    df['closing_spread'] = df['home_line_close']
 
     # Calculate edge vs Vegas
-    df['edge'] = df['bk_v1_0_spread'] - df['home_line_close']
+    df['edge'] = df['model_line'] - df['closing_spread']
     df['abs_edge'] = df['edge'].abs()
 
-    # Group by season and calculate metrics
-    results = []
-    for season in range(start_season, end_season + 1):
-        season_df = df[df['season'] == season]
+    # Mark bets (games with edge >= threshold)
+    df['bet'] = (df['abs_edge'] >= edge_threshold).astype(int)
 
-        if len(season_df) == 0:
-            continue
+    if verbose:
+        print(f"\n{'='*70}")
+        print(f"MODEL: v1.0 (Baseline nfelo)")
+        print(f"SEASONS: {start_season}-{end_season}")
+        print(f"{'='*70}")
 
-        # Bets are games with edge >= threshold
-        bets_df = season_df[season_df['abs_edge'] >= edge_threshold]
+        # Compute overall metrics using centralized functions
+        mae = eval_metrics.compute_mae(df['actual_margin'], df['model_line'])
+        rmse = eval_metrics.compute_rmse(df['actual_margin'], df['model_line'])
+        ats = eval_metrics.compute_ats_record(
+            df['actual_margin'].values,
+            df['model_line'].values,
+            df['closing_spread'].values
+        )
+        edge_ev = eval_metrics.compute_edge_and_ev(
+            df['actual_margin'].values,
+            df['model_line'].values,
+            df['closing_spread'].values
+        )
 
-        results.append({
-            'season': season,
-            'model': 'v1.0',
-            'edge_threshold': edge_threshold,
-            'n_games': len(season_df),
-            'n_bets': len(bets_df),
-            'mae_vs_vegas': season_df['abs_edge'].mean(),
-            'rmse_vs_vegas': np.sqrt((season_df['edge'] ** 2).mean()),
-            'mean_edge': season_df['edge'].mean(),
-        })
+        n_bets = df['bet'].sum()
 
-    return pd.DataFrame(results)
+        print(f"\nGames analyzed: {len(df)}")
+        print(f"Games with edge >= {edge_threshold}: {n_bets}")
+        print(f"\nPredictive Accuracy:")
+        print(f"  MAE vs Actual:      {mae:.2f} points")
+        print(f"  RMSE vs Actual:     {rmse:.2f} points")
+        print(f"\nAgainst The Spread:")
+        print(f"  Wins:               {ats['wins']}")
+        print(f"  Losses:             {ats['losses']}")
+        print(f"  Pushes:             {ats['pushes']}")
+        print(f"  Win %:              {ats['win_pct']:.1%}")
+        print(f"\nEdge Analysis:")
+        print(f"  Mean edge:          {edge_ev['mean_edge']:.2f} points")
+        print(f"  Median edge:        {edge_ev['median_edge']:.2f} points")
+        print(f"  Max edge:           {edge_ev['max_edge']:.2f} points")
+        print(f"  Flat-bet ROI:       {edge_ev['roi']:.2%}")
+        print(f"{'='*70}\n")
+
+    return df
 
 
 def run_backtest_v1_2(
     start_season: int,
     end_season: int,
-    edge_threshold: float = 0.0
+    edge_threshold: float = 0.0,
+    verbose: bool = True
 ) -> pd.DataFrame:
     """
     Run backtest for v1.2 model across specified seasons.
@@ -120,9 +143,10 @@ def run_backtest_v1_2(
         start_season: Start season year
         end_season: End season year
         edge_threshold: Minimum edge threshold for "betting"
+        verbose: Print summary statistics
 
     Returns:
-        DataFrame with one row per season containing metrics
+        DataFrame with one row per game containing all predictions and actuals
     """
     # Load trained v1.2 model parameters
     model_file = config.OUTPUT_DIR / 'ball_knower_v1_2_model.json'
@@ -153,6 +177,8 @@ def run_backtest_v1_2(
     df = df[df['home_line_close'].notna()].copy()
     df = df[df['starting_nfelo_home'].notna()].copy()
     df = df[df['starting_nfelo_away'].notna()].copy()
+    df = df[df['home_score'].notna()].copy()
+    df = df[df['away_score'].notna()].copy()
 
     # Engineer features
     df['nfelo_diff'] = df['starting_nfelo_home'] - df['starting_nfelo_away']
@@ -163,12 +189,13 @@ def run_backtest_v1_2(
     df['time_advantage'] = df['home_time_advantage_mod'].fillna(0)
     df['qb_diff'] = (df['home_538_qb_adj'].fillna(0) - df['away_538_qb_adj'].fillna(0))
 
-    # Target
-    df['vegas_line'] = df['home_line_close']
+    # Actual outcomes
+    df['actual_margin'] = df['home_score'] - df['away_score']
+    df['closing_spread'] = df['home_line_close']
 
     # Filter rows with complete features
     feature_cols = ['nfelo_diff', 'rest_advantage', 'div_game',
-                    'surface_mod', 'time_advantage', 'qb_diff', 'vegas_line']
+                    'surface_mod', 'time_advantage', 'qb_diff', 'closing_spread']
     mask = df[feature_cols].notna().all(axis=1)
     df = df[mask].copy()
 
@@ -176,7 +203,7 @@ def run_backtest_v1_2(
     intercept = model_params['intercept']
     coefs = model_params['coefficients']
 
-    df['bk_v1_2_spread'] = intercept + \
+    df['model_line'] = intercept + \
         (df['nfelo_diff'] * coefs['nfelo_diff']) + \
         (df['rest_advantage'] * coefs['rest_advantage']) + \
         (df['div_game'] * coefs['div_game']) + \
@@ -184,33 +211,55 @@ def run_backtest_v1_2(
         (df['time_advantage'] * coefs['time_advantage']) + \
         (df['qb_diff'] * coefs['qb_diff'])
 
-    # Calculate edge
-    df['edge'] = df['bk_v1_2_spread'] - df['vegas_line']
+    df['bk_line'] = df['model_line']  # For compatibility
+
+    # Calculate edge vs Vegas
+    df['edge'] = df['model_line'] - df['closing_spread']
     df['abs_edge'] = df['edge'].abs()
 
-    # Group by season and calculate metrics
-    results = []
-    for season in range(start_season, end_season + 1):
-        season_df = df[df['season'] == season]
+    # Mark bets (games with edge >= threshold)
+    df['bet'] = (df['abs_edge'] >= edge_threshold).astype(int)
 
-        if len(season_df) == 0:
-            continue
+    if verbose:
+        print(f"\n{'='*70}")
+        print(f"MODEL: v1.2 (Enhanced Ridge Regression)")
+        print(f"SEASONS: {start_season}-{end_season}")
+        print(f"{'='*70}")
 
-        # Bets are games with edge >= threshold
-        bets_df = season_df[season_df['abs_edge'] >= edge_threshold]
+        # Compute overall metrics using centralized functions
+        mae = eval_metrics.compute_mae(df['actual_margin'], df['model_line'])
+        rmse = eval_metrics.compute_rmse(df['actual_margin'], df['model_line'])
+        ats = eval_metrics.compute_ats_record(
+            df['actual_margin'].values,
+            df['model_line'].values,
+            df['closing_spread'].values
+        )
+        edge_ev = eval_metrics.compute_edge_and_ev(
+            df['actual_margin'].values,
+            df['model_line'].values,
+            df['closing_spread'].values
+        )
 
-        results.append({
-            'season': season,
-            'model': 'v1.2',
-            'edge_threshold': edge_threshold,
-            'n_games': len(season_df),
-            'n_bets': len(bets_df),
-            'mae_vs_vegas': season_df['abs_edge'].mean(),
-            'rmse_vs_vegas': np.sqrt((season_df['edge'] ** 2).mean()),
-            'mean_edge': season_df['edge'].mean(),
-        })
+        n_bets = df['bet'].sum()
 
-    return pd.DataFrame(results)
+        print(f"\nGames analyzed: {len(df)}")
+        print(f"Games with edge >= {edge_threshold}: {n_bets}")
+        print(f"\nPredictive Accuracy:")
+        print(f"  MAE vs Actual:      {mae:.2f} points")
+        print(f"  RMSE vs Actual:     {rmse:.2f} points")
+        print(f"\nAgainst The Spread:")
+        print(f"  Wins:               {ats['wins']}")
+        print(f"  Losses:             {ats['losses']}")
+        print(f"  Pushes:             {ats['pushes']}")
+        print(f"  Win %:              {ats['win_pct']:.1%}")
+        print(f"\nEdge Analysis:")
+        print(f"  Mean edge:          {edge_ev['mean_edge']:.2f} points")
+        print(f"  Median edge:        {edge_ev['median_edge']:.2f} points")
+        print(f"  Max edge:           {edge_ev['max_edge']:.2f} points")
+        print(f"  Flat-bet ROI:       {edge_ev['roi']:.2%}")
+        print(f"{'='*70}\n")
+
+    return df
 
 
 # ============================================================================
@@ -266,22 +315,20 @@ def main():
               f"end-season ({args.end_season})", file=sys.stderr)
         return 1
 
-    # Run backtest
-    print(f"\nRunning backtest for {args.model} model...")
-    print(f"  Seasons: {args.start_season}-{args.end_season}")
-    print(f"  Edge threshold: {args.edge_threshold}")
-
+    # Run backtest (verbose mode prints metrics automatically)
     if args.model == 'v1.0':
-        results = run_backtest_v1_0(
+        results_df = run_backtest_v1_0(
             args.start_season,
             args.end_season,
-            args.edge_threshold
+            args.edge_threshold,
+            verbose=True
         )
     else:  # v1.2
-        results = run_backtest_v1_2(
+        results_df = run_backtest_v1_2(
             args.start_season,
             args.end_season,
-            args.edge_threshold
+            args.edge_threshold,
+            verbose=True
         )
 
     # Determine output path
@@ -296,13 +343,11 @@ def main():
     # Ensure output directory exists
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Save results
-    results.to_csv(output_path, index=False)
+    # Save game-level results
+    results_df.to_csv(output_path, index=False)
 
-    print(f"\n✓ Backtest complete!")
-    print(f"  Results saved to: {output_path}")
-    print(f"\nSummary:")
-    print(results.to_string(index=False))
+    print(f"✓ Game-level results saved to: {output_path}")
+    print(f"  {len(results_df)} games written")
 
     return 0
 
