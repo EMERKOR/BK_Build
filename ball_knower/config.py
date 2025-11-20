@@ -59,9 +59,17 @@ TRAINING_START_YEAR = 2015
 TRAINING_END_YEAR = 2024
 VALIDATION_YEAR = 2024
 
+# ============================================================================
+# CURRENT SEASON DATA
+# ============================================================================
+
 # Current season info
 CURRENT_SEASON = 2025
 CURRENT_WEEK = 11
+
+# Current season data directory
+# All weekly data files for the current season should be placed here
+CURRENT_SEASON_DATA_DIR = CURRENT_SEASON_DIR
 
 # Rolling window sizes for EPA features (must be leak-free)
 EPA_ROLLING_WINDOWS = [3, 5, 10]  # games

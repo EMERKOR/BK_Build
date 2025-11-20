@@ -211,3 +211,34 @@ def get_predictiontracker_export_path(
     pt_dir = get_predictiontracker_dir()
     filename = f"{version.replace('.', '_')}_{start_season}_{end_season}.csv"
     return pt_dir / filename
+
+
+def get_current_season_data_dir() -> Path:
+    """
+    Get the current season data directory.
+
+    Returns:
+        Path to current season data directory (e.g., data/current_season/)
+
+    Creates the directory if it doesn't exist.
+    """
+    data_dir = config.CURRENT_SEASON_DATA_DIR
+    data_dir.mkdir(exist_ok=True, parents=True)
+    return data_dir
+
+
+def get_current_season_file(name: str) -> Path:
+    """
+    Get the path to a specific current season data file.
+
+    Args:
+        name: Filename (e.g., "power_ratings_nfelo_2025_week_11.csv")
+
+    Returns:
+        Path to the file in current season data directory
+
+    Note:
+        Does NOT create the file, only returns its expected path.
+    """
+    data_dir = get_current_season_data_dir()
+    return data_dir / name
