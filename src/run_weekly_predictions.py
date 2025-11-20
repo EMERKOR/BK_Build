@@ -31,6 +31,7 @@ sys.path.insert(0, str(project_root))
 # Import Ball Knower modules
 from ball_knower.io import loaders
 from ball_knower.modeling import models
+from ball_knower.features import engineering as features
 from src import config
 
 
@@ -132,6 +133,8 @@ def build_feature_matrix(matchups, team_ratings):
     """
     Build feature matrix by merging home/away team ratings with matchups.
 
+    Uses unified prepare_inference_features() from ball_knower.features.engineering.
+
     Args:
         matchups (pd.DataFrame): Game matchups with team_away, team_home
         team_ratings (pd.DataFrame): Team ratings with normalized 'team' column
@@ -141,31 +144,8 @@ def build_feature_matrix(matchups, team_ratings):
     """
     print("\n[2/4] Building feature matrix...")
 
-    # Merge home team ratings
-    feature_df = matchups.merge(
-        team_ratings,
-        left_on='team_home',
-        right_on='team',
-        how='left',
-        suffixes=('', '_home')
-    ).drop(columns=['team'])
-
-    # Rename home team columns
-    home_cols = {col: f"{col}_home" for col in team_ratings.columns if col != 'team'}
-    feature_df = feature_df.rename(columns=home_cols)
-
-    # Merge away team ratings
-    feature_df = feature_df.merge(
-        team_ratings,
-        left_on='team_away',
-        right_on='team',
-        how='left',
-        suffixes=('', '_away')
-    ).drop(columns=['team'])
-
-    # Rename away team columns
-    away_cols = {col: f"{col}_away" for col in team_ratings.columns if col != 'team'}
-    feature_df = feature_df.rename(columns=away_cols)
+    # Use unified feature preparation from ball_knower
+    feature_df = features.prepare_inference_features(matchups, team_ratings)
 
     print(f"  Feature matrix shape: {feature_df.shape}")
 
