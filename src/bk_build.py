@@ -342,16 +342,57 @@ Examples:
 
 
 def main():
-    """Main CLI entry point."""
-    parser = create_parser()
-    args = parser.parse_args()
+    """Main CLI entry point with unified exception handling."""
+    import traceback
 
-    if not args.command:
-        parser.print_help()
+    try:
+        parser = create_parser()
+        args = parser.parse_args()
+
+        if not args.command:
+            parser.print_help()
+            return 1
+
+        # Call the appropriate subcommand function
+        return args.func(args)
+
+    except KeyboardInterrupt:
+        # Handle Ctrl+C gracefully
+        print("\n\n" + "="*80)
+        print("❌ INTERRUPTED BY USER")
+        print("="*80)
+        print("\nOperation cancelled by user (Ctrl+C)")
+        return 130  # Standard exit code for SIGINT
+
+    except Exception as e:
+        # Handle all other exceptions with clear error banner
+        print("\n\n" + "="*80)
+        print("❌ ERROR")
+        print("="*80)
+        print(f"\nAn error occurred: {type(e).__name__}")
+        print(f"Message: {str(e)}")
+        print("\n" + "-"*80)
+        print("Stack trace (for debugging):")
+        print("-"*80)
+
+        # Print minimal stack trace (last 3 frames)
+        tb_lines = traceback.format_exc().split('\n')
+        # Show only the relevant frames (skip system frames)
+        for line in tb_lines[-15:]:  # Last 15 lines usually contain the relevant error
+            print(line)
+
+        print("\n" + "="*80)
+        print("TROUBLESHOOTING")
+        print("="*80)
+        print("\nCommon solutions:")
+        print("  1. Check that all required data files exist in data/current_season/")
+        print("  2. Verify model artifacts exist (e.g., output/ball_knower_v1_2_model.json)")
+        print("  3. Ensure correct season/week parameters")
+        print("  4. Run with --help for usage information")
+        print("\nFor more help, see: docs/USAGE_BK_BUILD.md")
+        print("="*80 + "\n")
+
         return 1
-
-    # Call the appropriate subcommand function
-    return args.func(args)
 
 
 if __name__ == '__main__':
