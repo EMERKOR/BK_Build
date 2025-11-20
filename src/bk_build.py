@@ -187,6 +187,16 @@ def cmd_export_predictiontracker(args):
 
 
 # ============================================================================
+# SUBCOMMAND: check-weekly-data
+# ============================================================================
+
+def cmd_check_weekly_data(args):
+    """Check weekly data files for presence and validity."""
+    from src import check_weekly_data
+    return check_weekly_data.check_weekly_data(args.season, args.week)["return_code"]
+
+
+# ============================================================================
 # CLI SETUP
 # ============================================================================
 
@@ -356,6 +366,27 @@ Examples:
         help='Output CSV path (default: output/predictiontracker/{model}_{start}_{end}.csv)'
     )
     parser_export.set_defaults(func=cmd_export_predictiontracker)
+
+    # ========================================
+    # check-weekly-data subcommand
+    # ========================================
+    parser_check = subparsers.add_parser(
+        'check-weekly-data',
+        help='Validate weekly data files for presence and schema compliance'
+    )
+    parser_check.add_argument(
+        '--season',
+        type=int,
+        default=config.CURRENT_SEASON,
+        help=f'Season year (default: {config.CURRENT_SEASON})'
+    )
+    parser_check.add_argument(
+        '--week',
+        type=int,
+        required=True,
+        help='Week number'
+    )
+    parser_check.set_defaults(func=cmd_check_weekly_data)
 
     return parser
 

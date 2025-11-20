@@ -96,6 +96,47 @@ python src/bk_build.py backtest --model v1.2 \
 - v1.2 model must be trained first
 - Model file: `output/ball_knower_v1_2_model.json`
 
+## Weekly Data Validation
+
+Before running weekly predictions, validate that all required data files are present and valid:
+
+```bash
+# Check weekly data for 2025 Week 11
+python src/bk_build.py check-weekly-data --week 11
+
+# Check data for a different season
+python src/bk_build.py check-weekly-data --season 2024 --week 18
+```
+
+**Output example**:
+```
+[Weekly Data Check] Season 2025, Week 11
+================================================================================
+
+Required nfelo files:
+  ✓ power_ratings_nfelo_2025_week_11.csv - Valid (32 rows)
+  ✓ epa_tiers_nfelo_2025_week_11.csv - Valid (32 rows)
+  ⚠ strength_of_schedule_nfelo_2025_week_11.csv - Optional file not found
+
+Required Substack files:
+  ✓ power_ratings_substack_2025_week_11.csv - Valid (32 rows)
+  ⚠ qb_epa_substack_2025_week_11.csv - Optional file not found
+  ✓ weekly_projections_ppg_substack_2025_week_11.csv - Valid (16 rows)
+
+================================================================================
+Summary:
+  Required files: 4/4 ✓
+  Optional files: 0/2 ✓
+
+✓ All required files present and valid
+  Ready to run weekly predictions!
+================================================================================
+```
+
+**Exit codes**:
+- `0`: All required files present and valid
+- `1`: Missing or invalid required files
+
 ## Weekly Predictions
 
 ### Generate Predictions for Current Week
