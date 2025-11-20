@@ -375,3 +375,160 @@ def create_matchup_features(schedules, team_ratings):
 
     print("✓ Created matchup features")
     return schedules
+
+
+# ============================================================================
+# UNIFIED INFERENCE FEATURES
+# ============================================================================
+
+def prepare_inference_features(matchups_df, ratings_df):
+    """
+    Unified feature construction for inference.
+
+    Must replicate v1.2 dataset builder logic exactly:
+    - nfelo_diff
+    - rest_advantage
+    - qb_diff adjustments
+    - surface_mod
+    - time_advantage
+    - division flags
+    - vegas line (if available)
+
+    Returns a pandas DataFrame with all v1_2 features ready for model.predict().
+
+    Args:
+        matchups_df (pd.DataFrame): Weekly matchups with columns:
+            - team_away, team_home (required)
+            - vegas_line (optional)
+            - Any other game-level features (rest_advantage, div_game, etc.)
+
+        ratings_df (pd.DataFrame): Team ratings with columns:
+            - team (required)
+            - nfelo (required)
+            - QB Adj or qb_adj (optional)
+            - epa_margin (optional)
+            - Ovr. (optional for Substack ratings)
+            - Any other team-level features
+
+    Returns:
+        pd.DataFrame: Feature matrix with columns:
+            - team_away, team_home
+            - nfelo_diff
+            - rest_advantage (0 if not in matchups_df)
+            - qb_diff (0 if not in ratings)
+            - div_game (0 if not in matchups_df)
+            - surface_mod (0 if not in matchups_df)
+            - time_advantage (0 if not in matchups_df)
+            - vegas_line (if available)
+            - All home/away team features for other models
+
+    Example:
+        >>> matchups = pd.DataFrame({
+        ...     'team_away': ['BUF', 'KC'],
+        ...     'team_home': ['SF', 'LV'],
+        ...     'vegas_line': [-3.5, -9.0]
+        ... })
+        >>> ratings = loaders.load_all_sources(2025, 11)['merged_ratings']
+        >>> features = prepare_inference_features(matchups, ratings)
+        >>> # Now features can be passed to v1.2 model for predictions
+    """
+    import pandas as pd
+    import numpy as np
+
+    # Start with matchups
+    df = matchups_df.copy()
+
+    # Merge home team ratings
+    df = df.merge(
+        ratings_df,
+        left_on='team_home',
+        right_on='team',
+        how='left',
+        suffixes=('', '_home')
+    ).drop(columns=['team'], errors='ignore')
+
+    # Rename home columns
+    home_rename = {}
+    for col in ratings_df.columns:
+        if col != 'team' and col in df.columns:
+            home_rename[col] = f"{col}_home"
+    df = df.rename(columns=home_rename)
+
+    # Merge away team ratings
+    df = df.merge(
+        ratings_df,
+        left_on='team_away',
+        right_on='team',
+        how='left',
+        suffixes=('', '_away')
+    ).drop(columns=['team'], errors='ignore')
+
+    # Rename away columns
+    away_rename = {}
+    for col in ratings_df.columns:
+        if col != 'team' and col in df.columns and not col.endswith('_home'):
+            away_rename[col] = f"{col}_away"
+    df = df.rename(columns=away_rename)
+
+    # =========================================================================
+    # CONSTRUCT V1.2 FEATURES
+    # =========================================================================
+
+    # 1. nfelo_diff (required)
+    if 'nfelo_home' in df.columns and 'nfelo_away' in df.columns:
+        df['nfelo_diff'] = df['nfelo_home'] - df['nfelo_away']
+    else:
+        df['nfelo_diff'] = 0.0
+
+    # 2. rest_advantage (use from matchups if available, else 0)
+    if 'rest_advantage' not in df.columns:
+        # Try to compute from home_bye_mod and away_bye_mod if available
+        if 'home_bye_mod' in df.columns and 'away_bye_mod' in df.columns:
+            df['rest_advantage'] = compute_rest_advantage_from_nfelo(df)
+        else:
+            df['rest_advantage'] = 0.0
+
+    # 3. qb_diff (QB adjustment differential)
+    qb_home = None
+    qb_away = None
+
+    if 'QB Adj_home' in df.columns:
+        qb_home = df['QB Adj_home']
+    elif 'qb_adj_home' in df.columns:
+        qb_home = df['qb_adj_home']
+
+    if 'QB Adj_away' in df.columns:
+        qb_away = df['QB Adj_away']
+    elif 'qb_adj_away' in df.columns:
+        qb_away = df['qb_adj_away']
+
+    if qb_home is not None and qb_away is not None:
+        df['qb_diff'] = qb_home.fillna(0) - qb_away.fillna(0)
+    else:
+        df['qb_diff'] = 0.0
+
+    # 4. div_game (division game flag)
+    if 'div_game' not in df.columns:
+        if 'div_game_mod' in df.columns:
+            df['div_game'] = df['div_game_mod'].fillna(0)
+        else:
+            df['div_game'] = 0.0
+
+    # 5. surface_mod (surface differential)
+    if 'surface_mod' not in df.columns:
+        if 'dif_surface_mod' in df.columns:
+            df['surface_mod'] = df['dif_surface_mod'].fillna(0)
+        else:
+            df['surface_mod'] = 0.0
+
+    # 6. time_advantage (time zone advantage)
+    if 'time_advantage' not in df.columns:
+        if 'home_time_advantage_mod' in df.columns:
+            df['time_advantage'] = df['home_time_advantage_mod'].fillna(0)
+        else:
+            df['time_advantage'] = 0.0
+
+    # 7. vegas_line (keep if present)
+    # Already in df if it was in matchups_df
+
+    return df
