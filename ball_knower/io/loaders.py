@@ -341,6 +341,65 @@ def load_weekly_projections_ppg(
         return df
 
 
+def load_team_power_ratings(
+    season: int,
+    week: int,
+    base_path: str = "subjective"
+) -> pd.DataFrame:
+    """
+    Load Ball Knower blended team power ratings.
+
+    This loader reads the subjective team power ratings CSV files that combine
+    market ratings, objective metrics (nfelo, Substack), analyst rankings
+    (Athletic, PFF), and subjective adjustments into a blended rating.
+
+    Args:
+        season: NFL season year
+        week: NFL week number
+        base_path: Base directory path (default: "subjective")
+
+    Returns:
+        DataFrame with all power rating components and blended rating
+
+    Raises:
+        FileNotFoundError: If the CSV file doesn't exist
+        AssertionError: If required columns are missing
+    """
+    # Construct path
+    file_path = Path(base_path) / f"team_power_ratings_{season}_week{week:02d}.csv"
+
+    # Check if file exists
+    if not file_path.exists():
+        raise FileNotFoundError(
+            f"Team power ratings file not found: {file_path}\n"
+            f"Expected path: {file_path.resolve()}"
+        )
+
+    # Load CSV
+    df = pd.read_csv(file_path)
+
+    # Required columns
+    required_cols = [
+        "season", "week", "team_code", "team_name",
+        "market_rating",
+        "nfelo_value", "substack_points", "objective_composite",
+        "athletic_rank", "pff_rank", "analyst_composite_rating",
+        "structural_edge",
+        "subjective_health_adj", "subjective_form_adj", "subjective_total",
+        "bk_blended_rating"
+    ]
+
+    # Validate required columns
+    missing_cols = [col for col in required_cols if col not in df.columns]
+    if missing_cols:
+        raise AssertionError(
+            f"Missing required columns in {file_path.name}: {missing_cols}\n"
+            f"Found columns: {list(df.columns)}"
+        )
+
+    return df
+
+
 def merge_team_ratings(
     sources: Dict[str, pd.DataFrame],
 ) -> pd.DataFrame:
