@@ -54,6 +54,32 @@
       "training_period": "2009-2024",
       "calibration_method": "Ridge or ML regression trained to predict Vegas closing line",
       "notes": "Experimental model. Targets Vegas spread rather than actual margin, learning market inefficiencies. Requires nfelo historical data for training."
+    },
+    {
+      "version": "v1.3",
+      "description": "v1.2 enhanced with leak-free team form features",
+      "target": "vegas_spread",
+      "features": [
+        "nfelo_diff",
+        "rest_advantage",
+        "div_game",
+        "surface_mod",
+        "time_advantage",
+        "qb_diff",
+        "offense_form_epa_diff",
+        "offense_form_success_diff",
+        "defense_form_epa_diff",
+        "defense_form_success_diff"
+      ],
+      "feature_description": "Extends v1.2 with rolling 4-game offensive/defensive efficiency metrics. All form features are strictly leak-free (exclude current game via .shift(1) before rolling calculations).",
+      "artifacts_path": "output/models/v1_3/",
+      "model_file": "output/models/v1_3/model.pkl",
+      "features_file": "output/models/v1_3/features.json",
+      "metrics_file": "output/models/v1_3/metrics.json",
+      "intended_use": "edge detection with momentum/form indicators",
+      "training_period": "2013-2024",
+      "calibration_method": "Ridge regression (alpha=1.0) trained to predict Vegas closing line",
+      "notes": "Training data starts from 2013 due to team-week EPA availability. Form features capture recent offensive/defensive efficiency trends beyond simple power ratings."
     }
   ],
   "metadata": {

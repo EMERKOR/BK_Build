@@ -46,6 +46,16 @@ def cmd_train_v1_2(args):
 
 
 # ============================================================================
+# SUBCOMMAND: train-v1-3
+# ============================================================================
+
+def cmd_train_v1_3(args):
+    """Train v1.3 model with team form features."""
+    from src import train_v1_3
+    return train_v1_3.main()
+
+
+# ============================================================================
 # SUBCOMMAND: backtest
 # ============================================================================
 
@@ -229,6 +239,15 @@ Examples:
         help='Output directory for model artifacts (default: output/models/v1_2/)'
     )
     parser_train.set_defaults(func=cmd_train_v1_2)
+
+    # ========================================
+    # train-v1-3 subcommand
+    # ========================================
+    parser_train_v1_3 = subparsers.add_parser(
+        'train-v1-3',
+        help='Train v1.3 model with team form features'
+    )
+    parser_train_v1_3.set_defaults(func=cmd_train_v1_3)
 
     # ========================================
     # backtest subcommand
