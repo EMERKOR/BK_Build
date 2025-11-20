@@ -14,7 +14,9 @@ import json
 from pathlib import Path
 from unittest.mock import patch
 
-from src import models, config
+from src import models
+from ball_knower import config
+from ball_knower.utils import paths
 
 
 # ============================================================================
@@ -26,7 +28,7 @@ def test_load_calibrated_weights_with_file():
     Test that load_calibrated_weights loads from JSON when file exists.
     """
     # Check if calibrated weights file exists
-    weights_file = config.OUTPUT_DIR / "calibrated_weights_v1.json"
+    weights_file = paths.get_output_dir() / "calibrated_weights_v1.json"
 
     if not weights_file.exists():
         pytest.skip(
@@ -129,7 +131,7 @@ def test_deterministic_spread_model_with_calibrated_weights():
     Test that DeterministicSpreadModel can load calibrated weights if available.
     """
     # Try to load calibrated weights
-    weights_file = config.OUTPUT_DIR / "calibrated_weights_v1.json"
+    weights_file = paths.get_output_dir() / "calibrated_weights_v1.json"
 
     if not weights_file.exists():
         pytest.skip(

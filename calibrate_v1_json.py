@@ -25,6 +25,7 @@ sys.path.insert(0, str(project_root))
 
 from ball_knower import config
 from ball_knower.features import engineering as features
+from ball_knower.utils import paths
 
 print("\n" + "="*80)
 print("CALIBRATING BALL KNOWER v1.x - JSON EXPORT")
@@ -174,8 +175,7 @@ calibration_data = {
 }
 
 # Save to JSON
-output_file = config.OUTPUT_DIR / 'calibrated_weights_v1.json'
-output_file.parent.mkdir(parents=True, exist_ok=True)
+output_file = paths.get_output_dir() / 'calibrated_weights_v1.json'
 
 with open(output_file, 'w') as f:
     json.dump(calibration_data, f, indent=2)

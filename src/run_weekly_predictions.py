@@ -31,6 +31,7 @@ sys.path.insert(0, str(project_root))
 # Import Ball Knower modules
 from ball_knower.io import loaders
 from ball_knower import config
+from ball_knower.utils import paths
 from src import models
 
 
@@ -262,9 +263,8 @@ def save_predictions(predictions, season, week, output_path=None):
 
     # Determine output path
     if output_path is None:
-        output_dir = config.OUTPUT_DIR
-        output_dir.mkdir(parents=True, exist_ok=True)
-        output_file = output_dir / f"predictions_{season}_week_{week}.csv"
+        # Use centralized path helper - defaults to output/ directory
+        output_file = paths.get_output_dir() / f"predictions_{season}_week_{week}.csv"
     else:
         output_file = Path(output_path)
         output_file.parent.mkdir(parents=True, exist_ok=True)
