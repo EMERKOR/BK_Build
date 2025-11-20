@@ -19,7 +19,7 @@ project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
 from src.nflverse_data import nflverse
-from src import config, betting_utils
+from ball_knower import config, betting_utils
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.width', 150)

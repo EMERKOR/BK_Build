@@ -23,7 +23,7 @@ from datetime import datetime
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
-from src import config
+from ball_knower import config
 from ball_knower.features import engineering as features
 
 print("\n" + "="*80)
