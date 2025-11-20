@@ -32,6 +32,9 @@ from typing import Dict, Optional, Union
 import sys
 import importlib.util
 
+# Import schema validators
+from ball_knower.io import schemas
+
 # Import team normalization function directly (avoid importing models.py dependencies via src/__init__.py)
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(_PROJECT_ROOT) not in sys.path:
@@ -187,7 +190,15 @@ def load_power_ratings(
         first_col = df.columns[0]
         df = df.rename(columns={first_col: 'team'})
 
-    return _normalize_team_column(df, team_col="team")
+    df = _normalize_team_column(df, team_col="team")
+
+    # Validate schema based on provider
+    if provider == "nfelo":
+        schemas.validate_nfelo_power_ratings_df(df)
+    elif provider == "substack":
+        schemas.validate_substack_power_ratings_df(df)
+
+    return df
 
 
 def load_epa_tiers(
@@ -218,7 +229,13 @@ def load_epa_tiers(
     if 'Team' in df.columns:
         df = df.rename(columns={'Team': 'team'})
 
-    return _normalize_team_column(df, team_col="team")
+    df = _normalize_team_column(df, team_col="team")
+
+    # Validate schema - nfelo EPA tiers only (substack doesn't have this category)
+    if provider == "nfelo":
+        schemas.validate_nfelo_epa_tiers_df(df)
+
+    return df
 
 
 def load_strength_of_schedule(
@@ -249,7 +266,13 @@ def load_strength_of_schedule(
     if 'Team' in df.columns:
         df = df.rename(columns={'Team': 'team'})
 
-    return _normalize_team_column(df, team_col="team")
+    df = _normalize_team_column(df, team_col="team")
+
+    # Validate schema - nfelo SOS only (substack doesn't have this category)
+    if provider == "nfelo":
+        schemas.validate_nfelo_sos_df(df)
+
+    return df
 
 
 def load_qb_epa(
@@ -294,7 +317,13 @@ def load_qb_epa(
         first_col = df.columns[0]
         df = df.rename(columns={first_col: 'team'})
 
-    return _normalize_team_column(df, team_col="team")
+    df = _normalize_team_column(df, team_col="team")
+
+    # Validate schema - primarily Substack QB EPA
+    if provider == "substack":
+        schemas.validate_substack_qb_epa_df(df)
+
+    return df
 
 
 def load_weekly_projections_ppg(
@@ -333,12 +362,17 @@ def load_weekly_projections_ppg(
     # Individual providers can handle this differently
     if 'Team' in df.columns:
         df = df.rename(columns={'Team': 'team'})
-        return _normalize_team_column(df, team_col="team")
+        df = _normalize_team_column(df, team_col="team")
     else:
         # Return as-is for matchup-based projections
         # Add a dummy 'team' column to avoid errors
         df['team'] = None
-        return df
+
+    # Validate schema - primarily Substack weekly projections
+    if provider == "substack":
+        schemas.validate_substack_weekly_proj_df(df)
+
+    return df
 
 
 def merge_team_ratings(
