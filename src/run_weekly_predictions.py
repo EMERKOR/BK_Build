@@ -35,7 +35,7 @@ from ball_knower.io import schemas
 from ball_knower import config
 from ball_knower.utils import paths, version
 from ball_knower.validation import sanity
-from src import models
+from ball_knower import modeling
 
 
 def parse_args():
@@ -301,10 +301,10 @@ def generate_predictions(feature_df, model_version='v1.1'):
 
     # Instantiate model (will automatically load calibrated weights)
     if model_version == 'v1.0':
-        model = models.DeterministicSpreadModel(use_calibrated=True)
+        model = modeling.DeterministicSpreadModel(use_calibrated=True)
         model_name = 'v1.0'
     else:
-        model = models.EnhancedSpreadModel(use_calibrated=True)
+        model = modeling.EnhancedSpreadModel(use_calibrated=True)
         model_name = 'v1.1'
 
     predictions = []
