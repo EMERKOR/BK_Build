@@ -83,6 +83,12 @@ def cmd_backtest(args):
             args.end_season,
             args.edge_threshold
         )
+    elif args.model == 'v1.3':
+        results = run_backtests.run_backtest_v1_3(
+            args.start_season,
+            args.end_season,
+            args.edge_threshold
+        )
     else:
         print(f"Error: Unknown model '{args.model}'", file=sys.stderr)
         return 1
@@ -315,7 +321,7 @@ Examples:
     parser_backtest.add_argument(
         '--model',
         type=str,
-        choices=['v1.0', 'v1.2'],
+        choices=['v1.0', 'v1.2', 'v1.3'],
         required=True,
         help='Model version to backtest'
     )

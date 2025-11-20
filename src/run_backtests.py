@@ -214,6 +214,107 @@ def run_backtest_v1_2(
     return pd.DataFrame(results)
 
 
+def run_backtest_v1_3(
+    start_season: int,
+    end_season: int,
+    edge_threshold: float = 0.0
+) -> pd.DataFrame:
+    """
+    Run backtest for v1.3 model across specified seasons.
+
+    Args:
+        start_season: Start season year (must be >= 2013 for form features)
+        end_season: End season year
+        edge_threshold: Minimum edge threshold for "betting"
+
+    Returns:
+        DataFrame with one row per season containing metrics
+    """
+    import joblib
+    from ball_knower.datasets import v1_3
+
+    # Validate start year (v1.3 requires EPA data from 2013+)
+    if start_season < 2013:
+        raise ValueError(
+            f"v1.3 backtest requires start_season >= 2013 (got {start_season}). "
+            "Team-week EPA data needed for form features starts in 2013."
+        )
+
+    # Load trained v1.3 model
+    model_dir = paths.get_models_dir("v1.3")
+    model_file = model_dir / "model.pkl"
+    features_file = model_dir / "features.json"
+
+    if not model_file.exists():
+        raise FileNotFoundError(
+            f"v1.3 model file not found at {model_file}. "
+            "Train the v1.3 model first using: python src/bk_build.py train-v1-3"
+        )
+
+    if not features_file.exists():
+        raise FileNotFoundError(
+            f"v1.3 features file not found at {features_file}. "
+            "Train the v1.3 model first."
+        )
+
+    # Load model and feature names
+    model = joblib.load(model_file)
+    with open(features_file, 'r') as f:
+        features_metadata = json.load(f)
+        feature_names = features_metadata['features']
+
+    print(f"  ✓ Loaded v1.3 model from {model_file}")
+    print(f"  ✓ Using {len(feature_names)} features: {', '.join(feature_names)}")
+
+    # Build v1.3 dataset for backtest period
+    print(f"  ✓ Building v1.3 dataset ({start_season}-{end_season})...")
+    df = v1_3.build_training_frame(
+        start_year=start_season,
+        end_year=end_season
+    )
+    print(f"  ✓ Loaded {len(df)} games")
+
+    # Filter to rows with complete features and vegas line
+    required_cols = feature_names + ['vegas_closing_spread']
+    mask = df[required_cols].notna().all(axis=1)
+    df = df[mask].copy()
+
+    print(f"  ✓ {len(df)} games with complete features")
+
+    # Generate v1.3 predictions
+    X = df[feature_names].values
+    df['bk_v1_3_spread'] = model.predict(X)
+
+    # Calculate edge vs Vegas
+    df['vegas_line'] = df['vegas_closing_spread']
+    df['edge'] = df['bk_v1_3_spread'] - df['vegas_line']
+    df['abs_edge'] = df['edge'].abs()
+
+    # Group by season and calculate metrics
+    results = []
+    for season in range(start_season, end_season + 1):
+        season_df = df[df['season'] == season]
+
+        if len(season_df) == 0:
+            continue
+
+        # Bets are games with edge >= threshold
+        bets_df = season_df[season_df['abs_edge'] >= edge_threshold]
+
+        results.append({
+            'season': season,
+            'model': 'v1.3',
+            'edge_threshold': edge_threshold,
+            'n_games': len(season_df),
+            'n_bets': len(bets_df),
+            'mae_vs_vegas': season_df['abs_edge'].mean(),
+            'rmse_vs_vegas': np.sqrt((season_df['edge'] ** 2).mean()),
+            'mean_edge': season_df['edge'].mean(),
+        })
+
+    return pd.DataFrame(results)
+
+
 # ============================================================================
 # CLI
 # ============================================================================
@@ -240,7 +341,7 @@ def main():
     parser.add_argument(
         '--model',
         type=str,
-        choices=['v1.0', 'v1.2'],
+        choices=['v1.0', 'v1.2', 'v1.3'],
         required=True,
         help='Model version to backtest'
     )
@@ -281,12 +382,21 @@ def main():
             args.end_season,
             args.edge_threshold
         )
-    else:  # v1.2
+    elif args.model == 'v1.2':
         results = run_backtest_v1_2(
             args.start_season,
             args.end_season,
             args.edge_threshold
         )
+    elif args.model == 'v1.3':
+        results = run_backtest_v1_3(
+            args.start_season,
+            args.end_season,
+            args.edge_threshold
+        )
+    else:
+        print(f"Error: Unknown model '{args.model}'", file=sys.stderr)
+        return 1
 
     # Determine output path
     if args.output is None:
