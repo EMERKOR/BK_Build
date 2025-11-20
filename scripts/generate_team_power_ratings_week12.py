@@ -35,9 +35,9 @@ SUBJECTIVE_WEIGHT = 0.10   # health / vibes / form sliders
 SUBSTACK_POINTS_SD = 3.0
 
 # File paths (relative to repo root; tweak as needed)
-NFelo_PATH      = Path("Team Season Power Ratings-export-2025-11-20.csv")
-SUBSTACK_PPG    = Path("data-w9KQp (1).csv")   # 2025 Forecast sheet w/ Ovr.
-SUBSTACK_ELO    = Path("data-ZZZAZ.csv")       # Elo forecast sheet
+NFelo_PATH      = Path("data/Team Season Power Ratings-export-2025-11-20.csv")
+SUBSTACK_PPG    = Path("data/data-w9KQp (1).csv")   # 2025 Forecast sheet w/ Ovr.
+SUBSTACK_ELO    = Path("data/data-ZZZAZ.csv")       # Elo forecast sheet
 
 OUTPUT_PATH     = Path("subjective/team_power_ratings_2025_week12.csv")
 
