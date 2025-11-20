@@ -8,7 +8,8 @@ from pathlib import Path
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
-from src import models, config
+from ball_knower.modeling import models
+from src import config
 
 print("\n" + "="*80)
 print("TESTING CALIBRATED WEIGHTS LOADING")

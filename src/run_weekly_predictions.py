@@ -30,7 +30,8 @@ sys.path.insert(0, str(project_root))
 
 # Import Ball Knower modules
 from ball_knower.io import loaders
-from src import config, models
+from ball_knower.modeling import models
+from src import config
 
 
 def parse_args():

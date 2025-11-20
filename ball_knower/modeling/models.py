@@ -19,7 +19,7 @@ from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
-from .config import HOME_FIELD_ADVANTAGE, OUTPUT_DIR
+from src.config import HOME_FIELD_ADVANTAGE, OUTPUT_DIR
 
 
 # ============================================================================
