@@ -1,0 +1,15 @@
+# Ball Knower Subjective Adjustments
+# Usage: python src/bk_build.py predict ... --subjective
+
+# Format:
+# TEAM_ABBREVIATION:
+#   adjustment: <float>  # Points to add (positive) or subtract (negative) from team score
+#   reason: "<string>"   # Rationale for the adjustment
+
+# Example:
+KC:
+  adjustment: 1.5
+  reason: "Mahomes magic in playoffs"
+NYG:
+  adjustment: -2.0
+  reason: "Locker room turmoil"

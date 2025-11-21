@@ -128,7 +128,7 @@ def cmd_predict(args):
     print(f"  Model: {args.model}")
 
     # Load weekly data
-    team_ratings, matchups = run_weekly_predictions.load_weekly_data(args.season, args.week)
+    team_ratings, matchups, status = run_weekly_predictions.load_weekly_data(args.season, args.week)
 
     # Build feature matrix
     feature_df = run_weekly_predictions.build_feature_matrix(matchups, team_ratings)
@@ -136,7 +136,10 @@ def cmd_predict(args):
     # Generate predictions
     predictions = run_weekly_predictions.generate_predictions(
         feature_df,
-        model_version=args.model
+        model_version=args.model,
+        season=args.season,
+        week=args.week,
+        use_subjective=not args.no_subjective
     )
 
     # Save predictions
@@ -240,6 +243,26 @@ def cmd_weekly_pipeline(args):
     except RuntimeError as e:
         print(f"\n✗ Pipeline failed: {e}", file=sys.stderr)
         return 1
+
+
+# ============================================================================
+# SUBCOMMAND: ingest
+# ============================================================================
+
+def cmd_ingest(args):
+    """Fetch or refresh data for a season or week."""
+    from ball_knower.io import ingestion
+
+    version.print_version_banner("ingest")
+
+    if args.week:
+        # Fetch weekly data
+        ingestion.fetch_week_data(args.season, args.week, force=args.force)
+    else:
+        # Fetch season data
+        ingestion.fetch_season_data(args.season, force=args.force)
+
+    return 0
 
 
 # ============================================================================
@@ -377,6 +400,11 @@ Examples:
         default=None,
         help='Output CSV path (default: output/predictions_{season}_week_{week}.csv)'
     )
+    parser_predict.add_argument(
+        '--no-subjective',
+        action='store_true',
+        help='Disable subjective adjustments (use model predictions only)'
+    )
     parser_predict.set_defaults(func=cmd_predict)
 
     # ========================================
@@ -471,6 +499,31 @@ Examples:
         help='Export to PredictionTracker format (not yet implemented)'
     )
     parser_pipeline.set_defaults(func=cmd_weekly_pipeline)
+
+    # ========================================
+    # ingest subcommand
+    # ========================================
+    parser_ingest = subparsers.add_parser(
+        'ingest',
+        help='Fetch or refresh data for a season or week'
+    )
+    parser_ingest.add_argument(
+        '--season',
+        type=int,
+        required=True,
+        help='Season year (e.g., 2025)'
+    )
+    parser_ingest.add_argument(
+        '--week',
+        type=int,
+        help='Week number (optional - if omitted, fetches season data)'
+    )
+    parser_ingest.add_argument(
+        '--force',
+        action='store_true',
+        help='Force re-download even if cached data exists'
+    )
+    parser_ingest.set_defaults(func=cmd_ingest)
 
     return parser
 
