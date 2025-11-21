@@ -363,8 +363,13 @@ def load_weekly_projections_ppg(
     if 'Team' in df.columns:
         df = df.rename(columns={'Team': 'team'})
         df = _normalize_team_column(df, team_col="team")
+    elif 'team_away' in df.columns and 'team_home' in df.columns:
+        # This is matchup-based data, don't add a dummy team column
+        # The dummy team column would cause merge_team_ratings to incorrectly
+        # merge matchup columns into team ratings
+        pass
     else:
-        # Return as-is for matchup-based projections
+        # Return as-is for other projection types
         # Add a dummy 'team' column to avoid errors
         df['team'] = None
 

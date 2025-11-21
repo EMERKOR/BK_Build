@@ -35,7 +35,7 @@ from ball_knower.io import schemas
 from ball_knower import config
 from ball_knower.utils import paths, version
 from ball_knower.validation import sanity
-from src import models
+from ball_knower.modeling import models
 
 
 def parse_args():
@@ -217,10 +217,25 @@ def load_weekly_data(season, week):
 
     # Parse matchups
     if 'team_away' in weekly_projections.columns and 'team_home' in weekly_projections.columns:
-        matchups = weekly_projections[['team_away', 'team_home']].copy()
+        # Start with team columns and add season/week if available
+        cols_to_extract = ['team_away', 'team_home']
+        if 'season' in weekly_projections.columns:
+            cols_to_extract.insert(0, 'season')
+        if 'week' in weekly_projections.columns:
+            cols_to_extract.insert(1 if 'season' in cols_to_extract else 0, 'week')
+
+        matchups = weekly_projections[cols_to_extract].copy()
+
+        # Add season/week from function args if not in file
+        if 'season' not in matchups.columns:
+            matchups['season'] = season
+        if 'week' not in matchups.columns:
+            matchups['week'] = week
 
         # Extract Vegas spread if available
-        if 'Favorite' in weekly_projections.columns:
+        if 'vegas_line' in weekly_projections.columns:
+            matchups['vegas_line'] = weekly_projections['vegas_line']
+        elif 'Favorite' in weekly_projections.columns:
             matchups['vegas_line'] = weekly_projections['Favorite'].str.extract(r'([-+]?\d+\.?\d*)')[0].astype(float)
         else:
             matchups['vegas_line'] = np.nan
@@ -231,6 +246,8 @@ def load_weekly_data(season, week):
         weekly_projections['team_home'] = weekly_projections['Matchup'].str.split(' at | vs ').str[1].apply(normalize_team_name)
 
         matchups = weekly_projections[['team_away', 'team_home']].copy()
+        matchups['season'] = season
+        matchups['week'] = week
 
         if 'Favorite' in weekly_projections.columns:
             matchups['vegas_line'] = weekly_projections['Favorite'].str.extract(r'([-+]?\d+\.?\d*)')[0].astype(float)
@@ -286,13 +303,16 @@ def build_feature_matrix(matchups, team_ratings):
     return feature_df
 
 
-def generate_predictions(feature_df, model_version='v1.1'):
+def generate_predictions(feature_df, model_version='v1.1', season=None, week=None, use_subjective=True):
     """
     Generate predictions for all games using the specified model.
 
     Args:
         feature_df (pd.DataFrame): Feature matrix with home/away features
         model_version (str): Model version ('v1.0' or 'v1.1')
+        season (int): Season year (required if use_subjective=True)
+        week (int): Week number (required if use_subjective=True)
+        use_subjective (bool): Whether to apply subjective adjustments
 
     Returns:
         list: Prediction dictionaries
@@ -310,8 +330,8 @@ def generate_predictions(feature_df, model_version='v1.1'):
     predictions = []
 
     for idx, game in feature_df.iterrows():
-        # Extract home team features
-        home_features = {
+        # Extract home team features (only include non-None values)
+        home_features_raw = {
             'nfelo': game.get('nfelo_home'),
             'epa_margin': game.get('epa_margin_home'),
             'Ovr.': game.get('Ovr._home'),
@@ -319,9 +339,10 @@ def generate_predictions(feature_df, model_version='v1.1'):
             'win_rate_L5': game.get('win_rate_L5_home'),
             'QB Adj': game.get('QB Adj_home')
         }
+        home_features = {k: v for k, v in home_features_raw.items() if v is not None and pd.notna(v)}
 
-        # Extract away team features
-        away_features = {
+        # Extract away team features (only include non-None values)
+        away_features_raw = {
             'nfelo': game.get('nfelo_away'),
             'epa_margin': game.get('epa_margin_away'),
             'Ovr.': game.get('Ovr._away'),
@@ -329,6 +350,7 @@ def generate_predictions(feature_df, model_version='v1.1'):
             'win_rate_L5': game.get('win_rate_L5_away'),
             'QB Adj': game.get('QB Adj_away')
         }
+        away_features = {k: v for k, v in away_features_raw.items() if v is not None and pd.notna(v)}
 
         # Generate prediction
         bk_line = model.predict(home_features, away_features)
@@ -349,12 +371,54 @@ def generate_predictions(feature_df, model_version='v1.1'):
             'week': game['week'],
             'away_team': game['team_away'],
             'home_team': game['team_home'],
-            'bk_line': round(bk_line, 1),
+            'model_line': round(bk_line, 1),
             'vegas_line': vegas_line if pd.notna(vegas_line) else None,
             'edge': round(edge, 1) if pd.notna(edge) else None
         })
 
     print(f"  Generated {len(predictions)} predictions")
+
+    # Apply subjective adjustments if enabled
+    if use_subjective and season is not None and week is not None:
+        from ball_knower.io.subjective import load_subjective_adjustments, apply_subjective_adjustments
+
+        print(f"  Loading subjective adjustments...")
+        adjustments, reasons = load_subjective_adjustments(season, week)
+
+        if adjustments:
+            print(f"  Found {len(adjustments)} subjective adjustments")
+            # Convert predictions to DataFrame
+            df = pd.DataFrame(predictions)
+
+            # Apply adjustments
+            df = apply_subjective_adjustments(df, adjustments, reasons)
+
+            # Update predictions with final values
+            # Keep model_line, add subjective columns, and bk_line becomes final_bk_line
+            for i, row in df.iterrows():
+                predictions[i]['subjective_home'] = row['subjective_home']
+                predictions[i]['subjective_away'] = row['subjective_away']
+                predictions[i]['subjective_reason_home'] = row['subjective_reason_home']
+                predictions[i]['subjective_reason_away'] = row['subjective_reason_away']
+                predictions[i]['bk_line'] = round(row['final_bk_line'], 1)
+
+                # Recalculate edge with final line
+                if pd.notna(row.get('vegas_line')):
+                    predictions[i]['edge'] = round(row['final_bk_line'] - row['vegas_line'], 1)
+        else:
+            print(f"  No subjective adjustments found")
+            # Add empty subjective columns for consistency
+            for pred in predictions:
+                pred['subjective_home'] = 0.0
+                pred['subjective_away'] = 0.0
+                pred['subjective_reason_home'] = ''
+                pred['subjective_reason_away'] = ''
+                # Rename model_line to bk_line for backward compatibility
+                pred['bk_line'] = pred.pop('model_line')
+    else:
+        # No subjective adjustments - rename model_line to bk_line for backward compatibility
+        for pred in predictions:
+            pred['bk_line'] = pred.pop('model_line')
 
     return predictions
 
