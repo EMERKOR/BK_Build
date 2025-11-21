@@ -1,0 +1,21 @@
+# Subjective Adjustments Template
+# Format:
+# TEAM_ABBREVIATION:
+#   adjustment: <numeric value>
+#   reason: "<free text>"
+
+# Positive adjustment strengthens the team (shifts line toward them)
+# Negative adjustment weakens the team
+
+# Example:
+# KC:
+#   adjustment: 1.5
+#   reason: "Mahomes elevates roster beyond ratings"
+
+# GB:
+#   adjustment: -2.0
+#   reason: "Cluster injuries at OL and WR"
+
+# SF:
+#   adjustment: 0.0
+#   reason: "No subjective change"
