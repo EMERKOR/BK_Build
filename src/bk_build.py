@@ -136,7 +136,10 @@ def cmd_predict(args):
     # Generate predictions
     predictions = run_weekly_predictions.generate_predictions(
         feature_df,
-        model_version=args.model
+        model_version=args.model,
+        season=args.season,
+        week=args.week,
+        use_subjective=not args.no_subjective
     )
 
     # Save predictions
@@ -396,6 +399,11 @@ Examples:
         type=str,
         default=None,
         help='Output CSV path (default: output/predictions_{season}_week_{week}.csv)'
+    )
+    parser_predict.add_argument(
+        '--no-subjective',
+        action='store_true',
+        help='Disable subjective adjustments (use model predictions only)'
     )
     parser_predict.set_defaults(func=cmd_predict)
 
