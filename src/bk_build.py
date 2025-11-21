@@ -243,6 +243,26 @@ def cmd_weekly_pipeline(args):
 
 
 # ============================================================================
+# SUBCOMMAND: ingest
+# ============================================================================
+
+def cmd_ingest(args):
+    """Fetch or refresh data for a season or week."""
+    from ball_knower.io import ingestion
+
+    version.print_version_banner("ingest")
+
+    if args.week:
+        # Fetch weekly data
+        ingestion.fetch_week_data(args.season, args.week, force=args.force)
+    else:
+        # Fetch season data
+        ingestion.fetch_season_data(args.season, force=args.force)
+
+    return 0
+
+
+# ============================================================================
 # CLI SETUP
 # ============================================================================
 
@@ -471,6 +491,31 @@ Examples:
         help='Export to PredictionTracker format (not yet implemented)'
     )
     parser_pipeline.set_defaults(func=cmd_weekly_pipeline)
+
+    # ========================================
+    # ingest subcommand
+    # ========================================
+    parser_ingest = subparsers.add_parser(
+        'ingest',
+        help='Fetch or refresh data for a season or week'
+    )
+    parser_ingest.add_argument(
+        '--season',
+        type=int,
+        required=True,
+        help='Season year (e.g., 2025)'
+    )
+    parser_ingest.add_argument(
+        '--week',
+        type=int,
+        help='Week number (optional - if omitted, fetches season data)'
+    )
+    parser_ingest.add_argument(
+        '--force',
+        action='store_true',
+        help='Force re-download even if cached data exists'
+    )
+    parser_ingest.set_defaults(func=cmd_ingest)
 
     return parser
 
