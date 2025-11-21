@@ -13,6 +13,7 @@ This module handles downloading and caching of:
 All data is staged in a consistent local directory structure under data/current_season/
 """
 
+import io
 import json
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -26,16 +27,25 @@ except ImportError:
     HAS_REQUESTS = False
     warnings.warn("requests library not available - ingestion functionality limited")
 
+# Try to import pandas for CSV processing
+try:
+    import pandas as pd
+    HAS_PANDAS = True
+except ImportError:
+    HAS_PANDAS = False
+    warnings.warn("pandas library not available - ingestion functionality limited")
+
 
 # ============================================================================
 # DATA SOURCE ENDPOINTS
 # ============================================================================
 
-# TODO: Configure these endpoints based on actual data sources
-NFELO_RATINGS_URL = "https://raw.githubusercontent.com/greerreNFL/nfelo/main/output_data/nfelo_games.csv"
-VEGAS_LINES_URL = "https://example.com/api/vegas/lines"  # TODO: Replace with actual endpoint
-PBP_AGGREGATE_URL = "https://example.com/api/pbp/season/{season}"  # TODO: Replace with actual endpoint
-TEAM_METADATA_URL = "https://example.com/api/teams"  # TODO: Replace with actual endpoint
+# NFLverse data sources (public GitHub repos)
+NFLVERSE_SCHEDULE_URL = "https://raw.githubusercontent.com/nflverse/nflverse-data/master/schedules/sched_{season}.csv"
+NFELO_RATINGS_URL = "https://raw.githubusercontent.com/nflverse/nfelo/master/data/nfelo_{season}.csv"
+VEGAS_LINES_URL = "https://raw.githubusercontent.com/nflverse/nflverse-data/master/vegas/lines/lines_{season}.csv"
+
+# TODO: Future data sources
 INJURY_REPORTS_URL = "https://example.com/api/injuries/{season}/{week}"  # TODO: Replace with actual endpoint
 ROSTER_DEPTH_URL = "https://example.com/api/rosters/{season}/{week}"  # TODO: Replace with actual endpoint
 
@@ -85,6 +95,10 @@ def _download_file(url: str, destination: Path, force: bool = False) -> bool:
     Returns:
         True if file was downloaded, False if skipped (already exists and not forced)
 
+    Raises:
+        requests.HTTPError: If download fails
+        IOError: If file cannot be written
+
     TODO:
         - Add authentication headers support
         - Add retry logic with exponential backoff
@@ -92,26 +106,38 @@ def _download_file(url: str, destination: Path, force: bool = False) -> bool:
         - Add checksum validation
     """
     if not HAS_REQUESTS:
-        print(f"WARNING: Cannot download {url} - requests library not available")
-        print(f"   Please install with: pip install requests")
+        print(f"      WARNING: Cannot download {url} - requests library not available")
+        print(f"      Please install with: pip install requests")
         return False
 
     if destination.exists() and not force:
-        print(f" Cached: {destination.name}")
+        print(f"      Cached: {destination.name}")
         return False
 
-    print(f"  Downloading {destination.name} from {url}")
+    print(f"      Downloading {destination.name}...")
 
-    # TODO: Implement actual download logic
-    # response = requests.get(url, timeout=30)
-    # response.raise_for_status()
-    # destination.parent.mkdir(parents=True, exist_ok=True)
-    # destination.write_bytes(response.content)
+    try:
+        response = requests.get(url, timeout=30)
+        response.raise_for_status()
 
-    print(f"   TODO: Implement download from {url}")
-    print(f"   TODO: Save to {destination}")
+        # Ensure directory exists
+        destination.parent.mkdir(parents=True, exist_ok=True)
 
-    return True
+        # Write file
+        destination.write_bytes(response.content)
+
+        print(f"      Downloaded: {destination.name} ({len(response.content)} bytes)")
+        return True
+
+    except requests.HTTPError as e:
+        print(f"      ERROR: HTTP {e.response.status_code} - {url}")
+        raise
+    except requests.RequestException as e:
+        print(f"      ERROR: Download failed - {e}")
+        raise
+    except IOError as e:
+        print(f"      ERROR: Cannot write file - {e}")
+        raise
 
 
 def _check_cache(file_path: Path, max_age_hours: int = 24) -> bool:
@@ -147,10 +173,8 @@ def fetch_season_data(season: int, *, force: bool = False) -> Dict[str, Path]:
     Fetches or updates all required data for a given NFL season.
 
     Downloads or refreshes:
-        - nfelo ratings
-        - play-by-play aggregates
-        - weekly vegas lines
-        - team metadata
+        - NFLverse schedule
+        - Vegas lines
 
     Args:
         season: NFL season year (e.g., 2025)
@@ -160,17 +184,9 @@ def fetch_season_data(season: int, *, force: bool = False) -> Dict[str, Path]:
         Dictionary mapping data types to their local file paths
 
     Example:
-        >>> paths = fetch_season_data(2025)
-        >>> print(paths['ratings'])
-        Path('data/current_season/ratings/nfelo_2025.csv')
-
-    TODO:
-        - Implement actual nfelo download
-        - Implement PBP aggregate download
-        - Implement vegas lines download
-        - Implement team metadata download
-        - Add data validation after download
-        - Add rollback on partial failure
+        >>> paths = fetch_season_data(2024)
+        >>> print(paths['schedule'])
+        Path('data/current_season/ratings/schedule_2024.csv')
     """
     print(f"\n{'='*60}")
     print(f"INGESTION: Fetching season data for {season}")
@@ -185,45 +201,40 @@ def fetch_season_data(season: int, *, force: bool = False) -> Dict[str, Path]:
     vegas_dir.mkdir(parents=True, exist_ok=True)
     pbp_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f" Data directories ready:")
+    print(f"  Data directories ready:")
     print(f"  - Ratings: {ratings_dir}")
     print(f"  - Vegas: {vegas_dir}")
     print(f"  - PBP: {pbp_dir}")
 
     # Define target files
-    files = {
-        'ratings': ratings_dir / f"nfelo_{season}.csv",
-        'vegas': vegas_dir / f"vegas_lines_{season}.csv",
-        'pbp': pbp_dir / f"pbp_aggregate_{season}.csv",
-        'teams': get_data_dir() / "teams_metadata.csv"
-    }
+    files = {}
 
     print(f"\nDownloading data (force={force}):")
 
-    # TODO: Download nfelo ratings
-    print(f"\n[1/4] nfelo ratings")
-    print(f"      TODO: Download from {NFELO_RATINGS_URL}")
-    print(f"      TODO: Save to {files['ratings']}")
+    # Download NFLverse schedule
+    print(f"\n[1/2] NFLverse schedule for {season}")
+    schedule_url = NFLVERSE_SCHEDULE_URL.format(season=season)
+    schedule_file = ratings_dir / f"schedule_{season}.csv"
+    try:
+        _download_file(schedule_url, schedule_file, force=force)
+        files['schedule'] = schedule_file
+    except Exception as e:
+        print(f"      WARNING: Could not download schedule - {e}")
 
-    # TODO: Download vegas lines
-    print(f"\n[2/4] Vegas lines")
-    print(f"      TODO: Download from {VEGAS_LINES_URL}")
-    print(f"      TODO: Save to {files['vegas']}")
-
-    # TODO: Download PBP aggregates
-    print(f"\n[3/4] Play-by-play aggregates")
-    pbp_url = PBP_AGGREGATE_URL.format(season=season)
-    print(f"      TODO: Download from {pbp_url}")
-    print(f"      TODO: Save to {files['pbp']}")
-
-    # TODO: Download team metadata
-    print(f"\n[4/4] Team metadata")
-    print(f"      TODO: Download from {TEAM_METADATA_URL}")
-    print(f"      TODO: Save to {files['teams']}")
+    # Download Vegas lines for entire season
+    print(f"\n[2/2] Vegas lines for {season}")
+    vegas_url = VEGAS_LINES_URL.format(season=season)
+    vegas_file = vegas_dir / f"vegas_lines_{season}.csv"
+    try:
+        _download_file(vegas_url, vegas_file, force=force)
+        files['vegas'] = vegas_file
+    except Exception as e:
+        print(f"      WARNING: Could not download vegas lines - {e}")
 
     print(f"\n{'='*60}")
-    print(f" Season data ingestion complete (scaffold)")
-    print(f"  Note: Actual downloads not yet implemented")
+    print(f"  Season data ingestion complete")
+    downloaded_count = len([f for f in files.values() if f.exists()])
+    print(f"  Downloaded {downloaded_count} / {len(files)} files")
     print(f"{'='*60}\n")
 
     return files
@@ -238,9 +249,8 @@ def fetch_week_data(season: int, week: int, *, force: bool = False) -> Dict[str,
     Fetches weekly supplemental data.
 
     Downloads or refreshes:
-        - weekly vegas lines
-        - injury reports (future)
-        - roster/QB depth chart (future)
+        - weekly nfelo ratings (filtered)
+        - weekly vegas lines (filtered)
 
     Args:
         season: NFL season year (e.g., 2025)
@@ -251,16 +261,9 @@ def fetch_week_data(season: int, week: int, *, force: bool = False) -> Dict[str,
         Dictionary mapping data types to their local file paths
 
     Example:
-        >>> paths = fetch_week_data(2025, 11)
+        >>> paths = fetch_week_data(2024, 11)
         >>> print(paths['vegas'])
-        Path('data/current_season/vegas/vegas_2025_week11.csv')
-
-    TODO:
-        - Implement weekly vegas lines download
-        - Implement injury report download
-        - Implement roster/depth chart download
-        - Add validation for week number (1-18 regular, 19-22 playoffs)
-        - Add caching with smart refresh (check for line movements)
+        Path('data/current_season/vegas/vegas_week_2024_11.csv')
     """
     print(f"\n{'='*60}")
     print(f"INGESTION: Fetching week data for {season} Week {week}")
@@ -268,40 +271,89 @@ def fetch_week_data(season: int, week: int, *, force: bool = False) -> Dict[str,
 
     # Ensure directory structure exists
     vegas_dir = get_vegas_dir(season)
+    ratings_dir = get_ratings_dir(season)
     vegas_dir.mkdir(parents=True, exist_ok=True)
+    ratings_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f" Data directories ready:")
+    print(f"  Data directories ready:")
     print(f"  - Vegas: {vegas_dir}")
+    print(f"  - Ratings: {ratings_dir}")
 
     # Define target files
-    files = {
-        'vegas': vegas_dir / f"vegas_{season}_week{week}.csv",
-        'injuries': vegas_dir / f"injuries_{season}_week{week}.csv",
-        'rosters': vegas_dir / f"rosters_{season}_week{week}.csv"
-    }
+    files = {}
 
     print(f"\nDownloading weekly data (force={force}):")
 
-    # TODO: Download weekly vegas lines
-    print(f"\n[1/3] Weekly Vegas lines")
-    print(f"      TODO: Download from {VEGAS_LINES_URL}")
-    print(f"      TODO: Save to {files['vegas']}")
+    # Download and filter nfelo ratings for this week
+    print(f"\n[1/2] nfelo ratings for Week {week}")
+    nfelo_url = NFELO_RATINGS_URL.format(season=season)
+    nfelo_week_file = ratings_dir / f"nfelo_week_{season}_{week}.csv"
+    
+    if not nfelo_week_file.exists() or force:
+        try:
+            if not HAS_PANDAS:
+                print(f"      ERROR: pandas required for filtering nfelo data")
+            elif not HAS_REQUESTS:
+                print(f"      ERROR: requests required for downloading data")
+            else:
+                print(f"      Downloading full season nfelo data...")
+                response = requests.get(nfelo_url, timeout=30)
+                response.raise_for_status()
+                
+                # Parse and filter by week
+                df = pd.read_csv(io.StringIO(response.text))
+                
+                # Filter for this season and week
+                if 'season' in df.columns and 'week' in df.columns:
+                    df_week = df[(df['season'] == season) & (df['week'] == week)]
+                    df_week.to_csv(nfelo_week_file, index=False)
+                    print(f"      Downloaded: {nfelo_week_file.name} ({len(df_week)} games)")
+                    files['nfelo'] = nfelo_week_file
+                else:
+                    print(f"      WARNING: nfelo data missing season/week columns")
+        except Exception as e:
+            print(f"      WARNING: Could not download nfelo ratings - {e}")
+    else:
+        print(f"      Cached: {nfelo_week_file.name}")
+        files['nfelo'] = nfelo_week_file
 
-    # TODO: Download injury reports
-    print(f"\n[2/3] Injury reports")
-    injury_url = INJURY_REPORTS_URL.format(season=season, week=week)
-    print(f"      TODO: Download from {injury_url}")
-    print(f"      TODO: Save to {files['injuries']}")
-
-    # TODO: Download roster/depth charts
-    print(f"\n[3/3] Roster/QB depth charts")
-    roster_url = ROSTER_DEPTH_URL.format(season=season, week=week)
-    print(f"      TODO: Download from {roster_url}")
-    print(f"      TODO: Save to {files['rosters']}")
+    # Download and filter Vegas lines for this week  
+    print(f"\n[2/2] Vegas lines for Week {week}")
+    vegas_url = VEGAS_LINES_URL.format(season=season)
+    vegas_week_file = vegas_dir / f"vegas_week_{season}_{week}.csv"
+    
+    if not vegas_week_file.exists() or force:
+        try:
+            if not HAS_PANDAS:
+                print(f"      ERROR: pandas required for filtering vegas data")
+            elif not HAS_REQUESTS:
+                print(f"      ERROR: requests required for downloading data")
+            else:
+                print(f"      Downloading full season vegas data...")
+                response = requests.get(vegas_url, timeout=30)
+                response.raise_for_status()
+                
+                # Parse and filter by week
+                df = pd.read_csv(io.StringIO(response.text))
+                
+                # Filter for this week
+                if 'week' in df.columns:
+                    df_week = df[df['week'] == week]
+                    df_week.to_csv(vegas_week_file, index=False)
+                    print(f"      Downloaded: {vegas_week_file.name} ({len(df_week)} games)")
+                    files['vegas'] = vegas_week_file
+                else:
+                    print(f"      WARNING: vegas data missing week column")
+        except Exception as e:
+            print(f"      WARNING: Could not download vegas lines - {e}")
+    else:
+        print(f"      Cached: {vegas_week_file.name}")
+        files['vegas'] = vegas_week_file
 
     print(f"\n{'='*60}")
-    print(f" Weekly data ingestion complete (scaffold)")
-    print(f"  Note: Actual downloads not yet implemented")
+    print(f"  Weekly data ingestion complete")
+    downloaded_count = len([f for f in files.values() if f.exists()])
+    print(f"  Downloaded {downloaded_count} files")
     print(f"{'='*60}\n")
 
     return files
@@ -325,20 +377,14 @@ def stage_data_for_pipeline(season: int, week: int) -> Dict[str, Path]:
     Returns:
         Dictionary of fully-qualified paths to staged files:
         {
-            'ratings': Path to nfelo ratings CSV,
-            'vegas': Path to vegas lines CSV,
-            'pbp': Path to play-by-play aggregates CSV,
-            'teams': Path to team metadata CSV,
-            'injuries': Path to injury reports CSV (optional),
-            'rosters': Path to roster data CSV (optional)
+            'schedule': Path to NFLverse schedule CSV,
+            'nfelo': Path to nfelo week ratings CSV,
+            'vegas': Path to vegas week lines CSV
         }
 
-    Raises:
-        FileNotFoundError: If required data files are missing
-
     Example:
-        >>> paths = stage_data_for_pipeline(2025, 11)
-        >>> df_ratings = pd.read_csv(paths['ratings'])
+        >>> paths = stage_data_for_pipeline(2024, 11)
+        >>> df_schedule = pd.read_csv(paths['schedule'])
 
     TODO:
         - Add schema validation for each staged file
@@ -351,54 +397,56 @@ def stage_data_for_pipeline(season: int, week: int) -> Dict[str, Path]:
     print(f"{'='*60}")
 
     # Define expected file paths
-    ratings_file = get_ratings_dir(season) / f"nfelo_{season}.csv"
-    vegas_file = get_vegas_dir(season) / f"vegas_{season}_week{week}.csv"
-    pbp_file = get_pbp_dir(season) / f"pbp_aggregate_{season}.csv"
-    teams_file = get_data_dir() / "teams_metadata.csv"
-    injuries_file = get_vegas_dir(season) / f"injuries_{season}_week{week}.csv"
-    rosters_file = get_vegas_dir(season) / f"rosters_{season}_week{week}.csv"
+    schedule_file = get_ratings_dir(season) / f"schedule_{season}.csv"
+    nfelo_file = get_ratings_dir(season) / f"nfelo_week_{season}_{week}.csv"
+    vegas_file = get_vegas_dir(season) / f"vegas_week_{season}_{week}.csv"
 
     staged_paths = {
-        'ratings': ratings_file,
-        'vegas': vegas_file,
-        'pbp': pbp_file,
-        'teams': teams_file,
-        'injuries': injuries_file,
-        'rosters': rosters_file
+        'schedule': schedule_file,
+        'nfelo': nfelo_file,
+        'vegas': vegas_file
     }
 
     # Check which files exist
     print(f"\nValidating staged files:")
 
-    required_files = ['ratings', 'vegas', 'pbp', 'teams']
-    optional_files = ['injuries', 'rosters']
-
+    required_files = ['schedule', 'nfelo', 'vegas']
     missing_required = []
 
     for file_type in required_files:
         path = staged_paths[file_type]
         if path.exists():
-            print(f"   {file_type}: {path}")
+            print(f"  ✓ {file_type}: {path}")
         else:
-            print(f"   {file_type}: MISSING - {path}")
+            print(f"  ✗ {file_type}: MISSING - {path}")
             missing_required.append(file_type)
 
-    for file_type in optional_files:
-        path = staged_paths[file_type]
-        if path.exists():
-            print(f"   {file_type}: {path}")
-        else:
-            print(f"  ! {file_type}: Not available (optional) - {path}")
-
     if missing_required:
-        print(f"\nL Missing required files: {', '.join(missing_required)}")
+        print(f"\n✗ Missing required files: {', '.join(missing_required)}")
         print(f"   Run: bk_build.py ingest --season {season} --week {week}")
         # TODO: Optionally auto-fetch missing data
         # fetch_season_data(season)
         # fetch_week_data(season, week)
     else:
-        print(f"\n All required data staged and ready")
+        print(f"\n✓ All required data staged and ready")
 
     print(f"{'='*60}\n")
 
     return staged_paths
+
+
+# ============================================================================
+# HELPER FUNCTIONS
+# ============================================================================
+
+def _save_csv_string(content: str, path: Path) -> None:
+    """
+    Save CSV content string to a file.
+
+    Args:
+        content: CSV content as string
+        path: Destination file path
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(content)
