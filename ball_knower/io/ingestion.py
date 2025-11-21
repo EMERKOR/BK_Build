@@ -41,9 +41,10 @@ except ImportError:
 # ============================================================================
 
 # NFLverse data sources (public GitHub repos)
-NFLVERSE_SCHEDULE_URL = "https://raw.githubusercontent.com/nflverse/nflverse-data/master/schedules/sched_{season}.csv"
-NFELO_RATINGS_URL = "https://raw.githubusercontent.com/nflverse/nfelo/master/data/nfelo_{season}.csv"
-VEGAS_LINES_URL = "https://raw.githubusercontent.com/nflverse/nflverse-data/master/vegas/lines/lines_{season}.csv"
+# Note: greerreNFL/nfelo has all-seasons file, we filter by game_id pattern
+NFELO_RATINGS_URL = "https://raw.githubusercontent.com/greerreNFL/nfelo/main/output_data/nfelo_games.csv"
+NFLVERSE_SCHEDULE_URL = "https://raw.githubusercontent.com/nflverse/nflverse-data/main/schedules/sched_{season}.csv"
+VEGAS_LINES_URL = "https://raw.githubusercontent.com/nflverse/nflverse-data/main/vegas/lines/lines_{season}.csv"
 
 # TODO: Future data sources
 INJURY_REPORTS_URL = "https://example.com/api/injuries/{season}/{week}"  # TODO: Replace with actual endpoint
@@ -286,9 +287,9 @@ def fetch_week_data(season: int, week: int, *, force: bool = False) -> Dict[str,
 
     # Download and filter nfelo ratings for this week
     print(f"\n[1/2] nfelo ratings for Week {week}")
-    nfelo_url = NFELO_RATINGS_URL.format(season=season)
+    nfelo_url = NFELO_RATINGS_URL  # All-seasons file, no formatting needed
     nfelo_week_file = ratings_dir / f"nfelo_week_{season}_{week}.csv"
-    
+
     if not nfelo_week_file.exists() or force:
         try:
             if not HAS_PANDAS:
@@ -296,21 +297,28 @@ def fetch_week_data(season: int, week: int, *, force: bool = False) -> Dict[str,
             elif not HAS_REQUESTS:
                 print(f"      ERROR: requests required for downloading data")
             else:
-                print(f"      Downloading full season nfelo data...")
+                print(f"      Downloading nfelo data (all seasons)...")
                 response = requests.get(nfelo_url, timeout=30)
                 response.raise_for_status()
-                
-                # Parse and filter by week
+
+                # Parse and filter by game_id pattern (YYYY_WW_AWAY_HOME)
                 df = pd.read_csv(io.StringIO(response.text))
-                
-                # Filter for this season and week
-                if 'season' in df.columns and 'week' in df.columns:
-                    df_week = df[(df['season'] == season) & (df['week'] == week)]
+
+                if 'game_id' in df.columns:
+                    # Extract season and week from game_id
+                    df['parsed_season'] = df['game_id'].str.split('_').str[0].astype(int)
+                    df['parsed_week'] = df['game_id'].str.split('_').str[1].astype(int)
+
+                    # Filter for this season and week
+                    df_week = df[(df['parsed_season'] == season) & (df['parsed_week'] == week)]
+
+                    # Drop parsed columns before saving
+                    df_week = df_week.drop(columns=['parsed_season', 'parsed_week'])
                     df_week.to_csv(nfelo_week_file, index=False)
                     print(f"      Downloaded: {nfelo_week_file.name} ({len(df_week)} games)")
                     files['nfelo'] = nfelo_week_file
                 else:
-                    print(f"      WARNING: nfelo data missing season/week columns")
+                    print(f"      WARNING: nfelo data missing game_id column")
         except Exception as e:
             print(f"      WARNING: Could not download nfelo ratings - {e}")
     else:
