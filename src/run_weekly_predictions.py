@@ -217,10 +217,25 @@ def load_weekly_data(season, week):
 
     # Parse matchups
     if 'team_away' in weekly_projections.columns and 'team_home' in weekly_projections.columns:
-        matchups = weekly_projections[['team_away', 'team_home']].copy()
+        # Start with team columns and add season/week if available
+        cols_to_extract = ['team_away', 'team_home']
+        if 'season' in weekly_projections.columns:
+            cols_to_extract.insert(0, 'season')
+        if 'week' in weekly_projections.columns:
+            cols_to_extract.insert(1 if 'season' in cols_to_extract else 0, 'week')
+
+        matchups = weekly_projections[cols_to_extract].copy()
+
+        # Add season/week from function args if not in file
+        if 'season' not in matchups.columns:
+            matchups['season'] = season
+        if 'week' not in matchups.columns:
+            matchups['week'] = week
 
         # Extract Vegas spread if available
-        if 'Favorite' in weekly_projections.columns:
+        if 'vegas_line' in weekly_projections.columns:
+            matchups['vegas_line'] = weekly_projections['vegas_line']
+        elif 'Favorite' in weekly_projections.columns:
             matchups['vegas_line'] = weekly_projections['Favorite'].str.extract(r'([-+]?\d+\.?\d*)')[0].astype(float)
         else:
             matchups['vegas_line'] = np.nan
@@ -231,6 +246,8 @@ def load_weekly_data(season, week):
         weekly_projections['team_home'] = weekly_projections['Matchup'].str.split(' at | vs ').str[1].apply(normalize_team_name)
 
         matchups = weekly_projections[['team_away', 'team_home']].copy()
+        matchups['season'] = season
+        matchups['week'] = week
 
         if 'Favorite' in weekly_projections.columns:
             matchups['vegas_line'] = weekly_projections['Favorite'].str.extract(r'([-+]?\d+\.?\d*)')[0].astype(float)
@@ -310,8 +327,8 @@ def generate_predictions(feature_df, model_version='v1.1'):
     predictions = []
 
     for idx, game in feature_df.iterrows():
-        # Extract home team features
-        home_features = {
+        # Extract home team features (only include non-None values)
+        home_features_raw = {
             'nfelo': game.get('nfelo_home'),
             'epa_margin': game.get('epa_margin_home'),
             'Ovr.': game.get('Ovr._home'),
@@ -319,9 +336,10 @@ def generate_predictions(feature_df, model_version='v1.1'):
             'win_rate_L5': game.get('win_rate_L5_home'),
             'QB Adj': game.get('QB Adj_home')
         }
+        home_features = {k: v for k, v in home_features_raw.items() if v is not None and pd.notna(v)}
 
-        # Extract away team features
-        away_features = {
+        # Extract away team features (only include non-None values)
+        away_features_raw = {
             'nfelo': game.get('nfelo_away'),
             'epa_margin': game.get('epa_margin_away'),
             'Ovr.': game.get('Ovr._away'),
@@ -329,6 +347,7 @@ def generate_predictions(feature_df, model_version='v1.1'):
             'win_rate_L5': game.get('win_rate_L5_away'),
             'QB Adj': game.get('QB Adj_away')
         }
+        away_features = {k: v for k, v in away_features_raw.items() if v is not None and pd.notna(v)}
 
         # Generate prediction
         bk_line = model.predict(home_features, away_features)

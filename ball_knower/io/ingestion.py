@@ -15,6 +15,7 @@ All data is staged in a consistent local directory structure under data/current_
 
 import io
 import json
+import os
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 import warnings
@@ -37,14 +38,29 @@ except ImportError:
 
 
 # ============================================================================
+# DEFAULT DATA DIRECTORY
+# ============================================================================
+
+# Default data directory: repo_root/data/current_season
+_DEFAULT_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_DATA_DIR = Path(
+    os.environ.get(
+        "BALL_KNOWER_DATA_DIR",
+        str(_DEFAULT_ROOT / "data" / "current_season"),
+    )
+)
+
+
+# ============================================================================
 # DATA SOURCE ENDPOINTS
 # ============================================================================
 
 # NFLverse data sources (public GitHub repos)
 # Note: greerreNFL/nfelo has all-seasons file, we filter by game_id pattern
 NFELO_RATINGS_URL = "https://raw.githubusercontent.com/greerreNFL/nfelo/main/output_data/nfelo_games.csv"
-NFLVERSE_SCHEDULE_URL = "https://raw.githubusercontent.com/nflverse/nflverse-data/main/schedules/sched_{season}.csv"
-VEGAS_LINES_URL = "https://raw.githubusercontent.com/nflverse/nflverse-data/main/vegas/lines/lines_{season}.csv"
+NFLVERSE_GAMES_URL = "https://raw.githubusercontent.com/nflverse/nfldata/master/data/games.csv"
+# Note: Vegas lines per-season files may not exist for all years on nflverse
+# Using games.csv as fallback which contains game results and basic info
 
 # TODO: Future data sources
 INJURY_REPORTS_URL = "https://example.com/api/injuries/{season}/{week}"  # TODO: Replace with actual endpoint
@@ -271,26 +287,26 @@ def fetch_week_data(season: int, week: int, *, force: bool = False) -> Dict[str,
     print(f"{'='*60}")
 
     # Ensure directory structure exists
-    vegas_dir = get_vegas_dir(season)
-    ratings_dir = get_ratings_dir(season)
-    vegas_dir.mkdir(parents=True, exist_ok=True)
-    ratings_dir.mkdir(parents=True, exist_ok=True)
+    DEFAULT_DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-    print(f"  Data directories ready:")
-    print(f"  - Vegas: {vegas_dir}")
-    print(f"  - Ratings: {ratings_dir}")
+    print(f"  Data directory ready:")
+    print(f"  - {DEFAULT_DATA_DIR}")
 
     # Define target files
     files = {}
 
     print(f"\nDownloading weekly data (force={force}):")
 
-    # Download and filter nfelo ratings for this week
-    print(f"\n[1/2] nfelo ratings for Week {week}")
+    # Download and filter nfelo data for this week
+    print(f"\n[1/3] nfelo power ratings for Week {week}")
     nfelo_url = NFELO_RATINGS_URL  # All-seasons file, no formatting needed
-    nfelo_week_file = ratings_dir / f"nfelo_week_{season}_{week}.csv"
 
-    if not nfelo_week_file.exists() or force:
+    # Use loader-compatible naming: power_ratings_nfelo_{season}_week_{week}.csv
+    power_ratings_file = DEFAULT_DATA_DIR / f"power_ratings_nfelo_{season}_week_{week}.csv"
+    epa_tiers_file = DEFAULT_DATA_DIR / f"epa_tiers_nfelo_{season}_week_{week}.csv"
+    sos_file = DEFAULT_DATA_DIR / f"strength_of_schedule_nfelo_{season}_week_{week}.csv"
+
+    if not power_ratings_file.exists() or force:
         try:
             if not HAS_PANDAS:
                 print(f"      ERROR: pandas required for filtering nfelo data")
@@ -310,53 +326,70 @@ def fetch_week_data(season: int, week: int, *, force: bool = False) -> Dict[str,
                     df['parsed_week'] = df['game_id'].str.split('_').str[1].astype(int)
 
                     # Filter for this season and week
-                    df_week = df[(df['parsed_season'] == season) & (df['parsed_week'] == week)]
+                    df_week = df[(df['parsed_season'] == season) & (df['parsed_week'] == week)].copy()
 
-                    # Drop parsed columns before saving
-                    df_week = df_week.drop(columns=['parsed_season', 'parsed_week'])
-                    df_week.to_csv(nfelo_week_file, index=False)
-                    print(f"      Downloaded: {nfelo_week_file.name} ({len(df_week)} games)")
-                    files['nfelo'] = nfelo_week_file
+                    # Transform game-level data to team-level power ratings
+                    # game_id format: YYYY_WW_AWAY_HOME
+                    # Extract team abbreviations from game_id
+                    df_week['away_team'] = df_week['game_id'].str.split('_').str[2]
+                    df_week['home_team'] = df_week['game_id'].str.split('_').str[3]
+
+                    # Create team-level ratings: one row per team
+                    home_ratings = df_week[['home_team', 'starting_nfelo_home']].rename(
+                        columns={'home_team': 'team', 'starting_nfelo_home': 'nfelo'}
+                    )
+                    away_ratings = df_week[['away_team', 'starting_nfelo_away']].rename(
+                        columns={'away_team': 'team', 'starting_nfelo_away': 'nfelo'}
+                    )
+
+                    # Combine and deduplicate (take most recent if multiple games)
+                    team_ratings = pd.concat([home_ratings, away_ratings], ignore_index=True)
+                    team_ratings = team_ratings.drop_duplicates(subset=['team'], keep='first')
+                    team_ratings = team_ratings.sort_values('team').reset_index(drop=True)
+
+                    # Save to loader-compatible filename
+                    team_ratings.to_csv(power_ratings_file, index=False)
+                    print(f"      Downloaded: {power_ratings_file.name} ({len(team_ratings)} teams from {len(df_week)} games)")
+                    files['power_ratings_nfelo'] = power_ratings_file
+
+                    # Create matchups file from nfelo game data
+                    # The prediction system needs this to know which teams are playing
+                    matchups_file = DEFAULT_DATA_DIR / f"weekly_projections_ppg_substack_{season}_week_{week}.csv"
+                    matchups = pd.DataFrame({
+                        'season': season,
+                        'week': week,
+                        'team_away': df_week['away_team'],
+                        'team_home': df_week['home_team'],
+                        'vegas_line': df_week.get('home_line_close', pd.NA)  # Use closing line if available
+                    })
+                    matchups.to_csv(matchups_file, index=False)
+                    print(f"      Created matchups file: {matchups_file.name} ({len(matchups)} games)")
+                    files['weekly_projections_ppg_substack'] = matchups_file
+
+                    # Note: We do NOT create placeholder files for epa_tiers and strength_of_schedule
+                    # The loader will handle missing files gracefully with warnings
+                    # Creating empty files causes IndexError when loader tries to read them
                 else:
                     print(f"      WARNING: nfelo data missing game_id column")
         except Exception as e:
             print(f"      WARNING: Could not download nfelo ratings - {e}")
     else:
-        print(f"      Cached: {nfelo_week_file.name}")
-        files['nfelo'] = nfelo_week_file
+        print(f"      Cached: {power_ratings_file.name}")
+        files['power_ratings_nfelo'] = power_ratings_file
+        if epa_tiers_file.exists():
+            files['epa_tiers_nfelo'] = epa_tiers_file
+        if sos_file.exists():
+            files['strength_of_schedule_nfelo'] = sos_file
 
-    # Download and filter Vegas lines for this week  
-    print(f"\n[2/2] Vegas lines for Week {week}")
-    vegas_url = VEGAS_LINES_URL.format(season=season)
-    vegas_week_file = vegas_dir / f"vegas_week_{season}_{week}.csv"
-    
-    if not vegas_week_file.exists() or force:
-        try:
-            if not HAS_PANDAS:
-                print(f"      ERROR: pandas required for filtering vegas data")
-            elif not HAS_REQUESTS:
-                print(f"      ERROR: requests required for downloading data")
-            else:
-                print(f"      Downloading full season vegas data...")
-                response = requests.get(vegas_url, timeout=30)
-                response.raise_for_status()
-                
-                # Parse and filter by week
-                df = pd.read_csv(io.StringIO(response.text))
-                
-                # Filter for this week
-                if 'week' in df.columns:
-                    df_week = df[df['week'] == week]
-                    df_week.to_csv(vegas_week_file, index=False)
-                    print(f"      Downloaded: {vegas_week_file.name} ({len(df_week)} games)")
-                    files['vegas'] = vegas_week_file
-                else:
-                    print(f"      WARNING: vegas data missing week column")
-        except Exception as e:
-            print(f"      WARNING: Could not download vegas lines - {e}")
-    else:
-        print(f"      Cached: {vegas_week_file.name}")
-        files['vegas'] = vegas_week_file
+    # Note: Vegas lines and Substack ratings are optional
+    # The prediction system can work with just nfelo data
+    print(f"\n[2/3] Vegas lines (optional)")
+    print(f"      Skipped: No reliable source URL available yet")
+    print(f"      Prediction system will proceed without Vegas lines")
+
+    print(f"\n[3/3] Substack ratings (optional)")
+    print(f"      Skipped: Manual data source - must be provided separately")
+    print(f"      Prediction system will proceed without Substack ratings")
 
     print(f"\n{'='*60}")
     print(f"  Weekly data ingestion complete")
@@ -404,21 +437,28 @@ def stage_data_for_pipeline(season: int, week: int) -> Dict[str, Path]:
     print(f"STAGING: Validating data for {season} Week {week}")
     print(f"{'='*60}")
 
-    # Define expected file paths
-    schedule_file = get_ratings_dir(season) / f"schedule_{season}.csv"
-    nfelo_file = get_ratings_dir(season) / f"nfelo_week_{season}_{week}.csv"
-    vegas_file = get_vegas_dir(season) / f"vegas_week_{season}_{week}.csv"
+    # Define expected file paths using loader-compatible naming
+    power_ratings_nfelo = DEFAULT_DATA_DIR / f"power_ratings_nfelo_{season}_week_{week}.csv"
+    epa_tiers_nfelo = DEFAULT_DATA_DIR / f"epa_tiers_nfelo_{season}_week_{week}.csv"
+    sos_nfelo = DEFAULT_DATA_DIR / f"strength_of_schedule_nfelo_{season}_week_{week}.csv"
+
+    # Optional files
+    power_ratings_substack = DEFAULT_DATA_DIR / f"power_ratings_substack_{season}_week_{week}.csv"
+    qb_epa_substack = DEFAULT_DATA_DIR / f"qb_epa_substack_{season}_week_{week}.csv"
 
     staged_paths = {
-        'schedule': schedule_file,
-        'nfelo': nfelo_file,
-        'vegas': vegas_file
+        'power_ratings_nfelo': power_ratings_nfelo,
+        'epa_tiers_nfelo': epa_tiers_nfelo,
+        'strength_of_schedule_nfelo': sos_nfelo,
+        'power_ratings_substack': power_ratings_substack,
+        'qb_epa_substack': qb_epa_substack,
     }
 
     # Check which files exist
     print(f"\nValidating staged files:")
 
-    required_files = ['schedule', 'nfelo', 'vegas']
+    required_files = ['power_ratings_nfelo']  # Only power_ratings is truly required
+    optional_files = ['epa_tiers_nfelo', 'strength_of_schedule_nfelo', 'power_ratings_substack', 'qb_epa_substack']
     missing_required = []
 
     for file_type in required_files:
@@ -429,14 +469,23 @@ def stage_data_for_pipeline(season: int, week: int) -> Dict[str, Path]:
             print(f"  ✗ {file_type}: MISSING - {path}")
             missing_required.append(file_type)
 
+    for file_type in optional_files:
+        path = staged_paths[file_type]
+        if path.exists():
+            print(f"  ✓ {file_type}: {path}")
+        else:
+            print(f"  - {file_type}: Not available (optional)")
+
     if missing_required:
         print(f"\n✗ Missing required files: {', '.join(missing_required)}")
         print(f"   Run: bk_build.py ingest --season {season} --week {week}")
         # TODO: Optionally auto-fetch missing data
-        # fetch_season_data(season)
         # fetch_week_data(season, week)
     else:
         print(f"\n✓ All required data staged and ready")
+        if len([p for p in staged_paths.values() if p.exists()]) > len(required_files):
+            optional_count = len([p for p in staged_paths.values() if p.exists()]) - len(required_files)
+            print(f"  ({optional_count} optional dataset(s) also available)")
 
     print(f"{'='*60}\n")
 

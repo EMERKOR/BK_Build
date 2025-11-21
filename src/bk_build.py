@@ -128,7 +128,7 @@ def cmd_predict(args):
     print(f"  Model: {args.model}")
 
     # Load weekly data
-    team_ratings, matchups = run_weekly_predictions.load_weekly_data(args.season, args.week)
+    team_ratings, matchups, status = run_weekly_predictions.load_weekly_data(args.season, args.week)
 
     # Build feature matrix
     feature_df = run_weekly_predictions.build_feature_matrix(matchups, team_ratings)
