@@ -35,7 +35,7 @@ from ball_knower.io import schemas
 from ball_knower import config
 from ball_knower.utils import paths, version
 from ball_knower.validation import sanity
-from src import models
+from ball_knower.modeling import models
 
 
 def parse_args():
